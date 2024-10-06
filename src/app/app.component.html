@@ -1,0 +1,95 @@
+<section class="app">
+  <app-toolbar [drawer]="drawer"></app-toolbar>
+  <mat-drawer-container class="sidenav-container">
+    <mat-drawer #drawer mode="side" class="drawer-section" opened>
+      <div class="nueva-tabla">
+        <button mat-raised-button (click)="openDialogNuevaTabla()">
+          Nueva Tabla
+        </button>
+      </div>
+      @for (tabla of tablas | async; track tabla) {
+        <div>
+          <div class="btn_principal">
+            <button
+              mat-raised-button
+              class="example-add-tab-button"
+              (click)="addTab(tabla.nombre_tabla)"
+              color="accent"
+              >
+              {{ tabla.nombre_tabla.split("_").join(" ") | uppercase }}
+            </button>
+          </div>
+          <div class="btn_secundario">
+            <button
+              mat-icon-button
+              [matMenuTriggerFor]="menu"
+              aria-label="Example icon-button with a menu"
+              >
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <button
+                mat-menu-item
+                [matTooltip]="'Elimina la tabla seleccionada'"
+                (click)="eliminarTabla(tabla.nombre_tabla)"
+                >
+                <mat-icon>close</mat-icon>
+                <span>Eliminar tabla {{tabla.nombre_tabla.split('_').join(' ')}}</span>
+              </button>
+            </mat-menu>
+          </div>
+        </div>
+      }
+    </mat-drawer>
+    <mat-drawer-content class="drawer-content">
+      <mat-tab-group
+        [selectedIndex]="selected.value"
+        (selectedIndexChange)="selected.setValue($event)"
+        (selectedTabChange)="selectTab($event)"
+        color="accent"
+        >
+        @for (tab of tabs; track tab; let index = $index) {
+          <mat-tab>
+            <ng-template mat-tab-label>
+              {{ tab.split("_").join(" ") | uppercase }}
+              <span class="spacer"></span>
+              <button mat-button (click)="removeTab(index)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </ng-template>
+            <div class="action_btns">
+              <button
+                mat-raised-button
+                color="accent"
+                (click)="openDialogNuevoRegistro()"
+                >
+                Nuevo registro
+              </button>
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="openDialogRecibo()"
+                >
+                <mat-icon>picture_as_pdf</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                (click)="mostrarElementosSeleccionados()"
+                >
+                <mat-icon>print</mat-icon>
+              </button>
+            </div>
+            <section class="tabla">
+              <app-table
+                [tabla]="tab"
+                (elementosSeleccionados)="elementosSeleccionados($event)"
+              ></app-table>
+            </section>
+          </mat-tab>
+        }
+      </mat-tab-group>
+    </mat-drawer-content>
+  </mat-drawer-container>
+  <div class="pdf" #pdf></div>
+  
+</section>

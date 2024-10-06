@@ -1,0 +1,102 @@
+<h2 mat-dialog-title>{{ data.message }}</h2>
+<div mat-dialog-content class="formStyle">
+  <form class="formulario" [formGroup]="newTable">
+    <div>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ TableNameField.label }}</mat-label>
+        <input
+          matInput
+          [type]="TableNameField.type"
+          [formControlName]="TableNameField.field"
+        />
+        @if (newTable.controls[TableNameField.field].hasError('required')) {
+        <mat-error> Este campo es <strong>requerido</strong> </mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <div>
+      <mat-divider></mat-divider>
+    </div>
+    <!-- <div class="fields">
+      @for (field of formFields; track field) {
+          <div>
+            @if(field.type === "text") {
+            <mat-form-field appearance="outline">
+              <mat-label>{{ field.label }}</mat-label>
+              <input matInput [type]="field.type" [formControlName]="field.field" />
+              @if (newTable.controls[field.field].hasError('required')) {
+              <mat-error> Este campo es <strong>requerido</strong> </mat-error>
+              }
+            </mat-form-field>
+            }
+          </div>
+          <div>
+            @if(field.type === "checkbox" && field.label === "Null") {
+            <mat-checkbox
+              [name]="field.field"
+              [checked]="field.value"
+              [aria-label]="field.field"
+              [formControlName]="field.field"
+            >
+              {{ field.label }}
+            </mat-checkbox>
+            }
+          </div>
+          <div>
+            @if(field.type === "checkbox" && field.label === "Fecha") {
+            <mat-checkbox
+              [name]="field.field"
+              [checked]="field.value"
+              [aria-label]="field.field"
+              [formControlName]="field.field"
+            >
+              {{ field.label }}
+            </mat-checkbox>
+            }
+          </div>
+          }
+    </div> -->
+      @for (field of formFields; track field) {
+          <div class="fields">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ field[0].label }}</mat-label>
+              <input matInput [type]="field[0].type" [formControlName]="field[0].field" />
+              @if (newTable.controls[field[0].field].hasError('required')) {
+              <mat-error> Este campo es <strong>requerido</strong> </mat-error>
+              }
+            </mat-form-field>
+            <mat-checkbox
+              [name]="field[1].field"
+              [checked]="field[1].value"
+              [aria-label]="field[1].field"
+              [formControlName]="field[1].field"
+            >
+              {{ field[1].label }}
+            </mat-checkbox>
+
+            <mat-checkbox
+              [name]="field[2].field"
+              [checked]="field[2].value"
+              [aria-label]="field[2].field"
+              [formControlName]="field[2].field"
+            >
+              {{ field[2].label }}
+            </mat-checkbox>
+          </div>
+          }
+    
+    <button mat-raised-button (click)="agregarCampo()">agregar campo</button>
+  </form>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="dialogClose()">Cancelar</button>
+  <button
+    mat-button
+    type="submit"
+    [disabled]="newTable.invalid"
+    (click)="onSubmit()"
+  >
+    Crear nueva tabla
+  </button>
+</div>

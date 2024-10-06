@@ -1,0 +1,21 @@
+button {
+    margin-right: 8px;
+  }
+
+form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+
+    mat-form-field{
+        width: 100%;
+    }
+
+    .description{
+        input{
+            height: 200px;
+        }
+    }
+}

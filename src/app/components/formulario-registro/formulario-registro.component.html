@@ -1,0 +1,40 @@
+<h2 mat-dialog-title>{{ data.message }}</h2>
+<div mat-dialog-content class="formStyle">
+  <form class="formulario" [formGroup]="newRegister">
+
+    @for (field of formFields; track field) {
+      <div >
+        @if(field.type === 'timestamp'){
+          <mat-form-field>
+            <mat-label>{{field.label.split('_').join(' ')}}</mat-label>
+            <input matInput [matDatepicker]="picker" [formControlName]="field.field">
+            <mat-hint>MM/DD/YYYY</mat-hint>
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        }@else{
+        <mat-form-field appearance="outline">
+          <mat-label>{{field.label.split('_').join(' ')}}</mat-label>
+          <input matInput [type]="field.type" [formControlName]="field.field">
+          @if (newRegister.controls[field.field].hasError('required')) {
+            <mat-error>
+              Este campo es <strong>requerido</strong>
+            </mat-error>
+          }
+        </mat-form-field>
+      }
+      </div>
+    }
+  </form>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="dialogClose()">Cancelar</button>
+  <button
+    mat-button
+    type="submit"
+    [disabled]="newRegister.invalid"
+    (click)="onSubmit()"
+    >
+    {{ isUpload ? "Actualizar Registro" : "Crear Registro"}}
+  </button>
+</div>

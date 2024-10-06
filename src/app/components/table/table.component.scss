@@ -1,0 +1,14 @@
+table{
+    margin-bottom: 100px;
+    overflow-x: hidden;
+}
+.search{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    mat-form-field{
+        width: 70%;
+    }
+}

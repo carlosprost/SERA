@@ -1,0 +1,71 @@
+<div class="search">
+  <mat-form-field>
+    <mat-label>Buscar</mat-label>
+    <input matInput (keyup)="search($event)"/>
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+</div>
+<table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+    <!--- Note that these columns can be defined in any order.
+    The actual rendered columns are set as a property on the row definition" -->
+  
+    <!-- Columns -->
+    @for (column of displayedColumns; track column) {
+      <ng-container [matColumnDef]="column">
+        @if(column === campoSeleccion){
+          <th mat-header-cell *matHeaderCellDef>
+            <mat-checkbox
+              [name]="campoSeleccion"
+              (change)="$event ? emitAllSelected() : null"
+              [checked]="selection.hasValue() && isAllSelected()"
+              [indeterminate]="selection.hasValue() && !isAllSelected()"
+              [aria-label]="checkboxLabel()"
+              >
+            </mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <mat-checkbox
+              [name]="checkboxLabel(row)"
+              (click)="$event.stopPropagation()"
+              (change)="$event ? emitSelected(row) : null"
+              [checked]="selection.isSelected(row)"
+              [aria-label]="checkboxLabel(row)"
+              >
+            </mat-checkbox>
+          </td>
+          } @if(column !== 'actions'){
+          <th mat-header-cell *matHeaderCellDef>{{ column.split('_').join(' ') | uppercase }}</th>
+          @if(column.split('_').includes('fecha')){
+            <td mat-cell *matCellDef="let element">{{ element[column] | date:'dd/MM/yyyy' }}</td>
+          }@else {
+            <td mat-cell *matCellDef="let element">{{ element[column] }}</td>
+          }
+        } @else{
+          <th mat-header-cell *matHeaderCellDef>{{ "actions" | uppercase }}</th>
+          <td mat-cell *matCellDef="let element">
+            <button
+              mat-icon-button
+              [matMenuTriggerFor]="menu"
+              aria-label="Example icon-button with a menu"
+              >
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="openDialogUploadRegistro(element['id_' + tabla])">
+                <mat-icon color="accent">replay</mat-icon>
+                <span>actualizar</span>
+              </button>
+              <button mat-menu-item (click)="eliminarRegistro(element['id_' + tabla])">
+                <mat-icon color="warn">close</mat-icon>
+                <span>eliminar</span>
+              </button>
+            </mat-menu>
+          </td>
+        }
+      </ng-container>
+    }
+  
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+  
