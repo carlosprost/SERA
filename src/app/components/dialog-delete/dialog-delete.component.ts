@@ -21,7 +21,6 @@ export class DialogDeleteComponent {
     @Inject(MAT_DIALOG_DATA) public data: any
   ){
     this.tabla = data.tabla;
-    console.log(this.tabla);
     
   }
 

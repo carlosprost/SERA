@@ -18,7 +18,7 @@ import { FormNewTableComponent } from "./components/form-new-table/form-new-tabl
 import { FormularioRegistroComponent } from "./components/formulario-registro/formulario-registro.component";
 import { TableComponent } from "./components/table/table.component";
 import { ToolbarComponent } from "./components/toolbar/toolbar.component";
-import { MatSidenavModule } from "@angular/material/sidenav";
+import { MatDrawer, MatSidenavModule } from "@angular/material/sidenav";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from "@angular/material/tooltip";
@@ -77,7 +77,7 @@ export class AppComponent {
     );
   }
 
-  addTab(tabName: string) {
+  addTab(tabName: string, drawer: MatDrawer) {
     if (!this.tabs.includes(tabName)) {
       this.tabs.push(tabName);
       this.selected.setValue(this.tabs.length - 1);
@@ -91,6 +91,7 @@ export class AppComponent {
           tabla: this.tabs[this.selected.value ? this.selected.value : 0],
         })
       );
+      drawer.toggle();
     }
   }
 
@@ -220,6 +221,7 @@ class PDF {
     this.contenedor.appendChild(titulo);
 
     const descripcion = this.crearElemento('p', 'descripcion', `${this.descripcion}`);
+    descripcion.style.width = '100%';
     descripcion.style.textAlign = 'justify';
     descripcion.style.fontSize = '12px';
     this.contenedor.appendChild(descripcion);
@@ -303,7 +305,7 @@ class PDF {
           heightLeft -= pageHeight;
         }
 
-        pdf.save("documento.pdf");
+        pdf.save("Recibo.pdf");
       })
       .catch((error) => {
         console.error("Error generando el canvas:", error);

@@ -13,7 +13,7 @@
             <button
               mat-raised-button
               class="example-add-tab-button"
-              (click)="addTab(tabla.nombre_tabla)"
+              (click)="addTab(tabla.nombre_tabla, drawer)"
               color="accent"
               >
               {{ tabla.nombre_tabla.split("_").join(" ") | uppercase }}
