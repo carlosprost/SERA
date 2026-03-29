@@ -1,0 +1,89 @@
+name: "Release"
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "macos-latest" # for x86_64 Mac
+            args: "--target x86_64-apple-darwin"
+          - platform: "macos-latest" # for ARM Mac
+            args: "--target aarch64-apple-darwin"
+          - platform: "ubuntu-22.04" # for x86_64 Linux
+            args: ""
+          - platform: "windows-latest" # for x86_64 Windows
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Those targets are only used on macos runners so it's safe to leave them here
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: install frontend dependencies
+        run: npm install
+
+      - name: build tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__ # tauri-action reemplaza esto con la versión en tauri.conf.json
+          releaseName: "SERA v__VERSION__"
+          releaseBody: "Lanzamiento oficial de SERA v__VERSION__. Incluye Ribbon UI, Reportes PDF y Cifrado .srx."
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+  # JOB ESPECÍFICO PARA LINUX ARM64 (Usando runners nativos de GitHub)
+  publish-linux-arm:
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - name: install frontend dependencies
+        run: npm install
+      - name: build tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "SERA v__VERSION__ (Linux ARM64)"
+          releaseDraft: true
+          prerelease: false
+          args: "--bundles deb,appimage"
