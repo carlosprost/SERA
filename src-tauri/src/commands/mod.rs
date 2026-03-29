@@ -13,7 +13,6 @@ use tauri::State;
 use crate::database;
 use crate::models::{Campo, ConfigData, DeleteRecord, ExportedTable, NewRecord, NuevaTabla, RestructureTable, Tabla};
 use crate::security::CryptoProvider;
-
 /// Estado compartido: ruta al archivo SQLite.
 pub struct DbPath(pub PathBuf);
 
@@ -221,12 +220,30 @@ pub fn importar_tabla(db_path: State<DbPath>, path: String, nuevo_nombre: Option
     // 4. Determinar nombre final
     let nombre_final = nuevo_nombre.unwrap_or(package.nombre);
     
+    // VALIDACIÓN: Verificar si la tabla ya existe para disparar el flujo de renombrado en el frontend
+    let tablas_actuales = database::get_tablas(&db_path.0)
+        .map_err(|e| format!("[SERA] Error al validar catálogo: {}", e))?;
+        
+    if tablas_actuales.iter().any(|t| t.nombre_tabla == nombre_final) {
+        return Err(format!("[SERA] La tabla '{}' ya existe. Por favor, elegí otro nombre.", nombre_final));
+    }
+    
     // 5. Crear tabla en la DB
-    // Generar definición de campos SQL
+    // Generar definición de campos SQL filtrando el ID original que ya maneja crear_tabla
     let mut sql_fields = String::new();
-    for (i, campo) in package.campos.iter().enumerate() {
-        if i > 0 { sql_fields.push_str(", "); }
+    let mut added_first = false;
+    
+    for campo in package.campos.iter() {
+        // Ignoramos la clave primaria (PRI) porque database::crear_tabla siempre la crea como id_{nombre}
+        if campo.key == "PRI" {
+            continue;
+        }
+        
+        if added_first {
+            sql_fields.push_str(", ");
+        }
         sql_fields.push_str(&format!("{} {}", campo.field, campo.tipo));
+        added_first = true;
     }
     
     let nueva_tabla = NuevaTabla {

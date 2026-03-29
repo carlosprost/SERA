@@ -28,6 +28,7 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { PdfService } from "./services/pdf.service";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { DialogRenameComponent } from "./components/dialog-rename/dialog-rename.component";
+import { AboutDialogComponent } from "./components/about-dialog/about-dialog";
 
 /**
  * Componente raíz de SERA.
@@ -329,5 +330,13 @@ export class AppComponent {
     this.snackBar.open(`Tabla "${nombre}" importada y lista para usar`, "¡Éxito!", { duration: 4000 });
     // Forzar recarga del listado de tablas en el Store
     this.store.dispatch(StoreActions.loadListadoTablas());
+  }
+  /** Muestra el diálogo "Acerca de SERA" con información del autor (WolfTeI). */
+  showAbout() {
+    this.dialog.open(AboutDialogComponent, {
+      width: '450px',
+      panelClass: 'custom-dialog-container',
+      autoFocus: false
+    });
   }
 }

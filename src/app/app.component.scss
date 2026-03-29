@@ -208,25 +208,34 @@
 
         .tab-title {
           flex: 1;
-          text-align: left; /* Título a la izquierda */
+          text-align: left;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
           color: #e0e0e0;
           font-weight: 500;
+          line-height: 24px; /* Alineado con el alto del botón */
         }
 
         .tab-close-btn {
           width: 24px !important;
           height: 24px !important;
           padding: 0 !important;
-          flex: 0 0 24px; /* Evita que crezca */
+          flex: 0 0 24px;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          min-width: 24px !important;
+          line-height: 1 !important;
           
           mat-icon { 
             font-size: 16px !important; 
             width: 16px !important;
             height: 16px !important;
             color: rgba(255, 255, 255, 0.4);
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
           }
           
           &:hover mat-icon {
@@ -256,16 +265,6 @@
         height: 100% !important;
       }
 
-      .tab-close-btn {
-        width: 24px;
-        height: 24px;
-        padding: 0;
-        margin-left: 12px;
-        mat-icon {
-          font-size: 18px;
-          line-height: 24px;
-        }
-      }
 
       .tab-content-wrapper-fix {
         display: flex !important;
