@@ -1,4 +1,60 @@
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif;}
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html, body { 
+  height: 100%; 
+  margin: 0; 
+  padding: 0;
+  overflow: hidden; /* Evitar scroll dobles */
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #1e1e1e;
+}
+
+app-root {
+  display: block;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* Global Material Dialog overrides to make them pop visually in dark themes */
+.cdk-overlay-pane.mat-mdc-dialog-panel {
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.7), 
+              0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px; /* A bit more rounded for modern look */
+}
+
+/* Custom Scrollbar for Dark Theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a5158; /* Color gris acorde al tema oscuro */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #60686f; /* Un gris un poco más claro al pasar el mouse */
+}
+/* Firefox support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4a5158 transparent;
+}
+
+/* Paleta de Comandos (Ctrl+F) */
+.spotlight-dialog-panel {
+  .mat-mdc-dialog-container {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+}
+
+.spotlight-backdrop {
+  background: rgba(0, 0, 0, 0.1) !important; /* Más transparente */
+  backdrop-filter: none !important; /* SIN BLUR */
+}

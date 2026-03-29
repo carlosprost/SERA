@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Inject, Optional } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Optional } from '@angular/core';
 import { MaterialModule } from '../../shared/material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NewRecord } from '../../interfaces/registros.interfaces';
@@ -23,7 +23,7 @@ import { provideNativeDateAdapter } from '@angular/material/core';
 })
 export class FormularioRegistroComponent {
   isUpload: boolean = false;
-  newRegister!: FormGroup;
+  newRegister: FormGroup;
   TableName: string = '';
   campos!: Observable<Campos[]>;
   formFields: FormFields[] = [];
@@ -33,21 +33,29 @@ export class FormularioRegistroComponent {
   constructor(
     private store: Store,
     private fb: FormBuilder,
+    private cdr: ChangeDetectorRef,
     @Optional() public dialogRef: MatDialogRef<FormNewTableComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    this.TableName = data.tabla;
+    // Inicialización inmediata para evitar errores en el template antes de que llegue la data
+    this.newRegister = this.fb.group({});
+    
+    // Normalizamos el nombre a minúsculas para coincidir con la convención de la DB
+    this.TableName = data.tabla.toLowerCase();
     this.id = data.id;
     this.isUpload = data.upload;
     const contenidoTabla = data.contenido;
     this.campos = this.store.select(selectCampos);
 
-    
-
     this.campos.subscribe({
       next: (campos) => {
+        // Usamos una lista temporal para asegurar un cambio de referencia al final
+        const temporalFields: FormFields[] = [];
+        this.formControlFields = {};
+
         campos.forEach((campo) => {
-          if (campo.Field !== `id_${this.TableName}`) {
+          // Filtramos la llave primaria (ID) para que no sea editable
+          if (campo.Field.toLowerCase() !== `id_${this.TableName}`) {
             let field: FormFields = {
               field: campo.Field,
               label: campo.Field,
@@ -57,18 +65,23 @@ export class FormularioRegistroComponent {
                   ? this.cargarContenido(contenidoTabla, campo.Field)
                   : '',
             };
-            this.formFields.push(field);
+            temporalFields.push(field);
           }
         });
+        
+        this.formFields = temporalFields;
         this.crearCampos();
+        // Forzamos la detección de cambios para OnPush ya que estamos en un callback asíncrono
+        this.cdr.markForCheck();
       },
     });
   }
 
   cargarContenido(contenido: any, index: string) {
-    let resultado: string = '';
-    contenido.forEach((element: any) => {
-      if (element[`id_${this.TableName}`] === this.id) {
+    let resultado: any = '';
+    contenido.data.forEach((element: any) => {
+      // Búsqueda de ID insensible a mayúsculas para mayor robustez
+      if (element[`id_${this.TableName}`] == this.id) {
         resultado = element[index];
       }
     });
@@ -77,15 +90,36 @@ export class FormularioRegistroComponent {
 
   crearCampos() {
     this.formFields.forEach((field) => {
+      // Normalizar tipo de dato de SQLite para el frontend
+      field.type = this.normalizarTipo(field.type);
       this.crearCampo(field);
     });
     this.newRegister = this.fb.group(this.formControlFields);
   }
 
+  normalizarTipo(type: string): string {
+    const t = type.toLowerCase();
+    if (t.includes('date') || t.includes('time') || t.includes('timestamp')) return 'date';
+    if (t.includes('int') || t.includes('real') || t.includes('num') || t.includes('double')) return 'number';
+    if (t.includes('bool')) return 'boolean';
+    return 'text';
+  }
+
   crearCampo(field: FormFields) {
-    console.log(field.type);
+    let value = field.value;
     
-    this.formControlFields[field.field] = field.type === 'timestamp' ? [new Date(field.value)] : [field.value];
+    // Si es fecha, intentar convertir el valor existente a objeto Date
+    if (field.type === 'date' && value) {
+      const d = new Date(value);
+      value = !isNaN(d.getTime()) ? d : '';
+    }
+    
+    // Si es booleano, normalizar a booleano real
+    if (field.type === 'boolean') {
+      value = (value === 'true' || value === 1 || value === '1' || value === true);
+    }
+
+    this.formControlFields[field.field] = [value];
   }
 
   dialogClose() {
@@ -97,12 +131,20 @@ export class FormularioRegistroComponent {
     let campos: string[] = [];
     let contenido: string[] = [];
 
-    this.formFields.forEach((field, index) => {
+    this.formFields.forEach((field) => {
       campos.push(`${field.field}`);
-      if(field.type === 'timestamp'){
-        contenido.push(`"${this.newRegister.value[field.field].toISOString().slice(0, 19).replace('T', ' ')}"`);
-      }else{
-        contenido.push(`"${this.newRegister.value[field.field]}"`);
+      const val = this.newRegister.value[field.field];
+
+      if (field.type === 'date' && val instanceof Date) {
+        // Formato SQLite estándar: YYYY-MM-DD HH:MM:SS
+        contenido.push(`"${val.toISOString().slice(0, 19).replace('T', ' ')}"`);
+      } else if (field.type === 'boolean') {
+        // En SQLite los booleanos son generalmente 0 o 1
+        contenido.push(val ? "1" : "0");
+      } else if (field.type === 'number') {
+        contenido.push(`${val}`);
+      } else {
+        contenido.push(`"${val}"`);
       }
     });
 

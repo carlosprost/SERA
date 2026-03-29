@@ -1,0 +1,17 @@
+<div class="palette-container">
+  <mat-icon class="search-icon">search</mat-icon>
+  <input 
+    type="text" 
+    #searchInput
+    [formControl]="searchControl" 
+    class="palette-input" 
+    placeholder="Escribe para buscar registros... (Enter o Esc para cerrar)" 
+    (keydown.enter)="closeDialog()" 
+    (keydown.escape)="closeDialog()"
+  />
+  @if (searchControl.value) {
+    <button mat-icon-button (click)="searchControl.setValue(''); searchInput.focus()" class="clear-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  }
+</div>

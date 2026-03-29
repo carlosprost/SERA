@@ -1,17 +1,71 @@
-<h2 mat-dialog-title>{{data.message}}</h2>
-<mat-dialog-content> 
-    <form [formGroup]="formularioRecibo">
-        <mat-form-field>
-            <mat-label>Titulo</mat-label>
-            <input matInput formControlName="titulo">
-        </mat-form-field>
-        <mat-form-field class="description">
-            <mat-label>Descripción</mat-label>
-            <input matInput formControlName="descripcion">
-        </mat-form-field>
-    </form>
+<h2 mat-dialog-title>Configuración de Reporte Personalizado</h2>
+<mat-dialog-content class="report-dialog-content"> 
+    <mat-tab-group color="accent" animationDuration="200ms">
+        
+        <!-- PESTAÑA: TEXTOS DEL REPORTE -->
+        <mat-tab label="Contenido de Texto">
+            <form [formGroup]="formularioRecibo" class="report-form tab-section">
+                <!-- SECCIÓN: CABECERA Y APERTURA -->
+                <div class="form-section">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Título del Reporte</mat-label>
+                        <input matInput formControlName="titulo" placeholder="Ej: Listado de Oficios Vencidos">
+                        <mat-icon matSuffix>title</mat-icon>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Texto de Apertura (Antes de la tabla)</mat-label>
+                        <textarea matInput formControlName="descripcion" rows="3" placeholder="Introducción o contexto..."></textarea>
+                    </mat-form-field>
+                </div>
+
+                <!-- SECCIÓN: CIERRE -->
+                <div class="form-section">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Texto de Cierre (Después de la tabla)</mat-label>
+                        <textarea matInput formControlName="descripcion_post" rows="3" placeholder="Conclusiones o notas finales..."></textarea>
+                    </mat-form-field>
+                </div>
+
+                <!-- SECCIÓN: FIRMA -->
+                <div class="signature-section">
+                    <mat-slide-toggle formControlName="incluir_firma" color="primary">
+                        Incluir bloque de firma al pie
+                    </mat-slide-toggle>
+
+                    <div class="signature-input" *ngIf="formularioRecibo.get('incluir_firma')?.value">
+                        <mat-form-field appearance="outline">
+                            <mat-label>Nombre / Cargo del Firmante</mat-label>
+                            <input matInput formControlName="firma_texto" placeholder="Ej: Of. Pr. Carlos Prost">
+                            <mat-icon matSuffix>draw</mat-icon>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </form>
+        </mat-tab>
+
+        <!-- PESTAÑA: COLUMNAS Y ORDEN -->
+        <mat-tab label="Columnas del Reporte">
+            <div class="columns-config-container tab-section">
+                <p class="section-hint">Seleccioná los campos que querés incluir y arrastralos para cambiar el orden en el reporte.</p>
+                
+                <div cdkDropList class="columns-list" (cdkDropListDropped)="drop($event)">
+                    <div class="column-item" *ngFor="let campo of camposConfig" cdkDrag>
+                        <div class="column-drag-placeholder" *cdkDragPlaceholder></div>
+                        <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
+                        <mat-checkbox [(ngModel)]="campo.seleccionado" color="primary">
+                            {{campo.nombre}}
+                        </mat-checkbox>
+                    </div>
+                </div>
+            </div>
+        </mat-tab>
+
+    </mat-tab-group>
 </mat-dialog-content>
-<mat-dialog-actions>
-  <button mat-button mat-dialog-close>Cancelar</button>
-  <button mat-button [mat-dialog-close]="true" cdkFocusInitial (click)="save()">Crear</button>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close color="warn">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="save()">
+    Generar Reporte
+  </button>
 </mat-dialog-actions>

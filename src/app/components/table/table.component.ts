@@ -18,6 +18,15 @@ import { StoreActions } from "../../store/store.actions";
 import { selectCampos, selectContenido } from "../../store/store.selectors";
 import { CommonModule } from "@angular/common";
 import { FormularioRegistroComponent } from "../formulario-registro/formulario-registro.component";
+import { ChangeDetectorRef, ViewChild, AfterViewInit, HostListener } from "@angular/core";
+import { TableConfigDialog } from "../table-config-dialog/table-config-dialog";
+import { TableConfig, TableRule, CalculatedField } from "../../interfaces/tablas.interfaces";
+import { invoke } from "@tauri-apps/api/core";
+import { MatTableDataSource } from "@angular/material/table";
+import { MatSort } from "@angular/material/sort";
+import { FilterSeraDialog, FilterRule } from "../filter-sera-dialog/filter-sera-dialog";
+import { SearchPaletteDialog } from "../search-palette-dialog/search-palette-dialog";
+import { FormulaEngine } from "../../utils/formula-engine";
 
 @Component({
   selector: "app-table",
@@ -26,25 +35,36 @@ import { FormularioRegistroComponent } from "../formulario-registro/formulario-r
   templateUrl: "./table.component.html",
   styleUrl: "./table.component.scss",
 })
-export class TableComponent implements OnInit, OnDestroy {
+export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() tabla!: string;
   @Output() elementosSeleccionados: EventEmitter<any> = new EventEmitter<any>();
+  @Output() printPdf: EventEmitter<any[]> = new EventEmitter<any[]>();
 
   campos!: Observable<Campos[]>;
   contenido!: Observable<any>;
   campoSeleccion!: string;
 
-  displayedColumns: string[] = [];
-  dataSource: string[] = [];
-  dataSearch: string[] = [];
+  allColumns: string[] = []; // Todas las columnas originales
+  displayedColumns: string[] = []; // Columnas actualmente renderizadas
+  hiddenColumns: Set<string> = new Set(); // Columnas ocultas por el usuario
+
+  dataSource = new MatTableDataSource<any>([]);
+  dataSearch: any[] = [];
   selection = new SelectionModel<any>(true, []);
 
   subcriptions: Subscription[] = [];
+  tableRules: TableRule[] = [];
+  calculatedFields: CalculatedField[] = [];
+  activeFilters: FilterRule[] = [];
+  lastSearchValue: string = '';
+
+  @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
     private store: Store,
     public dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -54,26 +74,44 @@ export class TableComponent implements OnInit, OnDestroy {
     this.subcriptions = [
       this.campos.subscribe({
         next: (campos) => {
-          this.displayedColumns = [this.campoSeleccion];
+          this.allColumns = [this.campoSeleccion];
 
           campos.forEach((campo) => {
             if (campo.Field !== `id_${this.tabla}`) {
-              this.displayedColumns.push(campo.Field);
+              this.allColumns.push(campo.Field);
             }
           });
-          this.displayedColumns.push("actions");
+          this.allColumns.push("actions");
+          this.updateDisplayedColumns();
         },
       }),
       this.contenido.subscribe({
         next: (contenido) => {
-          this.dataSearch = contenido;
-          this.dataSource = this.dataSearch;
+          this.dataRaw = contenido;
+          this.loadRulesAndCalculate();
+          this.cdr.detectChanges();
         },
       }),
     ];
+  }
 
-    
-    
+  private dataRaw: any[] = [];
+
+  ngAfterViewInit() {
+    this.dataSource.sort = this.sort;
+  }
+
+  toggleColumnVisibility(column: string) {
+    if (this.hiddenColumns.has(column)) {
+      this.hiddenColumns.delete(column);
+    } else {
+      this.hiddenColumns.add(column);
+    }
+    this.updateDisplayedColumns();
+  }
+
+  updateDisplayedColumns() {
+    this.displayedColumns = this.allColumns.filter(c => !this.hiddenColumns.has(c));
   }
 
   ngOnDestroy() {
@@ -93,8 +131,8 @@ export class TableComponent implements OnInit, OnDestroy {
   /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
     const numSelected = this.selection.selected.length;
-    const numRows = this.dataSource.length;
-    return numSelected === numRows;
+    const numRows = this.dataSource.data.length;
+    return numSelected === numRows && numRows > 0;
   }
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
@@ -103,7 +141,7 @@ export class TableComponent implements OnInit, OnDestroy {
       this.selection.clear();
       return;
     }
-    this.selection.select(...this.dataSource);
+    this.selection.select(...this.dataSource.data);
   }
 
   /** The label for the checkbox on the passed row */
@@ -132,7 +170,6 @@ export class TableComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.snackBar.open("Registro Actualizado", "", { duration: 3000 });
-        this.store.dispatch(StoreActions.loadContenido({ tabla: this.tabla }));
       }
     });
   }
@@ -145,17 +182,240 @@ export class TableComponent implements OnInit, OnDestroy {
     this.store.dispatch(
       StoreActions.loadDeleteRecord({ deleteRecord: tablaAEleiminar })
     );
-    this.store.dispatch(StoreActions.loadContenido({ tabla: this.tabla }));
     this.snackBar.open("Registro Eliminado", "", { duration: 3000 });
+  }
+
+  /** 
+   * Listener global para intercepción de Control + F 
+   * Previene el buscador del navegador y levanta Spotlight SERA.
+   */
+  @HostListener('window:keydown.control.f', ['$event'])
+  abrirPaletaBusqueda(event: Event) {
+    event.preventDefault();
+    this.openSearchPalette();
+  }
+
+  openSearchPalette() {
+    this.dialog.open(SearchPaletteDialog, {
+      width: '450px',
+      position: { top: '140px', right: '20px' },
+      panelClass: 'spotlight-dialog-panel', 
+      backdropClass: 'spotlight-backdrop',
+      data: {
+        initialValue: this.lastSearchValue,
+        onSearch: (val: string) => {
+          this.lastSearchValue = val;
+          this.applyDataSourceSearch(val);
+        }
+      }
+    });
+  }
+
+  applyDataSourceSearch(filterValue: string) {
+    this.dataSource.filter = filterValue.trim().toLowerCase();
   }
 
   search(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource = this.dataSearch;
-    this.dataSource = this.dataSource.filter((registro) => {
-      return Object.values(registro).some((value) => {
-        return value.toString().toLowerCase().includes(filterValue.toLowerCase());
+    this.lastSearchValue = filterValue;
+    this.applyDataSourceSearch(filterValue);
+  }
+
+  refresh() {
+    this.store.dispatch(StoreActions.loadContenido({ tabla: this.tabla }));
+  }
+
+  applyAdvancedFilters() {
+    if (!this.activeFilters || this.activeFilters.length === 0) {
+      this.dataSource.data = this.dataSearch; // Restablecer
+      return;
+    }
+
+    const filtered = this.dataSearch.filter(row => {
+      // Toda regla debe cumplirse (comportamiento AND)
+      return this.activeFilters.every(rule => {
+        const rowValue = row[rule.field];
+        const valStr = String(rowValue || '').toLowerCase();
+        const ruleValStr = String(rule.value || '').toLowerCase();
+
+        switch (rule.operator) {
+          case 'equals':
+            return valStr === ruleValStr;
+          case 'contains':
+            return valStr.includes(ruleValStr);
+          case 'not_contains':
+            return !valStr.includes(ruleValStr);
+          case 'lt':
+            return Number(rowValue) < Number(rule.value);
+          case 'gt':
+            return Number(rowValue) > Number(rule.value);
+          case 'is_empty':
+            return valStr === '' || rowValue === null || rowValue === undefined;
+          case 'is_not_empty':
+            return valStr !== '' && rowValue !== null && rowValue !== undefined;
+          default:
+            return true;
+        }
       });
+    });
+
+    this.dataSource.data = filtered;
+  }
+
+  openFilterDialog() {
+    const dialogRef = this.dialog.open(FilterSeraDialog, {
+      width: '80%',
+      minWidth: '500px',
+      data: {
+        campos: this.allColumns,
+        currentFilters: this.activeFilters
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (!result) return;
+      if (result.action === 'apply') {
+        this.activeFilters = result.filters;
+        this.applyAdvancedFilters();
+        this.snackBar.open(`Aplicados ${this.activeFilters.length} filtro(s)`, 'OK', { duration: 3000 });
+      } else if (result.action === 'clear') {
+        this.activeFilters = [];
+        this.applyAdvancedFilters();
+        this.snackBar.open("Filtros eliminados", "OK", { duration: 3000 });
+      }
+      this.cdr.detectChanges(); 
+    });
+  }
+
+  exportListView() {
+    const dataToExport = this.selection.selected.length > 0 ? this.selection.selected : this.dataSource.filteredData;
+    this.printPdf.emit(dataToExport);
+  }
+
+  async loadRulesAndCalculate() {
+    try {
+      const configJson: string = await invoke('get_tabla_config', { nombreTabla: this.tabla });
+      if (configJson && configJson.trim() !== '' && configJson !== '{}') {
+        const config: TableConfig = JSON.parse(configJson);
+        this.tableRules = config.rules || [];
+        this.calculatedFields = config.calculatedFields || [];
+      } else {
+        this.tableRules = [];
+        this.calculatedFields = [];
+      }
+    } catch (e) {
+      console.error("Error loading table rules:", e);
+      this.tableRules = [];
+      this.calculatedFields = [];
+    }
+    
+    this.applyVirtualCalculations();
+  }
+
+  applyVirtualCalculations() {
+    if (!this.dataRaw) return;
+
+    const processedData = this.dataRaw.map(row => {
+      const newRow = { ...row };
+      
+      if (this.calculatedFields && this.calculatedFields.length > 0) {
+        this.calculatedFields.forEach(cf => {
+          if (cf.isActive && cf.targetField && cf.formula) {
+            newRow[cf.targetField] = FormulaEngine.evaluate(cf.formula, row);
+          }
+        });
+      }
+      return newRow;
+    });
+
+    this.dataSearch = processedData;
+    this.dataSource.data = this.dataSearch;
+    this.cdr.detectChanges();
+  }
+
+  getRowStyle(row: any): any {
+    if (!this.tableRules || this.tableRules.length === 0) return {};
+
+    for (const rule of this.tableRules) {
+      if (rule.applyTo === 'cell') continue; // Ignorar reglas de celda
+
+      if (this.checkRuleMatch(rule, row)) {
+        return {
+          'background-color': rule.backgroundColor !== 'transparent' ? rule.backgroundColor : undefined,
+          'color': rule.textColor || undefined,
+        };
+      }
+    }
+    return {};
+  }
+
+  getCellStyle(row: any, column: string): any {
+    if (!this.tableRules || this.tableRules.length === 0) return {};
+
+    for (const rule of this.tableRules) {
+      // Solo aplicar si es regla de celda y coincide con esta columna
+      if (rule.applyTo !== 'cell' || rule.targetColumn !== column) continue;
+
+      if (this.checkRuleMatch(rule, row)) {
+        return {
+          'background-color': rule.backgroundColor !== 'transparent' ? rule.backgroundColor : undefined,
+          'color': rule.textColor || undefined,
+        };
+      }
+    }
+    return {};
+  }
+
+  private checkRuleMatch(rule: TableRule, row: any): boolean {
+    if (rule.type === 'formula' && rule.formula) {
+      return !!FormulaEngine.evaluate(rule.formula, row);
+    } 
+    else if (rule.field && rule.operator) {
+      const rowValue = row[rule.field];
+      if (rowValue === undefined || rowValue === null) return false;
+      
+      const strRowVal = String(rowValue).toLowerCase();
+      const strRuleVal = String(rule.value || '').toLowerCase();
+
+      switch (rule.operator) {
+        case 'equals':
+          return strRowVal === strRuleVal;
+        case 'contains':
+          return strRowVal.includes(strRuleVal);
+        case 'lt':
+          return Number(rowValue) < Number(rule.value);
+        case 'gt':
+          return Number(rowValue) > Number(rule.value);
+        case 'is_past':
+          const datePast = new Date(rowValue);
+          return !isNaN(datePast.getTime()) && datePast < new Date();
+        case 'is_future':
+          const dateFuture = new Date(rowValue);
+          return !isNaN(dateFuture.getTime()) && dateFuture > new Date();
+      }
+    }
+    return false;
+  }
+
+
+  openConfigDialog() {
+    const camposActuales = this.allColumns.filter(c => c !== this.campoSeleccion && c !== 'actions');
+
+    const dialogRef = this.dialog.open(TableConfigDialog, {
+      width: '95vw',
+      maxWidth: '1350px',
+      data: {
+        tabla: this.tabla,
+        campos: camposActuales
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result && result.reload) {
+        this.loadRulesAndCalculate();
+        this.snackBar.open("Configuración de tabla actualizada", "OK", { duration: 3000 });
+      }
+      this.cdr.detectChanges();
     });
   }
 }

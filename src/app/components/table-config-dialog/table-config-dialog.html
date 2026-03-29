@@ -1,0 +1,216 @@
+<div class="config-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>Configuración de Tabla: {{ tabla | uppercase }}</h2>
+    <div class="header-actions">
+      <button mat-flat-button (click)="toggleRecipes()" [color]="showRecipes ? 'warn' : 'accent'" type="button">
+        <mat-icon>{{ showRecipes ? 'close' : 'auto_fix_high' }}</mat-icon>
+        {{ showRecipes ? 'Cerrar Ayuda' : 'Ver Recetario' }}
+      </button>
+    </div>
+  </div>
+
+  <form [formGroup]="configForm" (ngSubmit)="onSubmit()">
+    <mat-tab-group animationDuration="200ms" color="accent">
+      
+      <!-- PESTAÑA 1: REGLAS VISUALES -->
+      <mat-tab label="Reglas de Color">
+        <div class="tab-content-container">
+          <div class="split-pane">
+            <div class="formula-editor-side">
+              <p class="section-hint">Definí cómo se pintarán las filas según sus datos.</p>
+              
+              <div class="rules-scroll-viewport">
+                <div formArrayName="rules" class="rules-container">
+                  <div *ngFor="let rule of rules.controls; let i = index" [formGroupName]="i" class="rule-row mat-elevation-z2">
+                    <div class="rule-header">
+                      <div class="rule-title-group">
+                        <span class="rule-badge">Regla #{{ i + 1 }}</span>
+                        <mat-button-toggle-group formControlName="type" class="small-toggle">
+                          <mat-button-toggle value="simple">Simple</mat-button-toggle>
+                          <mat-button-toggle value="formula">Fórmula</mat-button-toggle>
+                        </mat-button-toggle-group>
+                      </div>
+                      <button mat-icon-button color="warn" (click)="removeRule(i)" type="button">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+
+                    <div class="rule-body" [class.column-layout]="rule.get('type')?.value === 'formula'">
+                      <!-- MODO SIMPLE -->
+                      <ng-container *ngIf="rule.get('type')?.value === 'simple'">
+                        <mat-form-field appearance="outline">
+                          <mat-label>Campo</mat-label>
+                          <mat-select formControlName="field">
+                            <mat-option *ngFor="let campo of campos" [value]="campo">{{ campo }}</mat-option>
+                          </mat-select>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                          <mat-label>Operación</mat-label>
+                          <mat-select formControlName="operator">
+                            <mat-option *ngFor="let op of operators" [value]="op.value">{{ op.viewValue }}</mat-option>
+                          </mat-select>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                          <mat-label>Valor</mat-label>
+                          <input matInput formControlName="value">
+                        </mat-form-field>
+                      </ng-container>
+
+                      <!-- MODO FÓRMULA -->
+                      <ng-container *ngIf="rule.get('type')?.value === 'formula'">
+                        <mat-form-field appearance="outline" class="full-width-formula">
+                          <mat-label>Lógica de la Regla (Fórmula)</mat-label>
+                          <textarea matInput formControlName="formula" placeholder="Ej: [ipp] == 'URGENTE'" rows="2"></textarea>
+                          <mat-hint>
+                            @if(isFormulaValid(rule.get('formula')?.value)){
+                              <span class="text-success"><mat-icon class="mini-icon">check_circle</mat-icon> Sintaxis válida</span>
+                            } @else {
+                              <span class="text-danger"><mat-icon class="mini-icon">error</mat-icon> Error en la fórmula</span>
+                            }
+                          </mat-hint>
+                        </mat-form-field>
+                      </ng-container>
+
+                      <div class="row-flex scope-selection">
+                        <div class="scope-group">
+                          <mat-label class="mini-label">Aplicar a:</mat-label>
+                          <mat-button-toggle-group formControlName="applyTo" class="small-toggle">
+                            <mat-button-toggle value="row">Fila</mat-button-toggle>
+                            <mat-button-toggle value="cell">Celda</mat-button-toggle>
+                          </mat-button-toggle-group>
+                        </div>
+
+                        <mat-form-field appearance="outline" class="target-cell-field" *ngIf="rule.get('applyTo')?.value === 'cell'">
+                          <mat-label>Columna Objetivo</mat-label>
+                          <mat-select formControlName="targetColumn">
+                            <mat-option *ngFor="let campo of campos" [value]="campo">{{ campo }}</mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+
+                      <!-- ESTILO COMÚN -->
+                      <div class="style-row-container">
+                        <mat-form-field appearance="outline" class="color-picker-field">
+                          <mat-label>Color de Fondo</mat-label>
+                          <mat-select formControlName="backgroundColor">
+                            <mat-option value="transparent">Sin Fondo (Transparente)</mat-option>
+                            <mat-option *ngFor="let color of colors" [value]="color.value">
+                              <div class="color-sample-container">
+                                <div class="color-dot" [style.backgroundColor]="color.value"></div>
+                                {{ color.viewValue }}
+                              </div>
+                            </mat-option>
+                          </mat-select>
+                        </mat-form-field>
+
+                        <div class="live-preview-box" [style.backgroundColor]="rule.get('backgroundColor')?.value" [style.color]="rule.get('textColor')?.value">
+                          VISTA PREVIA
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="add-button-container">
+                  <button mat-stroked-button color="accent" type="button" (click)="addRule()" class="add-rule-btn">
+                    <mat-icon>add</mat-icon> Agregar Nueva Regla
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- PANEL DE RECETAS CONTEXTUAL: ESTILOS -->
+            <div class="recipes-side mat-elevation-z4" *ngIf="showRecipes">
+              <h3 class="recipe-title"><mat-icon>palette</mat-icon> Recetas de Estilo</h3>
+              <div class="recipe-list">
+                <div *ngFor="let recipe of styleRecipes" class="recipe-card" (click)="applyRecipe(recipe)">
+                  <div class="recipe-name">{{ recipe.title }}</div>
+                  <code class="recipe-code">{{ recipe.formula }}</code>
+                  <div class="recipe-action">Clic para aplicar</div>
+                </div>
+              </div>
+              <p class="recipe-footer-hint">Las recetas de estilo deben devolver <b>verdadero</b> o <b>falso</b>.</p>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- PESTAÑA 2: CAMPOS INTELIGENTES -->
+      <mat-tab label="Campos Inteligentes">
+        <div class="tab-content-container">
+          <div class="split-pane">
+            <div class="formula-editor-side">
+              <p class="section-hint">Creá columnas virtuales que calculan valores automáticamente sin tocar la DB.</p>
+              
+              <div class="rules-scroll-viewport">
+                <div formArrayName="calculatedFields" class="rules-container">
+                  <div *ngFor="let cf of calculatedFields.controls; let i = index" [formGroupName]="i" class="rule-row mat-elevation-z2">
+                    <div class="rule-header">
+                      <span class="rule-badge">Campo Virtual #{{ i + 1 }}</span>
+                      <button mat-icon-button color="warn" (click)="removeCalculatedField(i)" type="button">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+
+                    <div class="rule-body column-layout">
+                      <div class="row-flex">
+                        <mat-form-field appearance="outline" class="target-field">
+                          <mat-label>Campo Destino (a sobrescribir)</mat-label>
+                          <mat-select formControlName="targetField">
+                            <mat-option *ngFor="let campo of campos" [value]="campo">{{ campo }}</mat-option>
+                          </mat-select>
+                        </mat-form-field>
+
+                        <mat-slide-toggle formControlName="isActive">Activo</mat-slide-toggle>
+                      </div>
+
+                        <mat-form-field appearance="outline" class="formula-field">
+                          <mat-label>Fórmula de Cálculo</mat-label>
+                          <textarea matInput formControlName="formula" placeholder="Ej: MAYUS([nombre])" rows="3"></textarea>
+                          <mat-hint>
+                            @if(isFormulaValid(cf.get('formula')?.value)){
+                              <span class="text-success"><mat-icon class="mini-icon">check_circle</mat-icon> Sintaxis válida</span>
+                            } @else {
+                              <span class="text-danger"><mat-icon class="mini-icon">error</mat-icon> Error en la fórmula</span>
+                            }
+                          </mat-hint>
+                        </mat-form-field>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="add-button-container">
+                  <button mat-stroked-button color="accent" type="button" (click)="addCalculatedField()" class="add-rule-btn">
+                    <mat-icon>auto_awesome</mat-icon> Nueva Transformación Vitual
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- PANEL DE RECETAS CONTEXTUAL: FÓRMULAS -->
+            <div class="recipes-side mat-elevation-z4" *ngIf="showRecipes">
+              <h3 class="recipe-title"><mat-icon>functions</mat-icon> Recetas de Cálculo</h3>
+              <div class="recipe-list">
+                <div *ngFor="let recipe of formulaRecipes" class="recipe-card" (click)="applyRecipe(recipe)">
+                  <div class="recipe-name">{{ recipe.title }}</div>
+                  <code class="recipe-code">{{ recipe.formula }}</code>
+                  <div class="recipe-action">Clic para aplicar</div>
+                </div>
+              </div>
+              <p class="recipe-footer-hint">Las recetas de cálculo devuelven el <b>valor</b> que se mostrará en la tabla.</p>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+
+    <div mat-dialog-actions align="end" class="dialog-footer">
+      <button mat-button (click)="dialogClose()" type="button">Cancelar</button>
+      <button mat-flat-button color="accent" type="submit" [disabled]="configForm.invalid">
+        <mat-icon>save</mat-icon> Guardar Cambios
+      </button>
+    </div>
+  </form>
+</div>

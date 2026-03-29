@@ -1,102 +1,84 @@
 <h2 mat-dialog-title>{{ data.message }}</h2>
 <div mat-dialog-content class="formStyle">
-  <form class="formulario" [formGroup]="newTable">
-    <div>
-      <mat-form-field appearance="outline">
-        <mat-label>{{ TableNameField.label }}</mat-label>
-        <input
-          matInput
-          [type]="TableNameField.type"
-          [formControlName]="TableNameField.field"
-        />
-        @if (newTable.controls[TableNameField.field].hasError('required')) {
-        <mat-error> Este campo es <strong>requerido</strong> </mat-error>
+  <form class="formulario" [formGroup]="newTableForm" (ngSubmit)="onSubmit()">
+    <!-- Table Name -->
+    <div class="table-name-container">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre de la tabla</mat-label>
+        <input matInput type="text" formControlName="tableName" placeholder="Ej: oficios_2025"/>
+        @if (newTableForm.get('tableName')?.hasError('required')) {
+          <mat-error>Este campo es <strong>requerido</strong></mat-error>
         }
       </mat-form-field>
     </div>
 
-    <div>
-      <mat-divider></mat-divider>
-    </div>
-    <!-- <div class="fields">
-      @for (field of formFields; track field) {
-          <div>
-            @if(field.type === "text") {
-            <mat-form-field appearance="outline">
-              <mat-label>{{ field.label }}</mat-label>
-              <input matInput [type]="field.type" [formControlName]="field.field" />
-              @if (newTable.controls[field.field].hasError('required')) {
-              <mat-error> Este campo es <strong>requerido</strong> </mat-error>
-              }
-            </mat-form-field>
-            }
-          </div>
-          <div>
-            @if(field.type === "checkbox" && field.label === "Null") {
-            <mat-checkbox
-              [name]="field.field"
-              [checked]="field.value"
-              [aria-label]="field.field"
-              [formControlName]="field.field"
-            >
-              {{ field.label }}
-            </mat-checkbox>
-            }
-          </div>
-          <div>
-            @if(field.type === "checkbox" && field.label === "Fecha") {
-            <mat-checkbox
-              [name]="field.field"
-              [checked]="field.value"
-              [aria-label]="field.field"
-              [formControlName]="field.field"
-            >
-              {{ field.label }}
-            </mat-checkbox>
-            }
-          </div>
-          }
-    </div> -->
-      @for (field of formFields; track field) {
-          <div class="fields">
-            <mat-form-field appearance="outline">
-              <mat-label>{{ field[0].label }}</mat-label>
-              <input matInput [type]="field[0].type" [formControlName]="field[0].field" />
-              @if (newTable.controls[field[0].field].hasError('required')) {
-              <mat-error> Este campo es <strong>requerido</strong> </mat-error>
-              }
-            </mat-form-field>
-            <mat-checkbox
-              [name]="field[1].field"
-              [checked]="field[1].value"
-              [aria-label]="field[1].field"
-              [formControlName]="field[1].field"
-            >
-              {{ field[1].label }}
-            </mat-checkbox>
-
-            <mat-checkbox
-              [name]="field[2].field"
-              [checked]="field[2].value"
-              [aria-label]="field[2].field"
-              [formControlName]="field[2].field"
-            >
-              {{ field[2].label }}
-            </mat-checkbox>
-          </div>
-          }
+    <mat-divider></mat-divider>
     
-    <button mat-raised-button (click)="agregarCampo()">agregar campo</button>
+    <div class="fields-header">
+      <h3>Columnas de la Tabla</h3>
+      <p class="mat-body-2 text-muted">Añadí los campos y arrastralos para cambiar el orden.</p>
+    </div>
+
+    <!-- Drag and Drop List para Campos -->
+    <div formArrayName="fields" class="fields-list" cdkDropList (cdkDropListDropped)="drop($event)">
+      @for (fieldCtrl of fields.controls; track fieldCtrl; let i = $index) {
+        <div class="field-row" [formGroupName]="i" cdkDrag>
+          <!-- Drag Handle -->
+          <div class="drag-handle" cdkDragHandle>
+            <mat-icon>drag_indicator</mat-icon>
+          </div>
+
+          <!-- Nombre del Campo -->
+          <mat-form-field appearance="outline" class="flex-field">
+            <mat-label>Nombre de Columna</mat-label>
+            <input matInput type="text" formControlName="name" placeholder="Ej: fecha_recepcion"/>
+            @if (fieldCtrl.get('name')?.hasError('required')) {
+              <mat-error>Requerido</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Tipo de Dato -->
+          <mat-form-field appearance="outline" class="flex-field">
+            <mat-label>Tipo de Dato</mat-label>
+            <mat-select formControlName="type">
+              @for (type of dataTypes; track type.value) {
+                <mat-option [value]="type.value">{{ type.viewValue }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Opciones extras -->
+          <div class="field-options">
+            <mat-checkbox formControlName="notNull">Requerido (No Nulo)</mat-checkbox>
+            <mat-form-field appearance="outline" class="default-value">
+               <mat-label>Valor Defecto</mat-label>
+               <input matInput type="text" formControlName="defaultValue" placeholder="Opcional"/>
+            </mat-form-field>
+          </div>
+
+          <!-- Botón Eliminar -->
+          <button mat-icon-button color="warn" type="button" (click)="removeField(i)" [disabled]="fields.length === 1" matTooltip="Eliminar columna">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      }
+    </div>
+
+    <div class="add-btn-container">
+      <button mat-stroked-button color="primary" type="button" (click)="agregarCampo()">
+        <mat-icon>add</mat-icon> Agregar columna
+      </button>
+    </div>
   </form>
 </div>
 <div mat-dialog-actions align="end">
   <button mat-button (click)="dialogClose()">Cancelar</button>
   <button
-    mat-button
-    type="submit"
-    [disabled]="newTable.invalid"
+    mat-raised-button
+    color="primary"
     (click)="onSubmit()"
+    [disabled]="newTableForm.invalid"
   >
-    Crear nueva tabla
+    {{ data.isEdit ? 'Actualizar tabla' : 'Crear nueva tabla' }}
   </button>
 </div>

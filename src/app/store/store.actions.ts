@@ -1,7 +1,7 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { ConfigData } from '../interfaces/configData.interfaces';
 import { NewRecord, DeleteRecord } from '../interfaces/registros.interfaces';
-import { Tablas, NuevaTabla } from '../interfaces/tablas.interfaces';
+import { Tablas, NuevaTabla, RestructureTable } from '../interfaces/tablas.interfaces';
 
 export const StoreActions = createActionGroup({
   source: 'Store',
@@ -36,5 +36,8 @@ export const StoreActions = createActionGroup({
     'Load Delete Record': props<{ deleteRecord: DeleteRecord }>(),
     'Load Delete Record Success': props<{ message: string }>(),
     'Load Delete Record Failure': props<{ error: unknown }>(),
+    'Load Restructure Table': props<{ info: RestructureTable }>(),
+    'Load Restructure Table Success': props<{ message: string }>(),
+    'Load Restructure Table Failure': props<{ error: unknown }>(),
   }
 });

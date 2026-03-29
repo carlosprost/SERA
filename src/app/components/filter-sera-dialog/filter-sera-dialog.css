@@ -1,0 +1,51 @@
+.config-dialog {
+  min-width: 500px;
+  max-width: 800px;
+  
+  .rules-container {
+    max-height: 50vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px;
+  }
+
+  .rule-row {
+    background: #2b3035;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    .rule-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .rule-body {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+
+      mat-form-field {
+        flex: 1;
+        min-width: 150px;
+      }
+    }
+  }
+
+  .add-rule-btn {
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+}
+
+::ng-deep .rule-body mat-form-field .mdc-text-field--outlined {
+  margin-bottom: 0px;
+}
+::ng-deep .rule-body mat-form-field .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}

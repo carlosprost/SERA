@@ -3,38 +3,35 @@ import { MaterialModule } from "../../shared/material.module";
 import {
   FormBuilder,
   FormGroup,
+  FormArray,
   ReactiveFormsModule,
   Validators,
 } from "@angular/forms";
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { Store } from "@ngrx/store";
-import { FormFields } from "../../interfaces/form.interfaces";
 import { NuevaTabla } from "../../interfaces/tablas.interfaces";
 import { StoreActions } from "../../store/store.actions";
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: "app-form-new-table",
   standalone: true,
-  imports: [MaterialModule, ReactiveFormsModule],
+  imports: [MaterialModule, ReactiveFormsModule, CommonModule, DragDropModule],
   templateUrl: "./form-new-table.component.html",
   styleUrl: "./form-new-table.component.scss",
 })
 export class FormNewTableComponent {
-  newTable!: FormGroup;
-  TableNameField: FormFields = {
-    field: "tableName",
-    label: "Nombre de la tabla",
-    type: "text",
-    value: "",
-  };
-  formFields: FormFields[][] = [
-    [
-      { field: "field1", label: "campo", type: "text", value: "" },
-      { field: "checkboxNull1", label: "Vacío", type: "checkbox", value: "" },
-      { field: "checkboxDate1", label: "Fecha", type: "checkbox", value: "" },
-    ],
+  newTableForm: FormGroup;
+  
+  dataTypes = [
+    { value: 'VARCHAR(255)', viewValue: 'Texto Corto' },
+    { value: 'TEXT', viewValue: 'Texto Largo / Párrafo' },
+    { value: 'INTEGER', viewValue: 'Número Entero' },
+    { value: 'REAL', viewValue: 'Número Decimal' },
+    { value: 'TIMESTAMP', viewValue: 'Fecha y Hora' },
+    { value: 'BOOLEAN', viewValue: 'Booleano (Sí/No)' }
   ];
-  formControlFields: { [key: string]: any } = {};
 
   constructor(
     private store: Store,
@@ -42,59 +39,59 @@ export class FormNewTableComponent {
     @Optional() public dialogRef: MatDialogRef<FormNewTableComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    this.crearCampos();
-  }
-
-  crearCampos() {
-    this.formControlFields[this.TableNameField.field] = [
-      this.TableNameField.value,
-      [Validators.required],
-    ];
-    this.formFields.forEach((fields) => {
-      fields.forEach((field) => {
-        this.crearCampo(field);
-      });
+    this.newTableForm = this.fb.group({
+      tableName: [this.data?.tableName || "", Validators.required],
+      fields: this.fb.array([])
     });
-    this.newTable = this.fb.group(this.formControlFields);
+
+    if (this.data?.isEdit && this.data?.fields) {
+      // Filtramos la llave primaria (ID) ya que el backend la agrega automáticamente
+      this.data.fields
+        .filter((f: any) => f.Key !== 'PRI')
+        .forEach((f: any) => {
+          this.fields.push(this.createFieldGroup(f));
+        });
+    } else {
+      this.fields.push(this.createFieldGroup());
+    }
   }
 
-  crearCampo(field: FormFields) {
-    this.formControlFields[field.field] = [field.value];
+  get fields(): FormArray {
+    return this.newTableForm.get('fields') as FormArray;
+  }
+
+  createFieldGroup(fieldData?: any): FormGroup {
+    return this.fb.group({
+      name: [fieldData?.Field || "", Validators.required],
+      type: [fieldData?.Type || "VARCHAR(255)", Validators.required],
+      notNull: [fieldData?.Null === 'NO'],
+      defaultValue: [fieldData?.Default || ""],
+      oldName: [fieldData?.Field || null] // Para rastrear el mapeo en reestructuración
+    });
   }
 
   agregarCampo() {
-    let campo = {
-      field: `field${this.formFields.length + 1}`,
-      label: `campo${this.formFields.length + 1}`,
-      type: "text",
-      value: "",
-    };
+    this.fields.push(this.createFieldGroup());
+  }
 
-    let checkbox1 = {
-      field: `checkboxNull${this.formFields.length + 1}`,
-      label: "Vacío",
-      type: "checkbox",
-      value: "",
-    };
+  removeField(index: number) {
+    if (this.fields.length > 1) {
+      this.fields.removeAt(index);
+    }
+  }
 
-    let checkbox2 = {
-      field: `checkboxDate${this.formFields.length + 1}`,
-      label: "Fecha",
-      type: "checkbox",
-      value: "",
-    };
+  drop(event: CdkDragDrop<any[]>) {
+    // Reordenar los elementos en el FormArray
+    const dir = event.currentIndex > event.previousIndex ? 1 : -1;
+    const from = event.previousIndex;
+    const to = event.currentIndex;
 
-    this.TableNameField["value"] =
-      this.newTable.value[this.TableNameField.field];
-    this.formFields.forEach((fields) => {
-      fields.forEach((field) => {
-        field["value"] = this.newTable.value[field.field];
-      });
-    });
-
-    this.formFields.push([campo, checkbox1, checkbox2]);
-
-    this.crearCampos();
+    const temp = this.fields.at(from);
+    for (let i = from; i * dir < to * dir; i = i + dir) {
+      const current = this.fields.at(i + dir);
+      this.fields.setControl(i, current);
+    }
+    this.fields.setControl(to, temp);
   }
 
   dialogClose() {
@@ -102,38 +99,58 @@ export class FormNewTableComponent {
   }
 
   onSubmit() {
-    const nombreTabla = this.newTable.value[this.TableNameField.field]
-      .split(" ")
-      .join("_")
-      .toLowerCase();
+    if (this.newTableForm.invalid) return;
+
+    const formVal = this.newTableForm.value;
+    const nombreTabla = formVal.tableName.trim().split(" ").join("_").toLowerCase();
+    
     let cuerpoSQL = "";
+    
+    // El id se genera automáticamente en el backend (id_{nombre_tabla} INTEGER PRIMARY KEY AUTOINCREMENT)
+    const fieldsList = formVal.fields;
+    const mapeo: any[] = [];
 
-    console.log(this.newTable.value);
+    fieldsList.forEach((field: any, index: number) => {
+      let fName = field.name.trim().split(" ").join("_").toLowerCase();
+      let fType = field.type;
+      let fNull = field.notNull ? "NOT NULL" : "";
+      
+      let fDefault = "";
+      if (field.defaultValue && field.defaultValue.trim() !== '') {
+          if (fType.includes('TEXT') || fType.includes('VARCHAR') || fType.includes('TIMESTAMP')) {
+             fDefault = `DEFAULT '${field.defaultValue.trim()}'`;
+          } else {
+             fDefault = `DEFAULT ${field.defaultValue.trim()}`;
+          }
+      }
 
-    this.formFields.forEach((fields, index) => {
-      let campo = this.newTable.value[fields[0].field]
-        .split(" ")
-        .join("_")
-        .toLowerCase();
-      let nulo = this.newTable.value[fields[1].field] ? "NULL" : "NOT NULL";
-      let fecha = this.newTable.value[fields[2].field]
-        ? "TIMESTAMP"
-        : "VARCHAR(255)";
+      // Concatenar omitiendo espacios extras
+      const sqlParts = [fName, fType, fNull, fDefault].filter(p => p.trim() !== "").join(" ");
+      cuerpoSQL += sqlParts + (index === fieldsList.length - 1 ? "" : ", ");
 
-      if (index == this.formFields.length - 1) {
-        cuerpoSQL += `${campo} ${fecha} ${nulo}`;
-      } else {
-        cuerpoSQL += `${campo} ${fecha} ${nulo}, `;
+      // Si tiene oldName y está en modo edición, lo agregamos al mapeo para la migración
+      if (this.data?.isEdit && field.oldName) {
+        mapeo.push({ old_name: field.oldName, new_name: fName });
       }
     });
 
-    let nuevaTabla: NuevaTabla = {
-      nombre: nombreTabla,
-      campos: cuerpoSQL,
-    };
-
-    this.store.dispatch(StoreActions.loadNewTable({ tabla: nuevaTabla }));
-
+    if (this.data?.isEdit) {
+      this.store.dispatch(StoreActions.loadRestructureTable({
+         info: {
+           nombre_viejo: this.data.tableName,
+           nombre_nuevo: nombreTabla,
+           campos_schema: cuerpoSQL,
+           mapeo: mapeo
+         }
+      }));
+    } else {
+      let nuevaTabla: NuevaTabla = {
+        nombre: nombreTabla,
+        campos: cuerpoSQL,
+      };
+      this.store.dispatch(StoreActions.loadNewTable({ tabla: nuevaTabla }));
+    }
+    
     this.dialogRef.close({ reload: true });
   }
 }

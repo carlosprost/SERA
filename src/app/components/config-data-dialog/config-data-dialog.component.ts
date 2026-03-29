@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MaterialModule } from '../../shared/material.module';
 import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogActions, MatDialogClose, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { ConfigData, UserConfig } from '../../interfaces/configData.interfaces';
@@ -14,7 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 @Component({
   selector: 'app-config-data-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, MatFormFieldModule, MatButtonModule, MatDialogActions, MatDialogClose, MatDialogTitle, MatDialogContent, MatInputModule],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatButtonModule, MatDialogActions, MatDialogTitle, MatDialogContent, MatInputModule],
   templateUrl: './config-data-dialog.component.html',
   styleUrl: './config-data-dialog.component.scss'
 })
@@ -34,10 +34,15 @@ export class ConfigDataDialogComponent {
     this.configData = this.store.select(selectConfigData);
 
     this.configData.subscribe((data) => {
-      this.nombreApp = data.nombreApp;
-      this.user = data.user;
+      if (data) {
+        this.nombreApp = data.nombreApp || '';
+        this.user = data.user || { nombre: '', grado: '', institucion: '', dependencia: '', oficina: '', membrete: '' };
+      } else {
+        this.nombreApp = '';
+        this.user = { nombre: '', grado: '', institucion: '', dependencia: '', oficina: '', membrete: '' };
+      }
+      this.createForm();
     });
-    this.createForm();
   }
 
   createForm() {
@@ -46,12 +51,12 @@ export class ConfigDataDialogComponent {
 
   createFields() {
     this.formConfigurations = this.fb.group({
-      nombre: this.user.nombre,
-      grado: this.user.grado,
-      institucion: this.user.institucion,
-      dependencia: this.user.dependencia,
-      oficina: this.user.oficina,
-      membrete: this.user.membrete,
+      nombre: [this.user?.nombre || ''],
+      grado: [this.user?.grado || ''],
+      institucion: [this.user?.institucion || ''],
+      dependencia: [this.user?.dependencia || ''],
+      oficina: [this.user?.oficina || ''],
+      membrete: [this.user?.membrete || ''],
     });
   }
 

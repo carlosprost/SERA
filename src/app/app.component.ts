@@ -1,66 +1,86 @@
-import { Component, ElementRef, ViewChild } from "@angular/core";
+import { Component, ElementRef, ViewChild, ViewChildren, QueryList } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { RouterOutlet } from "@angular/router";
-import { invoke } from "@tauri-apps/api/tauri";
 import { SelectionModel } from "@angular/cdk/collections";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { MatTabChangeEvent, MatTabsModule } from "@angular/material/tabs";
+import { invoke } from "@tauri-apps/api/core";
 import { Store } from "@ngrx/store";
 import { Observable } from "rxjs";
 import { ConfigData } from "./interfaces/configData.interfaces";
 import { Tablas } from "./interfaces/tablas.interfaces";
 import { StoreActions } from "./store/store.actions";
-import { selectConfigData, selectTablas } from "./store/store.selectors";
+import { selectCampos, selectConfigData, selectTablas } from "./store/store.selectors";
 import { DialogDeleteComponent } from "./components/dialog-delete/dialog-delete.component";
 import { FormNewTableComponent } from "./components/form-new-table/form-new-table.component";
+import { ConfigDataDialogComponent } from "./components/config-data-dialog/config-data-dialog.component";
 import { FormularioRegistroComponent } from "./components/formulario-registro/formulario-registro.component";
 import { TableComponent } from "./components/table/table.component";
-import { ToolbarComponent } from "./components/toolbar/toolbar.component";
 import { MatDrawer, MatSidenavModule } from "@angular/material/sidenav";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { MatMenuModule } from "@angular/material/menu";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
+import { MatDividerModule } from "@angular/material/divider";
 import { ReciboComponent } from "./components/recibo/recibo.component";
 import { MatFormFieldModule } from "@angular/material/form-field";
+import { PdfService } from "./services/pdf.service";
+import { open, save } from "@tauri-apps/plugin-dialog";
+import { DialogRenameComponent } from "./components/dialog-rename/dialog-rename.component";
 
+/**
+ * Componente raíz de SERA.
+ * Orquesta la navegación por tabs, la gestión de tablas del sidebar
+ * y la apertura de diálogos para crear/eliminar tablas y registros.
+ */
 @Component({
   selector: "app-root",
   standalone: true,
   imports: [
     CommonModule,
-    RouterOutlet,
     MatSidenavModule,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
     MatMenuModule,
+    MatDividerModule,
     MatTabsModule,
     MatFormFieldModule,
     TableComponent,
-    ToolbarComponent,
   ],
   templateUrl: "./app.component.html",
   styleUrl: "./app.component.scss",
 })
 export class AppComponent {
+  /** Observable con los datos de configuración del usuario. */
   configData: Observable<ConfigData>;
+  /** Observable con el listado de tablas disponibles. */
   tablas: Observable<Tablas[]>;
 
+  /** Tabs de tablas actualmente abiertas. */
   tabs: string[] = [];
+  /** Índice del tab seleccionado. */
   selected = new FormControl(0);
+  /** Elementos seleccionados en la tabla activa. */
   elementos: SelectionModel<any> = new SelectionModel<any>(true, []);
 
+  /** Referencia dinámica a todas las tablas abiertas en los tabs. */
+  @ViewChildren(TableComponent) tablasCargadas!: QueryList<TableComponent>;
+
+  /** Devuelve la instancia de la tabla que está actualmente en foco. */
+  get activeTable(): TableComponent | undefined {
+    return this.tablasCargadas ? this.tablasCargadas.toArray()[this.selected.value ?? 0] : undefined;
+  }
+
+  /** Contenedor invisible para renderizado del PDF. */
   @ViewChild("pdf") elementPDF!: ElementRef<HTMLDivElement>;
 
   constructor(
     private store: Store,
     public dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private pdfService: PdfService
   ) {
     this.store.dispatch(StoreActions.loadStores());
     this.store.dispatch(StoreActions.loadListadoTablas());
@@ -68,6 +88,7 @@ export class AppComponent {
     this.tablas = this.store.select(selectTablas);
   }
 
+  /** Carga los campos y contenido al cambiar de tab. */
   selectTab(event: MatTabChangeEvent) {
     this.store.dispatch(
       StoreActions.loadCampos({ tabla: this.tabs[event.index] })
@@ -77,90 +98,94 @@ export class AppComponent {
     );
   }
 
-  addTab(tabName: string, drawer: MatDrawer) {
+  /** Agrega una tabla al panel de tabs si no estaba abierta. */
+  addTab(tabName: string) {
     if (!this.tabs.includes(tabName)) {
-      this.tabs.push(tabName);
+      this.tabs = [...this.tabs, tabName];
       this.selected.setValue(this.tabs.length - 1);
-      this.store.dispatch(
-        StoreActions.loadCampos({
-          tabla: this.tabs[this.selected.value ? this.selected.value : 0],
-        })
-      );
-      this.store.dispatch(
-        StoreActions.loadContenido({
-          tabla: this.tabs[this.selected.value ? this.selected.value : 0],
-        })
-      );
-      drawer.toggle();
+      const tablaActual = this.tabs[this.selected.value ?? 0];
+      this.store.dispatch(StoreActions.loadCampos({ tabla: tablaActual }));
+      this.store.dispatch(StoreActions.loadContenido({ tabla: tablaActual }));
     }
   }
 
+  /** Cierra un tab y carga el tab adyacente si corresponde. */
   removeTab(index: number) {
-    this.tabs.splice(index, 1);
-    this.selected.setValue(index);
-    if (index >= 1) {
-      this.store.dispatch(
-        StoreActions.loadCampos({ tabla: this.tabs[index - 1] })
-      );
-      this.store.dispatch(
-        StoreActions.loadContenido({ tabla: this.tabs[index - 1] })
-      );
-    } else if (index === 0 && this.tabs.length > 0) {
-      this.store.dispatch(StoreActions.loadCampos({ tabla: this.tabs[index] }));
-      this.store.dispatch(
-        StoreActions.loadContenido({ tabla: this.tabs[index] })
-      );
+    this.tabs = this.tabs.filter((_, i) => i !== index);
+    const newIndex = Math.min(index, this.tabs.length - 1);
+    this.selected.setValue(newIndex);
+    if (this.tabs.length > 0) {
+      this.store.dispatch(StoreActions.loadCampos({ tabla: this.tabs[newIndex] }));
+      this.store.dispatch(StoreActions.loadContenido({ tabla: this.tabs[newIndex] }));
     }
   }
 
+  /** Recibe los elementos seleccionados emitidos por TableComponent. */
   elementosSeleccionados(elementos: SelectionModel<any>) {
     this.elementos = elementos;
   }
 
-  mostrarElementosSeleccionados() {
-    //this.elementos.clear();
+  /** Abre el dialog de creación de recibo PDF recibiendo dinámicamente el dataset filtrado. */
+  openDialogRecibo(datos: any[] = []) {
+    // dataSource viene directamente de la tabla activa (selección o filtro)
+    const dataSource = datos;
     
-    
-  }
+    // Extraer campos disponibles (excluyendo IDs) para el selector
+    const camposDisponibles = dataSource.length > 0 
+      ? Object.keys(dataSource[0]).filter(key => !key.toLowerCase().includes('id'))
+      : [];
 
-  openDialogRecibo(){
     const dialogRef = this.dialog.open(ReciboComponent, {
-      width: "500px",
-      data: { message: "Crear nuevo Recibo" },
+      width: "650px",
+      data: { 
+        message: "Configurar Reporte",
+        campos: camposDisponibles
+      },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
-        new PDF(this.elementPDF.nativeElement, result.titulo, result.descripcion, this.elementos.selected);
-        this.snackBar.open("Recibo creado correctamente", "", {
-          duration: 3000,
-        });
+        await this.pdfService.generarPdf(
+          this.elementPDF.nativeElement,
+          result,
+          datos.length > 0 ? datos : this.elementos.selected
+        );
+        this.snackBar.open("Documento PDF generado correctamente", "", { duration: 3000 });
       }
     });
   }
 
+  /** Abre el dialog de configuración global del sistema (datos del usuario, institución, membrete). */
+  openDialogAjustes() {
+    this.dialog.open(ConfigDataDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      data: {},
+    });
+  }
+
+  /** Abre el dialog para crear una nueva tabla. */
   openDialogNuevaTabla() {
     const dialogRef = this.dialog.open(FormNewTableComponent, {
-      width: "500px",
+      width: "800px",
+      maxWidth: "90vw",
+      maxHeight: "90vh",
       data: { message: "Crear nueva Tabla" },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.snackBar.open("Tabla creada correctamente", "", {
-          duration: 3000,
-        });
-        this.store.dispatch(StoreActions.loadListadoTablas());
-      }
+      // El resultado ahora lo informan los Effects para mayor precisión
     });
   }
 
+  /** Abre el dialog para crear un nuevo registro en la tabla activa. */
   openDialogNuevoRegistro() {
+    const tablaActual = this.tabs[this.selected.value ?? 0];
     const dialogRef = this.dialog.open(FormularioRegistroComponent, {
       width: "500px",
       data: {
         message: "Crear nuevo Registro",
-        tabla: this.tabs[this.selected.value ? this.selected.value : 0],
+        tabla: tablaActual,
         upload: false,
       },
     });
@@ -168,148 +193,141 @@ export class AppComponent {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.snackBar.open("Nuevo Registro Creado", "", { duration: 3000 });
-        this.store.dispatch(
-          StoreActions.loadContenido({
-            tabla: this.tabs[this.selected.value ? this.selected.value : 0],
-          })
-        );
       }
     });
   }
 
+  /** Abre el dialog de confirmación para eliminar una tabla. */
   eliminarTabla(nombre_tabla: string) {
     const dialogRef = this.dialog.open(DialogDeleteComponent, {
       width: "250px",
       data: {
         title: "¿Seguro que desea eliminar la tabla?",
-        message: "Perdera todos los datos de los registros.",
+        message: "Perderá todos los datos de los registros.",
         tabla: nombre_tabla,
       },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.store.dispatch(StoreActions.loadListadoTablas());
+      // El effect de Redux maneja la recarga automáticamente al finalizar
+    });
+  }
+
+  /** Abre el dialog para editar la estructura de una tabla específica. */
+  abrirDialogoEdicionTabla(tableName?: string) {
+    const tablaActual = tableName || this.tabs[this.selected.value ?? 0];
+    if (!tablaActual) return;
+
+    // Si la tabla es la activa, usamos los campos del Store
+    if (tablaActual === this.tabs[this.selected.value ?? 0]) {
+      this.store.select(selectCampos).subscribe(fields => {
+        this.mostrarDialogEditor(tablaActual, fields);
+      }).unsubscribe();
+    } else {
+      // Si es una tabla del menú que no está en el tab activo, pedimos los campos a Rust
+      invoke<any[]>('get_campos', { tabla: tablaActual }).then(fields => {
+        this.mostrarDialogEditor(tablaActual, fields);
+      }).catch(err => {
+        this.snackBar.open("Error al cargar campos de la tabla", "Cerrar", { duration: 3000 });
+      });
+    }
+  }
+
+  /** Lógica común para abrir el modal del editor con los campos cargados. */
+  private mostrarDialogEditor(nombreTabla: string, fields: any[]) {
+    const dialogRef = this.dialog.open(FormNewTableComponent, {
+      width: "900px",
+      maxWidth: "95vw",
+      maxHeight: "95vh",
+      data: {
+        message: `Editar estructura de: ${nombreTabla}`,
+        isEdit: true,
+        tableName: nombreTabla,
+        fields: fields
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+       // El resultado ahora lo informan los Effects
+    });
+  }
+
+  // ─── EXPORTACIÓN E IMPORTACIÓN (.srx) ───────────────────────────────────────
+
+  /** Exporta la tabla activa a un archivo .srx encriptado. */
+  async exportarTabla() {
+    if (!this.activeTable) return;
+    const nombreTabla = this.activeTable.tabla;
+
+    // 1. Selector de ruta de guardado
+    const path = await save({
+      title: 'Exportar Tabla SERA',
+      filters: [{ name: 'SERA Data Package', extensions: ['srx'] }],
+      defaultPath: `${nombreTabla}.srx`
+    });
+
+    if (!path) return;
+
+    try {
+      await invoke('exportar_tabla', { nombreTabla, path });
+      this.snackBar.open(`Tabla "${nombreTabla}" exportada correctamente`, "Cerrar", { duration: 3000 });
+    } catch (error) {
+      console.error("[SERA] Error al exportar:", error);
+      this.snackBar.open("Error al exportar tabla: " + error, "Cerrar", { duration: 5000 });
+    }
+  }
+
+  /** Importa una tabla desde un archivo .srx, manejando conflictos de nombre. */
+  async importarTabla() {
+    // 1. Seleccionar archivo
+    const path = await open({
+      title: 'Importar Tabla SERA (.srx)',
+      filters: [{ name: 'SERA Data Package', extensions: ['srx'] }],
+      multiple: false
+    });
+
+    if (!path || Array.isArray(path)) return;
+
+    try {
+      // 2. Intentar importar directamente
+      const nombreImportado = await invoke<string>('importar_tabla', { path, nuevoNombre: null });
+      this.confirmarImportacion(nombreImportado);
+    } catch (error: any) {
+      // 3. Manejar conflicto si la tabla ya existe
+      if (error.toString().includes("already exists") || error.toString().toLowerCase().includes("ya existe")) {
+        this.resolverConflictoImportacion(path);
+      } else {
+        this.snackBar.open("Error al importar: " + error, "Cerrar", { duration: 5000 });
+      }
+    }
+  }
+
+  /** Abre el diálogo para renombrar la tabla en conflicto. */
+  private async resolverConflictoImportacion(path: string) {
+    // Extraer por defecto el nombre del archivo sin extensión para sugerir
+    const fileName = path.split(/[\\/]/).pop()?.replace('.srx', '') || 'nueva_tabla';
+    
+    const dialogRef = this.dialog.open(DialogRenameComponent, {
+      width: '400px',
+      data: { nombreOriginal: fileName }
+    });
+
+    dialogRef.afterClosed().subscribe(async (nuevoNombre) => {
+      if (nuevoNombre) {
+        try {
+          const res = await invoke<string>('importar_tabla', { path, nuevoNombre });
+          this.confirmarImportacion(res);
+        } catch (e) {
+          this.snackBar.open("Error al reintentar importación: " + e, "Cerrar", { duration: 5000 });
+        }
       }
     });
   }
-}
 
-class PDF {
-  titulo: string;
-  descripcion: string;
-  contenido: any;
-  contenedor: HTMLDivElement;
-
-  constructor(contendedor: HTMLDivElement, titulo: string, descripcion:string, contenido: any) {
-    this.contenedor = contendedor;
-    this.titulo = titulo;
-    this.descripcion = descripcion;
-    this.contenido = contenido;
-
-    this.crearTabla();
-  }
-
-  crearTabla() {
-    this.contenedor.innerHTML = "";
-
-    const titulo = this.crearElemento('h2', 'titulo', `${this.titulo}`);
-    titulo.style.textAlign = 'center';
-    titulo.style.fontSize = '24px';
-    titulo.style.fontWeight = 'bold';
-    titulo.style.color = 'black';
-    this.contenedor.appendChild(titulo);
-
-    const descripcion = this.crearElemento('p', 'descripcion', `${this.descripcion}`);
-    descripcion.style.width = '100%';
-    descripcion.style.textAlign = 'justify';
-    descripcion.style.fontSize = '12px';
-    this.contenedor.appendChild(descripcion);
-
-    const tabla = this.crearElemento('table');
-    tabla.style.width = '100%';
-    tabla.style.borderCollapse = 'collapse';
-    tabla.style.color = 'black';
-    const thead = this.crearElemento('thead');
-    const tbody = this.crearElemento('tbody');
-    const trHead = this.crearElemento('tr');
-    
-    const encabezado = this.camposTabla();
-
-    thead.appendChild(trHead);
-    encabezado.forEach((campo) => {
-      const th = this.crearElemento('th', '', campo);
-      th.style.fontSize = '12px';
-      trHead.appendChild(th);
-    });
-
-    this.contenido.forEach((elemento: any) => {
-      const tr = this.crearElemento('tr');
-      Object.keys(elemento).forEach((key: any) => {
-        if (!key.includes('id')) {
-          const td = this.crearElemento('td', '', elemento[key]);
-          td.style.fontSize = '12px';
-          tr.appendChild(td);
-        }
-      });
-      tbody.appendChild(tr);
-    });
-
-    tabla.appendChild(thead);
-    tabla.appendChild(tbody);
-    this.contenedor.appendChild(tabla);
-
-    
-
-    this.crearPDF();
-  }
-
-  camposTabla(): string[] {
-    return Object.keys(this.contenido[0]).filter(key => !key.includes('id'));
-  }
-
-  crearElemento(tag: string, clase: string = '', contenido: string = ''): HTMLElement {
-    const elemento = document.createElement(tag);
-    if(tag === 'th' || tag === 'td') {
-      elemento.style.border = '1px solid black';
-      elemento.style.padding = '8px';
-    }
-    if (tag === 'th') {
-      elemento.style.fontWeight = 'bold';
-      elemento.style.textAlign = 'left';
-    }
-    if (clase) elemento.classList.add(clase);
-    if (contenido) elemento.innerHTML = contenido;
-    return elemento;
-  }
-
-  crearPDF() {
-    html2canvas(this.contenedor, {
-      scale: 2,
-    })
-      .then((canvas: HTMLCanvasElement) => {
-        const imgWidth = 210; // Ancho del PDF en mm
-        const pageHeight = 297; // Altura del PDF en mm
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        const pdf = new jsPDF("p", "mm", "a4");
-        let position = 0;
-
-        pdf.addImage(canvas, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(canvas, "PNG", 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-
-        pdf.save("Recibo.pdf");
-      })
-      .catch((error) => {
-        console.error("Error generando el canvas:", error);
-      });
-    
+  /** Finaliza el proceso de importación y actualiza la UI. */
+  private confirmarImportacion(nombre: string) {
+    this.snackBar.open(`Tabla "${nombre}" importada y lista para usar`, "¡Éxito!", { duration: 4000 });
+    // Forzar recarga del listado de tablas en el Store
+    this.store.dispatch(StoreActions.loadListadoTablas());
   }
 }

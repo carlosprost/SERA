@@ -37,6 +37,7 @@ import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 // Material Data tables
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
@@ -80,6 +81,7 @@ import { MatTableModule } from '@angular/material/table';
     MatDialogModule,
     MatSnackBarModule,
     MatTooltipModule,
+    DragDropModule,
     MatPaginatorModule,
     MatSortModule,
     MatTableModule

@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "sera-default",
+  "description": "Permisos predeterminados de SERA para acceso a comandos del backend y eventos del sistema",
+  "windows": ["main"],
+    "permissions": [
+      "core:default",
+      "shell:allow-open",
+      "dialog:allow-save",
+      "fs:allow-write-file"
+    ]
+}

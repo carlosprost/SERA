@@ -1,95 +1,195 @@
 <section class="app">
-  <app-toolbar [drawer]="drawer"></app-toolbar>
-  <mat-drawer-container class="sidenav-container">
-    <mat-drawer #drawer mode="side" class="drawer-section" opened>
-      <div class="nueva-tabla">
-        <button mat-raised-button (click)="openDialogNuevaTabla()">
-          Nueva Tabla
-        </button>
-      </div>
-      @for (tabla of tablas | async; track tabla) {
-        <div>
-          <div class="btn_principal">
-            <button
-              mat-raised-button
-              class="example-add-tab-button"
-              (click)="addTab(tabla.nombre_tabla, drawer)"
-              color="accent"
-              >
-              {{ tabla.nombre_tabla.split("_").join(" ") | uppercase }}
+  
+  <!-- THE GLOBAL DESKTOP RIBBON -->
+  <div class="ribbon-container global-ribbon">
+    <div class="ribbon-tab-content">
+      
+      <!-- GRUPO SISTEMA -->
+      <div class="ribbon-group">
+        <div class="ribbon-actions">
+          <button class="ribbon-btn file-btn" [matMenuTriggerFor]="fileMenu" matTooltip="Administrador de Tablas y Base de Datos">
+            <mat-icon>folder</mat-icon>
+            <span>Archivo</span>
+          </button>
+          
+          <mat-menu #fileMenu="matMenu">
+            <button mat-menu-item (click)="openDialogNuevaTabla()">
+              <mat-icon color="primary">add_box</mat-icon>
+              <span>Nueva Tabla Core</span>
             </button>
-          </div>
-          <div class="btn_secundario">
-            <button
-              mat-icon-button
-              [matMenuTriggerFor]="menu"
-              aria-label="Example icon-button with a menu"
-              >
-              <mat-icon>more_vert</mat-icon>
-            </button>
-            <mat-menu #menu="matMenu">
-              <button
-                mat-menu-item
-                [matTooltip]="'Elimina la tabla seleccionada'"
-                (click)="eliminarTabla(tabla.nombre_tabla)"
-                >
-                <mat-icon>close</mat-icon>
-                <span>Eliminar tabla {{tabla.nombre_tabla.split('_').join(' ')}}</span>
+            <mat-divider></mat-divider>
+            <div class="menu-tablas-label">Tus Tablas</div>
+            @for (tabla of tablas | async; track tabla) {
+              <button mat-menu-item [matMenuTriggerFor]="tablaSubMenu">
+                <mat-icon>table_chart</mat-icon>
+                <span>{{ tabla.nombre_tabla.split('_').join(' ') | titlecase }}</span>
               </button>
-            </mat-menu>
-          </div>
+              <mat-menu #tablaSubMenu="matMenu">
+                <button mat-menu-item (click)="addTab(tabla.nombre_tabla)">
+                  <mat-icon color="accent">open_in_new</mat-icon> Abrir Tabla
+                </button>
+                <button mat-menu-item (click)="abrirDialogoEdicionTabla(tabla.nombre_tabla)">
+                  <mat-icon color="primary">settings_suggest</mat-icon> Configurar Estructura
+                </button>
+                <button mat-menu-item (click)="eliminarTabla(tabla.nombre_tabla)">
+                  <mat-icon color="warn">delete_forever</mat-icon> Eliminar de DB
+                </button>
+              </mat-menu>
+            }
+          </mat-menu>
+
+          <button class="ribbon-btn" (click)="importarTabla()" matTooltip="Importar tabla desde archivo .srx externo">
+            <mat-icon color="accent">publish</mat-icon>
+            <span>Importar</span>
+          </button>
+
+          <button class="ribbon-btn" (click)="openDialogAjustes()" matTooltip="Configuración del Sistema">
+            <mat-icon>settings</mat-icon>
+            <span>Ajustes</span>
+          </button>
         </div>
+        <span class="ribbon-group-label">Sistema</span>
+      </div>
+
+      <!-- GRUPOS CONTEXTUALES (Ribbon Inteligente) -->
+      @if (activeTable) {
+        
+        <!-- GRUPO EDICIÓN -->
+        <div class="ribbon-group">
+          <div class="ribbon-actions">
+            <button class="ribbon-btn add-btn" (click)="openDialogNuevoRegistro()" matTooltip="Cargar un nuevo registro en esta tabla">
+              <mat-icon>post_add</mat-icon>
+              <span>Nuevo Registro</span>
+            </button>
+          </div>
+          <span class="ribbon-group-label">Edición</span>
+        </div>
+
+        <!-- GRUPO DISEÑO DE VISTA -->
+        <div class="ribbon-group">
+          <div class="ribbon-actions">
+            <button class="ribbon-btn" [matMenuTriggerFor]="columnsMenu" matTooltip="Mostrar u ocultar columnas">
+              <mat-icon>view_column</mat-icon>
+              <span>Columnas</span>
+            </button>
+            <mat-menu #columnsMenu="matMenu">
+              @for (col of activeTable.allColumns; track col) {
+                @if (col !== activeTable.campoSeleccion && col !== 'actions') {
+                  <button mat-menu-item (click)="activeTable.toggleColumnVisibility(col); $event.stopPropagation()">
+                    <mat-icon>{{ activeTable.hiddenColumns.has(col) ? 'check_box_outline_blank' : 'check_box' }}</mat-icon>
+                    {{ col.split('_').join(' ') | titlecase }}
+                  </button>
+                }
+              }
+            </mat-menu>
+
+            <button class="ribbon-btn" (click)="activeTable.openConfigDialog()" matTooltip="Reglas visuales y colores">
+              <mat-icon>tune</mat-icon>
+              <span>Reglas</span>
+            </button>
+          </div>
+          <span class="ribbon-group-label">Diseño de Vista</span>
+        </div>
+
+        <!-- GRUPO HERRAMIENTAS -->
+        <div class="ribbon-group">
+          <div class="ribbon-actions">
+            <button class="ribbon-btn" (click)="activeTable.openSearchPalette()" matTooltip="Búsqueda Rápida (Ctrl + F)">
+              <mat-icon>search</mat-icon>
+              <span>Buscar</span>
+            </button>
+
+            <button class="ribbon-btn" [ngClass]="{'active': activeTable.activeFilters.length > 0}" (click)="activeTable.openFilterDialog()" matTooltip="Editor de Filtros Múltiples">
+              <mat-icon>filter_list</mat-icon>
+              <span>Filtros {{ activeTable.activeFilters.length > 0 ? '(' + activeTable.activeFilters.length + ')' : '' }}</span>
+            </button>
+
+            <button class="ribbon-btn" (click)="activeTable.refresh()" matTooltip="Sincronizar con DB">
+              <mat-icon>refresh</mat-icon>
+              <span>Actualizar</span>
+            </button>
+          </div>
+          <span class="ribbon-group-label">Herramientas</span>
+        </div>
+
+        <!-- GRUPO REPORTES -->
+        <div class="ribbon-group">
+          <div class="ribbon-actions">
+            <button class="ribbon-btn pdf-btn" (click)="activeTable.exportListView()" matTooltip="Configurar y generar un reporte PDF personalizado">
+              <mat-icon>picture_as_pdf</mat-icon>
+              <span>Generar Reporte</span>
+            </button>
+          </div>
+          <span class="ribbon-group-label">Reportes</span>
+        </div>
+
+        <!-- GRUPO TRANSFERENCIA -->
+        <div class="ribbon-group">
+          <div class="ribbon-actions">
+            <button class="ribbon-btn" (click)="exportarTabla()" matTooltip="Exportar esta tabla a un archivo .srx encriptado">
+              <mat-icon color="primary">assignment_return</mat-icon>
+              <span>Exportar .srx</span>
+            </button>
+          </div>
+          <span class="ribbon-group-label">Transferencia</span>
+        </div>
+
       }
-    </mat-drawer>
-    <mat-drawer-content class="drawer-content">
+
+    </div>
+  </div>
+
+<div class="main-workspace">
+  <!-- Si no hay pestañas, mostrar logo o pantalla vacía -->
+    @if (tabs.length === 0) {
+      <div class="empty-state">
+        <mat-icon class="huge-icon">dataset</mat-icon>
+        <h2>SERA Smart Workspace</h2>
+        <p>Abre una tabla desde <strong>Archivo</strong> o crea una nueva.</p>
+      </div>
+    }
+
+    <!-- Tabs Container -->
+    @if (tabs.length > 0) {
       <mat-tab-group
+        class="desktop-tab-group"
         [selectedIndex]="selected.value"
         (selectedIndexChange)="selected.setValue($event)"
         (selectedTabChange)="selectTab($event)"
         color="accent"
+        animationDuration="0ms"
         >
         @for (tab of tabs; track tab; let index = $index) {
           <mat-tab>
-            <ng-template mat-tab-label>
-              {{ tab.split("_").join(" ") | uppercase }}
-              <span class="spacer"></span>
-              <button mat-button (click)="removeTab(index)">
-                <mat-icon>close</mat-icon>
-              </button>
+            <ng-template matTabLabel>
+              <div class="custom-tab-label">
+                <span class="tab-title">{{ tab.split("_").join(" ") | uppercase }}</span>
+                <button
+                  mat-icon-button
+                  class="tab-close-btn"
+                  (click)="removeTab(index); $event.stopPropagation()"
+                >
+                  <mat-icon rippleColor="warn">close</mat-icon>
+                </button>
+              </div>
             </ng-template>
-            <div class="action_btns">
-              <button
-                mat-raised-button
-                color="accent"
-                (click)="openDialogNuevoRegistro()"
-                >
-                Nuevo registro
-              </button>
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="openDialogRecibo()"
-                >
-                <mat-icon>picture_as_pdf</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                (click)="mostrarElementosSeleccionados()"
-                >
-                <mat-icon>print</mat-icon>
-              </button>
-            </div>
-            <section class="tabla">
-              <app-table
-                [tabla]="tab"
-                (elementosSeleccionados)="elementosSeleccionados($event)"
-              ></app-table>
-            </section>
+            <ng-template matTabContent>
+              <div class="tab-content-wrapper-fix">
+                <section class="tabla-container-full">
+                  <app-table
+                    [tabla]="tab"
+                    (elementosSeleccionados)="elementosSeleccionados($event)"
+                    (printPdf)="openDialogRecibo($event)"
+                  ></app-table>
+                </section>
+              </div>
+            </ng-template>
           </mat-tab>
+            
         }
       </mat-tab-group>
-    </mat-drawer-content>
-  </mat-drawer-container>
+    }
+  </div>
+
   <div class="pdf" #pdf></div>
-  
 </section>

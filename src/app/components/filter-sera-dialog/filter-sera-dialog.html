@@ -1,0 +1,72 @@
+<h2 mat-dialog-title>Filtros Avanzados</h2>
+<div mat-dialog-content class="config-dialog">
+  <p class="mat-body-1 text-muted">Añade reglas dinámicas para ocultar datos de la tabla que no coincidan.</p>
+  
+  <form [formGroup]="filterForm">
+    <div formArrayName="rules" class="rules-container">
+      @for (ruleCtrl of rules.controls; track ruleCtrl; let i = $index) {
+        <div class="rule-row mat-elevation-z2" [formGroupName]="i">
+          
+          <div class="rule-header">
+            <strong>Filtro #{{ i + 1 }}</strong>
+            <button mat-icon-button color="warn" type="button" (click)="removeRule(i)" matTooltip="Eliminar regla">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+
+          <div class="rule-body">
+            <!-- Campo a Evaluar -->
+            <mat-form-field appearance="outline">
+              <mat-label>Columna a filtrar</mat-label>
+              <mat-select formControlName="field">
+                @for (campo of campos; track campo) {
+                  @if(campo !== 'actions' && !campo.includes('select')) {
+                    <mat-option [value]="campo">{{ campo.split('_').join(' ') | titlecase }}</mat-option>
+                  }
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <!-- Operador Lógico -->
+            <mat-form-field appearance="outline">
+              <mat-label>Condición</mat-label>
+              <mat-select formControlName="operator">
+                @for (op of operators; track op.value) {
+                  <mat-option [value]="op.value">{{ op.viewValue }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <!-- Valor -->
+            <mat-form-field appearance="outline" [hidden]="['is_empty', 'is_not_empty'].includes(ruleCtrl.get('operator')?.value)">
+              <mat-label>Valor objetivo</mat-label>
+              <input matInput formControlName="value" placeholder="Ej: Urgente, 100, etc."/>
+            </mat-form-field>
+
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (rules.length === 0) {
+      <p class="mat-body-2 text-center text-muted" style="margin: 16px 0;">No hay ningún filtro activo.</p>
+    }
+
+    <button mat-stroked-button color="primary" type="button" (click)="addRule()" class="add-rule-btn">
+      <mat-icon>add</mat-icon> Agregar nuevo filtro
+    </button>
+  </form>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button color="warn" (click)="clearFilters()">Limpiar Todo</button>
+  <span style="flex: 1 1 auto;"></span>
+  <button mat-button (click)="dialogClose()">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="filterForm.invalid"
+  >
+    Aplicar Filtros
+  </button>
+</div>

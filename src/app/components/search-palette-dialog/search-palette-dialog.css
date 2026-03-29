@@ -1,0 +1,43 @@
+.palette-container {
+  display: flex;
+  align-items: center;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  padding: 8px 16px;
+  width: 100%;
+  box-sizing: border-box;
+
+  .search-icon {
+    color: #8c8c8c;
+    margin-right: 12px;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    margin-top: 2px;
+  }
+
+  .palette-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #e0e0e0;
+    font-size: 20px;
+    font-family: 'Inter', Roboto, sans-serif;
+    outline: none;
+    height: 48px;
+
+    &::placeholder {
+      color: #5c5c5c;
+      font-weight: 400;
+    }
+  }
+
+  .clear-btn {
+    color: #8c8c8c;
+    &:hover {
+      color: #ffffff;
+    }
+  }
+}

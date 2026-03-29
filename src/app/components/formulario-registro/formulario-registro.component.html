@@ -4,25 +4,33 @@
 
     @for (field of formFields; track field) {
       <div >
-        @if(field.type === 'timestamp'){
-          <mat-form-field>
+        @if(field.type === 'date'){
+          <mat-form-field appearance="outline">
             <mat-label>{{field.label.split('_').join(' ')}}</mat-label>
             <input matInput [matDatepicker]="picker" [formControlName]="field.field">
-            <mat-hint>MM/DD/YYYY</mat-hint>
+            <mat-hint>DD/MM/YYYY</mat-hint>
             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
           </mat-form-field>
-        }@else{
-        <mat-form-field appearance="outline">
-          <mat-label>{{field.label.split('_').join(' ')}}</mat-label>
-          <input matInput [type]="field.type" [formControlName]="field.field">
-          @if (newRegister.controls[field.field].hasError('required')) {
-            <mat-error>
-              Este campo es <strong>requerido</strong>
-            </mat-error>
-          }
-        </mat-form-field>
-      }
+        } @else if (field.type === 'boolean') {
+          <mat-form-field appearance="outline">
+            <mat-label>{{field.label.split('_').join(' ')}}</mat-label>
+            <mat-select [formControlName]="field.field">
+              <mat-option [value]="true">Sí</mat-option>
+              <mat-option [value]="false">No</mat-option>
+            </mat-select>
+          </mat-form-field>
+        } @else {
+          <mat-form-field appearance="outline">
+            <mat-label>{{field.label.split('_').join(' ')}}</mat-label>
+            <input matInput [type]="field.type === 'number' ? 'number' : 'text'" [formControlName]="field.field">
+            @if (newRegister.controls[field.field].hasError('required')) {
+              <mat-error>
+                Este campo es <strong>requerido</strong>
+              </mat-error>
+            }
+          </mat-form-field>
+        }
       </div>
     }
   </form>
