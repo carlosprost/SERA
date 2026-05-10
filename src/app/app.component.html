@@ -48,6 +48,18 @@
             <span>Ajustes</span>
           </button>
 
+          <button
+            class="ribbon-btn"
+            (click)="checkForUpdatesManual()"
+            [disabled]="isCheckingUpdate"
+            matTooltip="Verificar si hay una nueva versión disponible"
+          >
+            <mat-icon [class.spin-icon]="isCheckingUpdate" style="color: #7c83fd;">
+              {{ isCheckingUpdate ? 'sync' : 'system_update_alt' }}
+            </mat-icon>
+            <span>{{ isCheckingUpdate ? 'Verificando...' : 'Actualizaciones' }}</span>
+          </button>
+
           <button class="ribbon-btn" (click)="showAbout()" matTooltip="Información sobre SERA y autoría">
             <mat-icon style="color: #4caf50;">info</mat-icon>
             <span>Acerca de</span>

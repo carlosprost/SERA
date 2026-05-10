@@ -1,6 +1,6 @@
 {
   "productName": "SERA",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "identifier": "ar.com.wolftei.sera",
   "build": {
     "beforeDevCommand": "npm run start",

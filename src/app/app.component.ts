@@ -66,6 +66,9 @@ export class AppComponent implements AfterViewInit, OnInit {
   /** Elementos seleccionados en la tabla activa. */
   elementos: SelectionModel<any> = new SelectionModel<any>(true, []);
 
+  /** Indica si hay una comprobación de actualizaciones en curso. */
+  isCheckingUpdate = false;
+
   /** Referencia dinámica a todas las tablas abiertas en los tabs. */
   @ViewChildren(TableComponent) tablasCargadas!: QueryList<TableComponent>;
 
@@ -131,6 +134,60 @@ export class AppComponent implements AfterViewInit, OnInit {
       }
     } catch (error) {
       console.error("[SERA Updater] Error comprobando actualizaciones:", error);
+    }
+  }
+
+  /**
+   * Comprobación manual de actualizaciones iniciada por el usuario desde el ribbon.
+   * A diferencia del check automático al inicio, informa explícitamente si la app
+   * ya está en su última versión.
+   */
+  async checkForUpdatesManual() {
+    if (this.isCheckingUpdate) return;
+    this.isCheckingUpdate = true;
+
+    try {
+      const { check } = await import('@tauri-apps/plugin-updater');
+      const { ask, message } = await import('@tauri-apps/plugin-dialog');
+      const { relaunch } = await import('@tauri-apps/plugin-process');
+
+      const update = await check();
+
+      if (update) {
+        // Hay una nueva versión disponible
+        const yes = await ask(
+          `¡Nueva versión disponible: v${update.version}!\n\n¿Deseas descargar e instalar la actualización ahora?`,
+          { title: 'Actualización Disponible', kind: 'info' }
+        );
+
+        if (yes) {
+          const snack = this.snackBar.open(
+            `Descargando versión ${update.version}... No cierres la aplicación.`,
+            '',
+            { duration: 0 }
+          );
+
+          await update.downloadAndInstall();
+
+          snack.dismiss();
+          this.snackBar.open('Actualización instalada. Reiniciando...', '', { duration: 2000 });
+
+          setTimeout(async () => {
+            await relaunch();
+          }, 1500);
+        }
+      } else {
+        // Sin actualizaciones disponibles — informar explícitamente al usuario
+        await message(
+          'SERA está actualizado.\nYa tenés la última versión disponible.',
+          { title: 'Sin actualizaciones', kind: 'info' }
+        );
+      }
+    } catch (error) {
+      console.error('[SERA Updater Manual] Error:', error);
+      this.snackBar.open('No se pudo verificar actualizaciones. Revisá tu conexión.', 'Cerrar', { duration: 4000 });
+    } finally {
+      this.isCheckingUpdate = false;
     }
   }
 
