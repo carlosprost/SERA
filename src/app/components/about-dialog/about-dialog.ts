@@ -18,7 +18,7 @@ import { MatIconModule } from '@angular/material/icon';
       <div class="about-header text-center">
         <img src="assets/icon.png" alt="SERA Logo" class="about-logo">
         <h1 class="about-title">SERA</h1>
-        <p class="about-version">Versión 3.0.3 "Orion"</p>
+        <p class="about-version">Versión 3.0.4 "Orion"</p>
       </div>
       
       <div class="about-content">
