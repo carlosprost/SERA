@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   release:
     strategy:
@@ -29,7 +32,7 @@ jobs:
           targets: x86_64-pc-windows-msvc
 
       - name: Install Frontend Dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build and Deploy Tauri App
         uses: tauri-apps/tauri-action@v0
