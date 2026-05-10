@@ -321,7 +321,9 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
       if (this.calculatedFields && this.calculatedFields.length > 0) {
         this.calculatedFields.forEach(cf => {
           if (cf.isActive && cf.targetField && cf.formula) {
-            newRow[cf.targetField] = FormulaEngine.evaluate(cf.formula, row);
+            // evaluateForDisplay: muestra 'ERROR_FORMULA' al usuario si falla,
+            // pero no afecta la lógica de reglas de color (que usa evaluate())
+            newRow[cf.targetField] = FormulaEngine.evaluateForDisplay(cf.formula, row);
           }
         });
       }

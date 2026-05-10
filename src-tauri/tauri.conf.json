@@ -1,6 +1,6 @@
 {
   "productName": "SERA",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "identifier": "ar.com.wolftei.sera",
   "build": {
     "beforeDevCommand": "npm run start",
@@ -21,7 +21,15 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' ipc: http://ipc.localhost"
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' ipc: http://ipc.localhost"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ0QkZFOURFRjUyOTQ1NApSV1JVbEZMdm5mNUxEY3l4VEVGWHoxWmJJUGxnZ0VUSHFLN1QzdzdmTDN6QXgzMlJSdDQ3alN4dAo=",
+      "endpoints": [
+        "https://github.com/carlosprost/SERA/releases/latest/download/latest.json"
+      ]
     }
   },
   "bundle": {

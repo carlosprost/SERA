@@ -159,7 +159,7 @@
       <mat-tab-group
         class="desktop-tab-group"
         [selectedIndex]="selected.value"
-        (selectedIndexChange)="selected.setValue($event)"
+        (selectedIndexChange)="selected.setValue($event); cdr.detectChanges()"
         (selectedTabChange)="selectTab($event)"
         color="accent"
         animationDuration="0ms"
@@ -178,17 +178,16 @@
                 </button>
               </div>
             </ng-template>
-            <ng-template matTabContent>
-              <div class="tab-content-wrapper-fix">
-                <section class="tabla-container-full">
-                  <app-table
-                    [tabla]="tab"
-                    (elementosSeleccionados)="elementosSeleccionados($event)"
-                    (printPdf)="openDialogRecibo($event)"
-                  ></app-table>
-                </section>
-              </div>
-            </ng-template>
+            <!-- Contenido directo (sin lazy portal) para que @ViewChildren lo encuentre en orden -->
+            <div class="tab-content-wrapper-fix">
+              <section class="tabla-container-full">
+                <app-table
+                  [tabla]="tab"
+                  (elementosSeleccionados)="elementosSeleccionados($event)"
+                  (printPdf)="openDialogRecibo($event)"
+                ></app-table>
+              </section>
+            </div>
           </mat-tab>
             
         }

@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, ViewChildren, QueryList } from "@angular/core";
+import { Component, ElementRef, ViewChild, ViewChildren, QueryList, ChangeDetectorRef, AfterViewInit, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { SelectionModel } from "@angular/cdk/collections";
 import { FormControl } from "@angular/forms";
@@ -53,7 +53,7 @@ import { AboutDialogComponent } from "./components/about-dialog/about-dialog";
   templateUrl: "./app.component.html",
   styleUrl: "./app.component.scss",
 })
-export class AppComponent {
+export class AppComponent implements AfterViewInit, OnInit {
   /** Observable con los datos de configuración del usuario. */
   configData: Observable<ConfigData>;
   /** Observable con el listado de tablas disponibles. */
@@ -81,12 +81,68 @@ export class AppComponent {
     private store: Store,
     public dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private pdfService: PdfService
+    private pdfService: PdfService,
+    public cdr: ChangeDetectorRef
   ) {
     this.store.dispatch(StoreActions.loadStores());
     this.store.dispatch(StoreActions.loadListadoTablas());
     this.configData = this.store.select(selectConfigData);
     this.tablas = this.store.select(selectTablas);
+  }
+
+  async ngOnInit() {
+    await this.checkForUpdates();
+  }
+
+  /**
+   * Comprueba en segundo plano si existe una actualización en el servidor (GitHub Releases).
+   * Si hay una nueva versión, pregunta al usuario y ejecuta el proceso de descarga,
+   * instalación y reinicio de manera automática.
+   */
+  async checkForUpdates() {
+    try {
+      // Importamos dinámicamente para no bloquear el inicio de la app
+      const { check } = await import('@tauri-apps/plugin-updater');
+      const { ask } = await import('@tauri-apps/plugin-dialog');
+      const { relaunch } = await import('@tauri-apps/plugin-process');
+
+      const update = await check();
+      
+      if (update) {
+        const yes = await ask(
+          `¡Hay una nueva versión de SERA disponible (${update.version})!\n\n¿Deseas descargar e instalar la actualización ahora?`, 
+          { title: 'Actualización Disponible', kind: 'info' }
+        );
+        
+        if (yes) {
+          // Mostramos un mensaje que no desaparece mientras descarga
+          const snack = this.snackBar.open(`Descargando e instalando versión ${update.version}... Por favor, no cierres la aplicación.`, "", { duration: 0 });
+          
+          await update.downloadAndInstall();
+          
+          snack.dismiss();
+          this.snackBar.open(`Actualización instalada con éxito. Reiniciando...`, "", { duration: 2000 });
+          
+          // Damos un pequeño margen para que el usuario lea el mensaje
+          setTimeout(async () => {
+            await relaunch();
+          }, 1500);
+        }
+      }
+    } catch (error) {
+      console.error("[SERA Updater] Error comprobando actualizaciones:", error);
+    }
+  }
+
+  /**
+   * Suscripción a cambios en la QueryList de TableComponents.
+   * Cuando un tab lazy se renderiza por primera vez, la QueryList cambia
+   * y el getter activeTable necesita re-evaluarse para que el ribbon reaccione.
+   */
+  ngAfterViewInit() {
+    this.tablasCargadas.changes.subscribe(() => {
+      this.cdr.detectChanges();
+    });
   }
 
   /** Carga los campos y contenido al cambiar de tab. */

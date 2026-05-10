@@ -1,6 +1,6 @@
 [package]
 name = "sera"
-version = "3.0.1"
+version = "3.0.2"
 description = "Sistema de Expedientes de Registro Avanzado"
 authors = ["WolfTeI"]
 edition = "2021"
@@ -20,3 +20,8 @@ serde_json = "1"
 rusqlite = { version = "0.32", features = ["bundled"] }
 aes-gcm = "0.10"
 rand = "0.8"
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2.3.1"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
