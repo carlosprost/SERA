@@ -1,7 +1,7 @@
 {
   "name": "sera",
   "description": "Sistema de Expedientes de Registro Avanzado",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 1420",
