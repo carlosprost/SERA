@@ -1,7 +1,7 @@
 {
   "productName": "SERA",
-  "version": "3.0.5",
-  "identifier": "ar.com.wolftei.sera",
+  "version": "3.0.6",
+  "identifier": "WolfTeI.SERADesktop",
   "build": {
     "beforeDevCommand": "npm run start",
     "beforeBuildCommand": "npm run build",
@@ -37,6 +37,9 @@
     "createUpdaterArtifacts": true,
     "targets": "all",
     "publisher": "WolfTeI",
+    "windows": {
+      "publisherDisplayName": "WolfTeI"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
