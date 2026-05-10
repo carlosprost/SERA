@@ -44,6 +44,6 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'SERA ${{ github.ref_name }}'
           releaseBody: 'Mira los cambios en este nuevo release de SERA.'
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ''
