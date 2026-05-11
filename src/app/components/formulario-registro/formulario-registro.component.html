@@ -20,6 +20,15 @@
               <mat-option [value]="false">No</mat-option>
             </mat-select>
           </mat-form-field>
+        } @else if (field.type === 'select') {
+          <mat-form-field appearance="outline">
+            <mat-label>{{field.label.split('_').join(' ')}}</mat-label>
+            <mat-select [formControlName]="field.field">
+              @for (option of optionsMap[field.field]; track option.value) {
+                <mat-option [value]="option.value">{{ option.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
         } @else {
           <mat-form-field appearance="outline">
             <mat-label>{{field.label.split('_').join(' ')}}</mat-label>
@@ -34,6 +43,45 @@
       </div>
     }
   </form>
+
+    <!-- Sección de Adjuntos -->
+    @if (allowAttachments) {
+      <div class="attachments-section">
+        <mat-divider></mat-divider>
+        <div class="section-header">
+          <h3><mat-icon>attachment</mat-icon> Archivos Adjuntos</h3>
+          <button mat-stroked-button color="primary" (click)="subirAdjunto()">
+            <mat-icon>add_circle</mat-icon> Adjuntar
+          </button>
+        </div>
+
+        @if (adjuntos.length > 0) {
+          <div class="attachments-list">
+            @for (adj of adjuntos; track adj.ruta) {
+              <div class="attachment-item">
+                <mat-icon class="file-icon">insert_drive_file</mat-icon>
+                <div class="file-info">
+                  <span class="file-name" [matTooltip]="adj.nombre">{{ adj.nombre }}</span>
+                  <span class="file-date">{{ adj.fecha | date:'dd/MM/yy HH:mm' }}</span>
+                </div>
+                <div class="item-actions">
+                  <button mat-icon-button color="primary" matTooltip="Abrir archivo" (click)="abrirAdjunto(adj.ruta)">
+                    <mat-icon>launch</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" matTooltip="Eliminar" (click)="borrarAdjunto(adj)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="no-attachments">
+            <p>No hay archivos adjuntos en este registro.</p>
+          </div>
+        }
+      </div>
+    }
 </div>
 <div mat-dialog-actions align="end">
   <button mat-button (click)="dialogClose()">Cancelar</button>

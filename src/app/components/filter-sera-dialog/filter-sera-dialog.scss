@@ -10,18 +10,18 @@
   }
 
   .rule-row {
-    background: #2b3035;
+    background: var(--sera-card-bg);
     border-radius: 8px;
     padding: 12px;
     margin-bottom: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(var(--sera-text-rgb), 0.1);
 
     .rule-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
-      color: #e0e0e0;
+      color: var(--sera-text-color);
     }
 
     .rule-body {

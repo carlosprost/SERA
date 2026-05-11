@@ -1,15 +1,20 @@
 <h2 mat-dialog-title>{{ data.message }}</h2>
 <div mat-dialog-content class="formStyle">
   <form class="formulario" [formGroup]="newTableForm" (ngSubmit)="onSubmit()">
-    <!-- Table Name -->
-    <div class="table-name-container">
-      <mat-form-field appearance="outline" class="full-width">
+    <!-- Table Name and Attachments Toggle -->
+    <div class="table-header-config">
+      <mat-form-field appearance="outline" class="flex-grow">
         <mat-label>Nombre de la tabla</mat-label>
         <input matInput type="text" formControlName="tableName" placeholder="Ej: oficios_2025"/>
         @if (newTableForm.get('tableName')?.hasError('required')) {
           <mat-error>Este campo es <strong>requerido</strong></mat-error>
         }
       </mat-form-field>
+
+      <div class="attachments-toggle mat-elevation-z1">
+        <mat-icon>attachment</mat-icon>
+        <mat-checkbox formControlName="allowAttachments" color="primary">Habilitar Adjuntos</mat-checkbox>
+      </div>
     </div>
 
     <mat-divider></mat-divider>
@@ -49,7 +54,7 @@
 
           <!-- Opciones extras -->
           <div class="field-options">
-            <mat-checkbox formControlName="notNull">Requerido (No Nulo)</mat-checkbox>
+            <mat-checkbox formControlName="notNull" color="primary">Requerido (No Nulo)</mat-checkbox>
             <mat-form-field appearance="outline" class="default-value">
                <mat-label>Valor Defecto</mat-label>
                <input matInput type="text" formControlName="defaultValue" placeholder="Opcional"/>
@@ -60,6 +65,35 @@
           <button mat-icon-button color="warn" type="button" (click)="removeField(i)" [disabled]="fields.length === 1" matTooltip="Eliminar columna">
             <mat-icon>delete</mat-icon>
           </button>
+
+          <!-- CONFIGURACIÓN DE VÍNCULO (Se muestra solo si el tipo es LINK) -->
+          @if (fieldCtrl.get('type')?.value === 'LINK') {
+            <div class="link-config-container mat-elevation-z1">
+              <div class="link-header">
+                <mat-icon>link</mat-icon>
+                <span>Configuración de Relación</span>
+              </div>
+              <div class="link-fields">
+                <mat-form-field appearance="outline">
+                  <mat-label>Tabla Relacionada</mat-label>
+                  <mat-select formControlName="remoteTable" (selectionChange)="onRemoteTableChange($event.value)">
+                    @for (t of tablasDisponibles; track t.nombre_tabla) {
+                      <mat-option [value]="t.nombre_tabla">{{ t.nombre_tabla | uppercase }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Campo a Mostrar</mat-label>
+                  <mat-select formControlName="displayField">
+                    @for (cf of camposRemotos[fieldCtrl.get('remoteTable')?.value] || []; track cf) {
+                      <mat-option [value]="cf">{{ cf }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+          }
         </div>
       }
     </div>

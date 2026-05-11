@@ -3,15 +3,10 @@
 
 use rusqlite::{Connection, Result, params};
 use std::path::Path;
-use crate::models::{Campo, ConfigData, DeleteRecord, NewRecord, NuevaTabla, RestructureTable, Tabla, UserConfig};
+use serde_json::{json, Value};
+use crate::models::{Campo, ConfigData, DeleteRecord, NewRecord, NuevaTabla, RestructureTable, Tabla, UserConfig, BulkRecord, GlobalStats};
 
 /// Inicializa la base de datos SQLite en la ruta indicada.
-/// Crea el esquema inicial si no existe:
-/// - Tabla `tablas`: catálogo de tablas creadas por el usuario.
-/// - Tabla `sera_config`: configuración persistente del usuario.
-///
-/// # Arguments
-/// * `db_path` - Ruta al archivo .db de SQLite.
 pub fn inicializar_db(db_path: &Path) -> Result<()> {
     let conn = Connection::open(db_path)?;
 
@@ -39,6 +34,15 @@ pub fn inicializar_db(db_path: &Path) -> Result<()> {
 
         INSERT OR IGNORE INTO sera_config (id, nombre_app, user_nombre, user_grado, user_institucion, user_dependencia, user_oficina, user_membrete)
         VALUES (1, 'SERA', '', '', '', '', '', '');
+
+        CREATE TABLE IF NOT EXISTS _sera_adjuntos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tabla_nombre TEXT NOT NULL,
+            registro_id INTEGER NOT NULL,
+            archivo_nombre TEXT NOT NULL,
+            archivo_ruta_relativa TEXT NOT NULL,
+            fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
         ",
     )?;
 
@@ -57,7 +61,6 @@ fn abrir_conn(db_path: &Path) -> Result<Connection> {
 
 // ─── CONFIGURACIÓN ────────────────────────────────────────────────────────────
 
-/// Obtiene la configuración actual del usuario desde la DB.
 pub fn get_config(db_path: &Path) -> Result<ConfigData> {
     let conn = abrir_conn(db_path)?;
     let config = conn.query_row(
@@ -80,7 +83,6 @@ pub fn get_config(db_path: &Path) -> Result<ConfigData> {
     Ok(config)
 }
 
-/// Actualiza la configuración del usuario en la DB.
 pub fn update_config(db_path: &Path, config: &ConfigData) -> Result<()> {
     let conn = abrir_conn(db_path)?;
     conn.execute(
@@ -108,7 +110,6 @@ pub fn update_config(db_path: &Path, config: &ConfigData) -> Result<()> {
 
 // ─── TABLAS ───────────────────────────────────────────────────────────────────
 
-/// Devuelve el listado de todas las tablas registradas en el catálogo.
 pub fn get_tablas(db_path: &Path) -> Result<Vec<Tabla>> {
     let conn = abrir_conn(db_path)?;
     let mut stmt = conn.prepare("SELECT id_tablas, nombre_tabla FROM tablas ORDER BY nombre_tabla")?;
@@ -123,7 +124,6 @@ pub fn get_tablas(db_path: &Path) -> Result<Vec<Tabla>> {
     Ok(tablas)
 }
 
-/// Obtiene la configuración de reglas (JSON string) para una tabla específica
 pub fn get_tabla_config(db_path: &Path, nombre_tabla: &str) -> Result<String> {
     validar_nombre_identificador(nombre_tabla)?;
     let conn = abrir_conn(db_path)?;
@@ -135,7 +135,6 @@ pub fn get_tabla_config(db_path: &Path, nombre_tabla: &str) -> Result<String> {
     Ok(config)
 }
 
-/// Actualiza la configuración de reglas de una tabla específica
 pub fn update_tabla_config(db_path: &Path, nombre_tabla: &str, config_json: &str) -> Result<()> {
     validar_nombre_identificador(nombre_tabla)?;
     let conn = abrir_conn(db_path)?;
@@ -146,25 +145,12 @@ pub fn update_tabla_config(db_path: &Path, nombre_tabla: &str, config_json: &str
     Ok(())
 }
 
-/// Crea una nueva tabla en la DB y la registra en el catálogo.
-///
-/// La tabla tendrá siempre una PK llamada `id_{nombre}` de tipo INTEGER AUTOINCREMENT.
-/// Los campos adicionales se pasan como string con la sintaxis SQLite
-/// (ej: "nombre TEXT, edad INTEGER").
-///
-/// NOTA DE SEGURIDAD: El nombre de tabla y los nombres de campos son validados
-/// antes de ser interpolados en la query DDL. Esta es la única situación donde
-/// no se pueden usar parámetros SQLite: las sentencias DDL (CREATE TABLE)
-/// no admiten placeholders para nombres de objetos.
 pub fn crear_tabla(db_path: &Path, nueva_tabla: &NuevaTabla) -> Result<()> {
-    // Validación: solo se permiten nombres con letras, números y guiones bajos
     validar_nombre_identificador(&nueva_tabla.nombre)?;
-
     let conn = abrir_conn(db_path)?;
 
-    // Crear la tabla con PK dinámica compatible con el frontend
     let sql_create = format!(
-        "CREATE TABLE IF NOT EXISTS {nombre} (
+        "CREATE TABLE IF NOT EXISTS \"{nombre}\" (
             id_{nombre} INTEGER PRIMARY KEY AUTOINCREMENT,
             {campos}
         )",
@@ -174,7 +160,6 @@ pub fn crear_tabla(db_path: &Path, nueva_tabla: &NuevaTabla) -> Result<()> {
 
     conn.execute_batch(&sql_create)?;
 
-    // Registrar en el catálogo usando prepared statement (seguro contra injection)
     conn.execute(
         "INSERT OR IGNORE INTO tablas (nombre_tabla) VALUES (?1)",
         params![nueva_tabla.nombre],
@@ -183,28 +168,35 @@ pub fn crear_tabla(db_path: &Path, nueva_tabla: &NuevaTabla) -> Result<()> {
     Ok(())
 }
 
-/// Elimina una tabla de la DB y la quita del catálogo.
-///
-/// NOTA DE SEGURIDAD: Igual que en crear_tabla, el nombre de tabla en DDL
-/// (DROP TABLE) no admite placeholders, por lo que se valida el nombre primero.
 pub fn eliminar_tabla(db_path: &Path, nombre_tabla: &str) -> Result<()> {
     validar_nombre_identificador(nombre_tabla)?;
-
     let conn = abrir_conn(db_path)?;
 
-    let sql_drop = format!("DROP TABLE IF EXISTS {nombre_tabla}");
+    // 1. Limpiar adjuntos (huérfanos)
+    let mut stmt = conn.prepare("SELECT archivo_ruta_relativa FROM _sera_adjuntos WHERE tabla_nombre = ?")?;
+    let rutas: Vec<String> = stmt.query_map(params![nombre_tabla], |r| r.get(0))?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    let _ = conn.execute("DELETE FROM _sera_adjuntos WHERE tabla_nombre = ?", params![nombre_tabla]);
+
+    if let Some(app_dir) = db_path.parent() {
+        for ruta_rel in rutas {
+            let full_path = app_dir.join(ruta_rel);
+            let _ = std::fs::remove_file(full_path);
+        }
+    }
+
+    // 2. Eliminar tabla física
+    let sql_drop = format!("DROP TABLE IF EXISTS \"{nombre_tabla}\"");
     conn.execute_batch(&sql_drop)?;
 
-    conn.execute(
-        "DELETE FROM tablas WHERE nombre_tabla = ?1",
-        params![nombre_tabla],
-    )?;
+    // 3. Quitar del catálogo
+    conn.execute("DELETE FROM tablas WHERE nombre_tabla = ?1", params![nombre_tabla])?;
 
     Ok(())
 }
 
-/// Reestructura una tabla existente (Renombrar, Reordenar, Borrar, Agregar campos).
-/// Proceso: Crear temporal -> Copiar datos -> Borrar vieja -> Renombrar temporal.
 pub fn reestructurar_tabla(db_path: &Path, info: &RestructureTable) -> Result<()> {
     validar_nombre_identificador(&info.nombre_viejo)?;
     validar_nombre_identificador(&info.nombre_nuevo)?;
@@ -212,10 +204,9 @@ pub fn reestructurar_tabla(db_path: &Path, info: &RestructureTable) -> Result<()
     let mut conn = abrir_conn(db_path)?;
     let tx = conn.transaction()?;
 
-    // 1. Crear tabla temporal
     let temp_name = format!("__temp_{}", info.nombre_nuevo);
     let sql_create = format!(
-        "CREATE TABLE {temp_name} (
+        "CREATE TABLE \"{temp_name}\" (
             id_{new_name} INTEGER PRIMARY KEY AUTOINCREMENT,
             {campos}
         )",
@@ -224,8 +215,6 @@ pub fn reestructurar_tabla(db_path: &Path, info: &RestructureTable) -> Result<()
     );
     tx.execute_batch(&sql_create)?;
 
-    // 2. Construir la consulta de copia de datos selectiva
-    // Mapeamos el ID viejo al ID nuevo explícitamente
     let id_viejo = format!("id_{}", info.nombre_viejo);
     let id_nuevo = format!("id_{}", info.nombre_nuevo);
 
@@ -235,12 +224,12 @@ pub fn reestructurar_tabla(db_path: &Path, info: &RestructureTable) -> Result<()
     for m in &info.mapeo {
         validar_nombre_identificador(&m.old_name)?;
         validar_nombre_identificador(&m.new_name)?;
-        select_cols.push(m.old_name.clone());
-        insert_cols.push(m.new_name.clone());
+        select_cols.push(format!("\"{}\"", m.old_name));
+        insert_cols.push(format!("\"{}\"", m.new_name));
     }
 
     let sql_copy = format!(
-        "INSERT INTO {temp_name} ({insert_cols}) SELECT {select_cols} FROM {nombre_viejo}",
+        "INSERT INTO \"{temp_name}\" ({insert_cols}) SELECT {select_cols} FROM \"{nombre_viejo}\"",
         temp_name = temp_name,
         insert_cols = insert_cols.join(", "),
         select_cols = select_cols.join(", "),
@@ -248,11 +237,9 @@ pub fn reestructurar_tabla(db_path: &Path, info: &RestructureTable) -> Result<()
     );
     tx.execute_batch(&sql_copy)?;
 
-    // 3. Limpieza: Borrar tabla vieja y renombrar
-    tx.execute_batch(&format!("DROP TABLE {nombre_viejo}", nombre_viejo = info.nombre_viejo))?;
-    tx.execute_batch(&format!("ALTER TABLE {temp_name} RENAME TO {nombre_nuevo}", temp_name = temp_name, nombre_nuevo = info.nombre_nuevo))?;
+    tx.execute_batch(&format!("DROP TABLE \"{nombre_viejo}\"", nombre_viejo = info.nombre_viejo))?;
+    tx.execute_batch(&format!("ALTER TABLE \"{temp_name}\" RENAME TO \"{nombre_nuevo}\"", temp_name = temp_name, nombre_nuevo = info.nombre_nuevo))?;
 
-    // 4. Actualizar catálogo si el nombre cambió
     tx.execute(
         "UPDATE tablas SET nombre_tabla = ?1 WHERE nombre_tabla = ?2",
         params![info.nombre_nuevo, info.nombre_viejo],
@@ -262,220 +249,338 @@ pub fn reestructurar_tabla(db_path: &Path, info: &RestructureTable) -> Result<()
     Ok(())
 }
 
-// ─── CAMPOS ───────────────────────────────────────────────────────────────────
+// ─── CAMPOS Y CONTENIDO ───────────────────────────────────────────────────────
 
-/// Devuelve la estructura de campos de una tabla usando PRAGMA table_info.
-/// El resultado se mapea al formato `Campos` esperado por el frontend Angular.
 pub fn get_campos(db_path: &Path, tabla: &str) -> Result<Vec<Campo>> {
     validar_nombre_identificador(tabla)?;
-
     let conn = abrir_conn(db_path)?;
-    let sql = format!("PRAGMA table_info({tabla})");
-    let mut stmt = conn.prepare(&sql)?;
+    let mut stmt = conn.prepare(&format!("PRAGMA table_info(\"{}\")", tabla))?;
+    let rows = stmt.query_map([], |row| {
+        let notnull: i32 = row.get(3)?;
+        let pk: i32 = row.get(5)?;
+        Ok(Campo {
+            field: row.get(1)?,
+            tipo: row.get(2).unwrap_or_else(|_| "TEXT".to_string()),
+            null: if notnull == 1 { "NO".to_string() } else { "YES".to_string() },
+            key: if pk == 1 { "PRI".to_string() } else { String::new() },
+            default: row.get(4)?,
+            extra: if pk == 1 { "auto_increment".to_string() } else { String::new() },
+        })
+    })?;
 
-    let campos = stmt
-        .query_map([], |row| {
-            let notnull: i32 = row.get(3)?;
-            let pk: i32 = row.get(5)?;
-            Ok(Campo {
-                field: row.get(1)?,
-                tipo: row.get(2).unwrap_or_else(|_| "TEXT".to_string()),
-                null: if notnull == 1 { "NO".to_string() } else { "YES".to_string() },
-                key: if pk == 1 { "PRI".to_string() } else { String::new() },
-                default: row.get(4)?,
-                extra: if pk == 1 { "auto_increment".to_string() } else { String::new() },
-            })
-        })?
-        .collect::<Result<Vec<Campo>>>()?;
-
-    Ok(campos)
+    let mut results = Vec::new();
+    for r in rows {
+        results.push(r?);
+    }
+    Ok(results)
 }
 
-// ─── CONTENIDO / REGISTROS ────────────────────────────────────────────────────
-
-/// Devuelve todos los registros de una tabla.
-pub fn get_contenido(db_path: &Path, tabla: &str) -> Result<Vec<serde_json::Value>> {
+pub fn get_contenido(db_path: &Path, tabla: &str) -> Result<Vec<Value>> {
     validar_nombre_identificador(tabla)?;
-
     let conn = abrir_conn(db_path)?;
-    let sql = format!("SELECT * FROM {tabla}");
+    
+    // Query que incluye el conteo de adjuntos vinculados a cada registro
+    let sql = format!(
+        "SELECT t.*, (SELECT COUNT(*) FROM _sera_adjuntos a WHERE a.tabla_nombre = '{tabla}' AND a.registro_id = t.id_{tabla}) as sera_adjuntos_count 
+         FROM \"{tabla}\" t",
+        tabla = tabla
+    );
+    
     let mut stmt = conn.prepare(&sql)?;
+    let column_names: Vec<String> = stmt.column_names().iter().map(|s| s.to_string()).collect();
 
-    let column_names: Vec<String> = stmt
-        .column_names()
-        .iter()
-        .map(|s| s.to_string())
-        .collect();
-
-    let filas = stmt
-        .query_map([], |row| {
-            let mut obj = serde_json::Map::new();
-            for (i, col) in column_names.iter().enumerate() {
-                let valor: rusqlite::types::Value = row.get(i)?;
-                obj.insert(col.clone(), sqlite_value_to_json(valor));
-            }
-            Ok(serde_json::Value::Object(obj))
-        })?
-        .collect::<Result<Vec<serde_json::Value>>>()?;
+    let filas = stmt.query_map([], |row| {
+        let mut obj = serde_json::Map::new();
+        for (i, col) in column_names.iter().enumerate() {
+            let valor: rusqlite::types::Value = row.get(i)?;
+            obj.insert(col.clone(), sqlite_value_to_json(valor));
+        }
+        Ok(Value::Object(obj))
+    })?.collect::<Result<Vec<Value>>>()?;
 
     Ok(filas)
 }
 
-/// Inserta un nuevo registro en la tabla indicada.
-///
-/// NOTA DE SEGURIDAD: Los valores se insertan usando execute_batch con
-/// parámetros posicionales. Los nombres de columnas son validados.
-/// Los valores vienen como strings desde el frontend y se insertan directamente
-/// mediante la API de parámetros de rusqlite, eliminando el riesgo de SQL Injection.
+// ─── REGISTROS ────────────────────────────────────────────────────────────────
+
 pub fn nuevo_registro(db_path: &Path, record: &NewRecord) -> Result<()> {
     validar_nombre_identificador(&record.tabla)?;
-    for campo in &record.campos {
-        validar_nombre_identificador(campo)?;
-    }
-
     let conn = abrir_conn(db_path)?;
 
-    let columnas = record.campos.join(", ");
-    let placeholders: Vec<String> = (1..=record.campos.len())
-        .map(|i| format!("?{i}"))
-        .collect();
-    let placeholders_str = placeholders.join(", ");
-
+    let placeholders: Vec<String> = (1..=record.campos.len()).map(|i| format!("?{}", i)).collect();
     let sql = format!(
-        "INSERT INTO {tabla} ({columnas}) VALUES ({placeholders_str})",
-        tabla = record.tabla
+        "INSERT INTO \"{tabla}\" ({columnas}) VALUES ({placeholders})",
+        tabla = record.tabla,
+        columnas = record.campos.iter().map(|c| format!("\"{}\"", c)).collect::<Vec<_>>().join(", "),
+        placeholders = placeholders.join(", ")
     );
 
     let mut stmt = conn.prepare(&sql)?;
-
-    // Mapear los valores del frontend a params de rusqlite
-    let valores: Vec<rusqlite::types::Value> = record
-        .contenido
-        .iter()
-        .map(|v| {
-            // Limpiar comillas que el frontend agrega (compatibilidad con el formato anterior)
-            let limpio = v.trim_matches('"');
-            rusqlite::types::Value::Text(limpio.to_string())
-        })
-        .collect();
-
+    let valores: Vec<rusqlite::types::Value> = record.contenido.iter().map(|v| rusqlite::types::Value::Text(v.clone())).collect();
     stmt.execute(rusqlite::params_from_iter(valores.iter()))?;
 
     Ok(())
 }
 
-/// Actualiza un registro existente.
 pub fn actualizar_registro(db_path: &Path, record: &NewRecord) -> Result<()> {
     validar_nombre_identificador(&record.tabla)?;
-    for campo in &record.campos {
-        validar_nombre_identificador(campo)?;
-    }
-
-    let id = record.id.ok_or_else(|| rusqlite::Error::InvalidParameterName("id requerido para actualizar".into()))?;
+    let id = record.id.ok_or_else(|| rusqlite::Error::InvalidParameterName("id requerido".into()))?;
     let conn = abrir_conn(db_path)?;
 
-    let sets: Vec<String> = record
-        .campos
-        .iter()
-        .enumerate()
-        .map(|(i, campo)| format!("{campo} = ?{}", i + 1))
-        .collect();
-    let sets_str = sets.join(", ");
+    let sets: Vec<String> = record.campos.iter().enumerate().map(|(i, c)| format!("\"{}\" = ?{}", c, i + 1)).collect();
     let id_placeholder = record.campos.len() + 1;
-
     let sql = format!(
-        "UPDATE {tabla} SET {sets_str} WHERE id_{tabla} = ?{id_placeholder}",
-        tabla = record.tabla
+        "UPDATE \"{tabla}\" SET {sets} WHERE id_{tabla} = ?{id_placeholder}",
+        tabla = record.tabla,
+        sets = sets.join(", ")
     );
 
     let mut stmt = conn.prepare(&sql)?;
-
-    let mut valores: Vec<rusqlite::types::Value> = record
-        .contenido
-        .iter()
-        .map(|v| {
-            let limpio = v.trim_matches('"');
-            rusqlite::types::Value::Text(limpio.to_string())
-        })
-        .collect();
+    let mut valores: Vec<rusqlite::types::Value> = record.contenido.iter().map(|v| rusqlite::types::Value::Text(v.clone())).collect();
     valores.push(rusqlite::types::Value::Integer(id));
-
     stmt.execute(rusqlite::params_from_iter(valores.iter()))?;
 
     Ok(())
 }
 
-/// Elimina un registro por su ID.
 pub fn eliminar_registro(db_path: &Path, record: &DeleteRecord) -> Result<()> {
     validar_nombre_identificador(&record.tabla)?;
-
     let conn = abrir_conn(db_path)?;
-    let sql = format!(
-        "DELETE FROM {tabla} WHERE id_{tabla} = ?1",
-        tabla = record.tabla
-    );
+    let sql = format!("DELETE FROM \"{tabla}\" WHERE id_{tabla} = ?1", tabla = record.tabla);
     conn.execute(&sql, params![record.ids])?;
+    Ok(())
+}
 
+pub fn importar_bulk(db_path: &Path, bulk: &BulkRecord) -> Result<()> {
+    validar_nombre_identificador(&bulk.tabla)?;
+    let mut conn = abrir_conn(db_path)?;
+    let tx = conn.transaction()?;
+
+    let placeholders: Vec<String> = (1..=bulk.campos.len()).map(|i| format!("?{}", i)).collect();
+    let sql = format!(
+        "INSERT INTO \"{}\" ({}) VALUES ({})",
+        bulk.tabla,
+        bulk.campos.iter().map(|c| format!("\"{}\"", c)).collect::<Vec<_>>().join(", "),
+        placeholders.join(", ")
+    );
+
+    for row in &bulk.contenido {
+        let valores: Vec<rusqlite::types::Value> = row.iter().map(|v| rusqlite::types::Value::Text(v.clone())).collect();
+        tx.execute(&sql, rusqlite::params_from_iter(valores.iter()))?;
+    }
+
+    tx.commit()?;
+    Ok(())
+}
+
+// ─── ADJUNTOS ─────────────────────────────────────────────────────────────
+
+pub fn get_adjuntos(db_path: &Path, tabla: &str, registro_id: i64) -> Result<Vec<Value>> {
+    let conn = abrir_conn(db_path)?;
+    let mut stmt = conn.prepare("SELECT id, archivo_nombre, archivo_ruta_relativa, fecha_creacion FROM _sera_adjuntos WHERE tabla_nombre = ? AND registro_id = ?")?;
+    let rows = stmt.query_map(params![tabla, registro_id], |row| {
+        Ok(json!({
+            "id": row.get::<_, i64>(0)?,
+            "nombre": row.get::<_, String>(1)?,
+            "ruta": row.get::<_, String>(2)?,
+            "fecha": row.get::<_, String>(3)?
+        }))
+    })?;
+
+    let mut results = Vec::new();
+    for r in rows { results.push(r?); }
+    Ok(results)
+}
+
+pub fn insertar_adjunto(db_path: &Path, tabla: &str, registro_id: i64, nombre: &str, ruta: &str) -> Result<i64> {
+    let conn = abrir_conn(db_path)?;
+    conn.execute(
+        "INSERT INTO _sera_adjuntos (tabla_nombre, registro_id, archivo_nombre, archivo_ruta_relativa) VALUES (?, ?, ?, ?)",
+        params![tabla, registro_id, nombre, ruta]
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+pub fn eliminar_adjunto(db_path: &Path, id: i64) -> Result<String> {
+    let conn = abrir_conn(db_path)?;
+    let ruta: String = conn.query_row("SELECT archivo_ruta_relativa FROM _sera_adjuntos WHERE id = ?", params![id], |r| r.get(0))?;
+    conn.execute("DELETE FROM _sera_adjuntos WHERE id = ?", params![id])?;
+    Ok(ruta)
+}
+
+// ─── ESTADÍSTICAS ─────────────────────────────────────────────────────────────
+
+pub fn get_global_stats(db_path: &Path) -> Result<GlobalStats> {
+    let conn = abrir_conn(db_path)?;
+    let total_tablas: i64 = conn.query_row("SELECT COUNT(*) FROM tablas", [], |r| r.get(0))?;
+    
+    let mut stmt = conn.prepare("SELECT nombre_tabla FROM tablas")?;
+    let tablas: Vec<String> = stmt.query_map([], |row| row.get(0))?.filter_map(|r| r.ok()).collect();
+    
+    let mut total_registros = 0;
+    for tabla in tablas {
+        let count: i64 = conn.query_row(&format!("SELECT COUNT(*) FROM \"{}\"", tabla), [], |r| r.get(0)).unwrap_or(0);
+        total_registros += count;
+    }
+
+    Ok(GlobalStats { total_tablas, total_registros })
+}
+
+// ─── BÚSQUEDA GLOBAL ─────────────────────────────────────────────────────────────
+
+pub fn search_global(db_path: &Path, term: &str) -> Result<Value> {
+    let conn = abrir_conn(db_path)?;
+    let term_like = format!("%{}%", term);
+
+    let mut stmt = conn.prepare("SELECT nombre_tabla FROM tablas")?;
+    let tablas: Vec<String> = stmt.query_map([], |row| row.get(0))?.filter_map(|r| r.ok()).collect();
+
+    let mut all_results = serde_json::Map::new();
+
+    for tabla in tablas {
+        let mut pragma_stmt = conn.prepare(&format!("PRAGMA table_info(\"{}\")", tabla))?;
+        let columns: Vec<String> = pragma_stmt.query_map([], |row| Ok((row.get::<_, String>(1)?, row.get::<_, String>(2)?)))?
+            .filter_map(|r| r.ok())
+            .filter(|(_, dtype)| {
+                let d = dtype.to_uppercase();
+                d.contains("TEXT") || d.contains("VARCHAR") || d.contains("CHAR")
+            })
+            .map(|(name, _)| name)
+            .collect();
+
+        if columns.is_empty() { continue; }
+
+        let conditions: Vec<String> = columns.iter().map(|c| format!("\"{}\" LIKE ?", c)).collect();
+        let query = format!("SELECT * FROM \"{}\" WHERE {}", tabla, conditions.join(" OR "));
+        let mut search_stmt = conn.prepare(&query)?;
+        
+        let params_vec: Vec<&dyn rusqlite::ToSql> = vec![&term_like; columns.len()];
+        let rows = search_stmt.query_map(rusqlite::params_from_iter(params_vec), |row| {
+            let col_count = row.as_ref().column_count();
+            let mut map = serde_json::Map::new();
+            for i in 0..col_count {
+                let name = row.as_ref().column_name(i).unwrap_or("unknown").to_string();
+                map.insert(name, sqlite_value_to_json(row.get(i)?));
+            }
+            Ok(Value::Object(map))
+        })?;
+
+        let results: Vec<Value> = rows.filter_map(|r| r.ok()).collect();
+        if !results.is_empty() { all_results.insert(tabla, json!(results)); }
+    }
+
+    Ok(Value::Object(all_results))
+}
+
+pub fn importar_tabla(db_path: &Path, nombre_tabla: String, package: crate::models::ExportedTable) -> Result<()> {
+    let mut conn = abrir_conn(db_path)?;
+    let tx = conn.transaction()?;
+
+    // 1. Crear la tabla física
+    let mut sql_create = format!("CREATE TABLE IF NOT EXISTS \"{}\" (id INTEGER PRIMARY KEY AUTOINCREMENT", nombre_tabla);
+    
+    let mut campos_finales = if package.campos.is_empty() {
+        println!("[SERA] No se encontraron campos definidos. Deduciendo de los datos...");
+        let mut deduccion = Vec::new();
+        if let Some(primer_reg) = package.contenido.first().and_then(|v| v.as_object()) {
+            for key in primer_reg.keys() {
+                if key != "id" && !key.starts_with("sera_") {
+                    deduccion.push(crate::models::Campo {
+                        field: key.clone(),
+                        tipo: "TEXT".to_string(),
+                        null: "YES".to_string(),
+                        key: "".to_string(),
+                        default: None,
+                        extra: "".to_string(),
+                    });
+                }
+            }
+        }
+        deduccion
+    } else {
+        package.campos.clone()
+    };
+
+    // Filtrar campos virtuales para la creación física
+    campos_finales.retain(|c| !c.field.starts_with("sera_") && c.field != "id");
+
+    for campo in &campos_finales {
+        sql_create.push_str(&format!(", \"{}\" TEXT", campo.field));
+    }
+    sql_create.push_str(")");
+    tx.execute(&sql_create, [])?;
+
+    // 2. Registrar en la tabla maestra 'tablas'
+    tx.execute(
+        "INSERT OR REPLACE INTO tablas (nombre_tabla, config) VALUES (?, ?)",
+        params![nombre_tabla, package.visual_config]
+    )?;
+
+    // 3. Insertar los registros
+    for reg in &package.contenido {
+        if let Some(obj) = reg.as_object() {
+            let mut col_names: Vec<String> = Vec::new();
+            let mut placeholders: Vec<String> = Vec::new();
+            let mut vals_strings = Vec::new();
+
+            for campo in &campos_finales {
+                col_names.push(format!("\"{}\"", campo.field));
+                placeholders.push("?".to_string());
+                
+                let v = obj.get(&campo.field).cloned().unwrap_or(serde_json::Value::Null);
+                vals_strings.push(if v.is_string() { v.as_str().unwrap().to_string() } else if v.is_null() { "".to_string() } else { v.to_string() });
+            }
+            
+            if col_names.is_empty() { continue; }
+
+            let columns = col_names.join(", ");
+            let ques = placeholders.join(", ");
+            let mut stmt = tx.prepare(&format!("INSERT INTO \"{}\" ({}) VALUES ({})", nombre_tabla, columns, ques))?;
+            
+            let params: Vec<&dyn rusqlite::ToSql> = vals_strings.iter().map(|s| s as &dyn rusqlite::ToSql).collect();
+            stmt.execute(rusqlite::params_from_iter(params))?;
+        }
+    }
+
+    // 4. Insertar los adjuntos si existen
+    if let Some(adjuntos) = package.adjuntos {
+        for adj in adjuntos {
+            let ruta_final = if adj.ruta_interna.starts_with("attachments/") {
+                adj.ruta_interna.clone()
+            } else {
+                format!("attachments/{}", adj.ruta_interna)
+            };
+
+            tx.execute(
+                "INSERT INTO _sera_adjuntos (tabla_nombre, registro_id, archivo_nombre, archivo_ruta_relativa) VALUES (?, ?, ?, ?)",
+                params![nombre_tabla, adj.registro_id, adj.nombre, ruta_final]
+            )?;
+        }
+    }
+
+    tx.commit()?;
+    println!("[SERA] Tabla '{}' importada con éxito.", nombre_tabla);
     Ok(())
 }
 
 // ─── UTILIDADES ───────────────────────────────────────────────────────────────
 
-/// Valida que un identificador (nombre de tabla o campo) solo contenga
-/// caracteres seguros: letras, números y guiones bajos.
-///
-/// Esto mitiga el riesgo de SQL Injection en sentencias DDL donde
-/// los placeholders (?) no son aplicables.
-///
-/// OWASP A03 — Injection: validación de identificadores.
 fn validar_nombre_identificador(nombre: &str) -> Result<()> {
     if nombre.is_empty() {
-        return Err(rusqlite::Error::InvalidParameterName(
-            "El nombre no puede estar vacío".into(),
-        ));
+        return Err(rusqlite::Error::InvalidParameterName("Nombre vacío".into()));
     }
-    let valido = nombre
-        .chars()
-        .all(|c| c.is_alphanumeric() || c == '_');
-    if !valido {
-        return Err(rusqlite::Error::InvalidParameterName(format!(
-            "Nombre inválido '{nombre}': solo se permiten letras, números y guiones bajos"
-        )));
+    if !nombre.chars().all(|c| c.is_alphanumeric() || c == '_') {
+        return Err(rusqlite::Error::InvalidParameterName(format!("Nombre inválido: {nombre}")));
     }
     Ok(())
 }
 
-/// Convierte valores de SQLite a JSON para serialización.
-fn sqlite_value_to_json(valor: rusqlite::types::Value) -> serde_json::Value {
+fn sqlite_value_to_json(valor: rusqlite::types::Value) -> Value {
     match valor {
-        rusqlite::types::Value::Null => serde_json::Value::Null,
-        rusqlite::types::Value::Integer(i) => serde_json::Value::Number(i.into()),
-        rusqlite::types::Value::Real(f) => {
-            serde_json::Number::from_f64(f)
-                .map(serde_json::Value::Number)
-                .unwrap_or(serde_json::Value::Null)
-        }
-        rusqlite::types::Value::Text(s) => serde_json::Value::String(s),
-        rusqlite::types::Value::Blob(b) => {
-            serde_json::Value::String(base64_encode(&b))
-        }
+        rusqlite::types::Value::Null => Value::Null,
+        rusqlite::types::Value::Integer(i) => json!(i),
+        rusqlite::types::Value::Real(f) => json!(f),
+        rusqlite::types::Value::Text(s) => json!(s),
+        rusqlite::types::Value::Blob(b) => json!(format!("blob:{} bytes", b.len())),
     }
-}
-
-/// Codifica bytes en base64 sin dependencias externas (implementación simple).
-fn base64_encode(data: &[u8]) -> String {
-    const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut result = String::new();
-    let mut i = 0;
-    while i < data.len() {
-        let b0 = data[i] as u32;
-        let b1 = if i + 1 < data.len() { data[i + 1] as u32 } else { 0 };
-        let b2 = if i + 2 < data.len() { data[i + 2] as u32 } else { 0 };
-        result.push(CHARS[((b0 >> 2) & 0x3F) as usize] as char);
-        result.push(CHARS[((b0 << 4 | b1 >> 4) & 0x3F) as usize] as char);
-        result.push(if i + 1 < data.len() { CHARS[((b1 << 2 | b2 >> 6) & 0x3F) as usize] as char } else { '=' });
-        result.push(if i + 2 < data.len() { CHARS[(b2 & 0x3F) as usize] as char } else { '=' });
-        i += 3;
-    }
-    result
 }

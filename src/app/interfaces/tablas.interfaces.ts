@@ -6,6 +6,7 @@ export interface Tablas {
 export interface NuevaTabla {
     nombre: string;
     campos: string;
+    config?: string; // JSON string de TableConfig
 }
 
 export interface TableRule {
@@ -26,9 +27,18 @@ export interface CalculatedField {
     isActive: boolean;
 }
 
+export interface LinkedField {
+    localField: string;
+    remoteTable: string;
+    remoteField: string;
+    displayField: string;
+}
+
 export interface TableConfig {
     rules: TableRule[];
     calculatedFields?: CalculatedField[];
+    linkedFields?: LinkedField[];
+    allowAttachments?: boolean; // Nuevo campo opcional
 }
 
 export interface FieldMapping {
@@ -41,4 +51,5 @@ export interface RestructureTable {
     nombre_nuevo: string;
     campos_schema: string;
     mapeo: FieldMapping[];
+    config?: string; // JSON string de TableConfig
 }

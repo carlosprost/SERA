@@ -15,7 +15,7 @@ export interface FilterRule {
   standalone: true,
   imports: [MaterialModule, ReactiveFormsModule, CommonModule],
   templateUrl: './filter-sera-dialog.html',
-  styleUrl: './filter-sera-dialog.css'
+  styleUrl: './filter-sera-dialog.scss'
 })
 export class FilterSeraDialog {
   filterForm: FormGroup;

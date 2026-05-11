@@ -33,13 +33,15 @@
                         Incluir bloque de firma al pie
                     </mat-slide-toggle>
 
-                    <div class="signature-input" *ngIf="formularioRecibo.get('incluir_firma')?.value">
-                        <mat-form-field appearance="outline">
-                            <mat-label>Nombre / Cargo del Firmante</mat-label>
-                            <input matInput formControlName="firma_texto" placeholder="Ej: Of. Pr. Carlos Prost">
-                            <mat-icon matSuffix>draw</mat-icon>
-                        </mat-form-field>
-                    </div>
+                    @if (formularioRecibo.get('incluir_firma')?.value) {
+                        <div class="signature-input">
+                            <mat-form-field appearance="outline">
+                                <mat-label>Nombre / Cargo del Firmante</mat-label>
+                                <input matInput formControlName="firma_texto" placeholder="Ej: Of. Pr. Carlos Prost">
+                                <mat-icon matSuffix>draw</mat-icon>
+                            </mat-form-field>
+                        </div>
+                    }
                 </div>
             </form>
         </mat-tab>
@@ -50,13 +52,15 @@
                 <p class="section-hint">Seleccioná los campos que querés incluir y arrastralos para cambiar el orden en el reporte.</p>
                 
                 <div cdkDropList class="columns-list" (cdkDropListDropped)="drop($event)">
-                    <div class="column-item" *ngFor="let campo of camposConfig" cdkDrag>
-                        <div class="column-drag-placeholder" *cdkDragPlaceholder></div>
-                        <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
-                        <mat-checkbox [(ngModel)]="campo.seleccionado" color="primary">
-                            {{campo.nombre}}
-                        </mat-checkbox>
-                    </div>
+                    @for (campo of camposConfig; track campo.nombre) {
+                        <div class="column-item" cdkDrag>
+                            <div class="column-drag-placeholder" *cdkDragPlaceholder></div>
+                            <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
+                            <mat-checkbox [(ngModel)]="campo.seleccionado" color="primary">
+                                {{campo.nombre}}
+                            </mat-checkbox>
+                        </div>
+                    }
                 </div>
             </div>
         </mat-tab>

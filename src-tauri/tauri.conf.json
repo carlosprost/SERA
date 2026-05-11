@@ -1,6 +1,6 @@
 {
   "productName": "SERA",
-  "version": "3.0.7",
+  "version": "3.1.0",
   "identifier": "WolfTeI.SERADesktop",
   "build": {
     "beforeDevCommand": "npm run start",
@@ -21,7 +21,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' ipc: http://ipc.localhost"
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src * data: blob: asset: https://asset.localhost; connect-src 'self' ipc: http://ipc.localhost"
     }
   },
   "plugins": {},

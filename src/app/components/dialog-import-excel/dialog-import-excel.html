@@ -1,0 +1,66 @@
+<h2 mat-dialog-title class="dialog-header">
+  <mat-icon>upload_file</mat-icon> Importar desde Excel/CSV
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <p class="subtitle">Se han detectado <strong>{{ data.json.length }}</strong> registros en <strong>{{ data.fileName }}</strong>.</p>
+
+  <div class="preview-section">
+    <h3>Previsualización de datos:</h3>
+    <div class="table-preview-container">
+      <table class="preview-table">
+        <thead>
+          <tr>
+            @for (h of headers; track h) {
+              <th>{{ h }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of previewRows; track row) {
+            <tr>
+              @for (h of headers; track h) {
+                <td>{{ row[h] }}</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mode-selection">
+    <h3>Destino de la importación:</h3>
+    <mat-radio-group [(ngModel)]="mode" class="radio-group">
+      <mat-radio-button value="new">Crear como Tabla Nueva</mat-radio-button>
+      <mat-radio-button value="existing" [disabled]="!data.activeTable">
+        Añadir a Tabla Abierta ({{ data.activeTable || 'Ninguna' }})
+      </mat-radio-button>
+    </mat-radio-group>
+  </div>
+
+  @if (mode === 'new') {
+    <div class="options-section">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre de la nueva tabla</mat-label>
+        <input matInput [(ngModel)]="tableName" placeholder="Ej: Registro_Inventario" pattern="^[a-zA-Z0-9_]*$">
+        <mat-hint>Solo letras, números y guiones bajos.</mat-hint>
+      </mat-form-field>
+    </div>
+  }
+  
+  @if (mode === 'existing') {
+    <div class="info-alert">
+      <mat-icon>info</mat-icon>
+      <span>Los datos se añadirán al final de la tabla actual. Asegúrate de que las columnas coincidan exactamente con las del archivo.</span>
+    </div>
+  }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancelar</button>
+  <button mat-raised-button color="primary" (click)="onConfirm()" [disabled]="mode === 'new' && !tableName">
+    <mat-icon>check_circle</mat-icon> Iniciar Importación
+  </button>
+</mat-dialog-actions>

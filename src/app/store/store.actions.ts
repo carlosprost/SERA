@@ -28,7 +28,7 @@ export const StoreActions = createActionGroup({
     'Load Delete Table Success': props<{ message: string }>(),
     'Load Delete Table Failure': props<{ error: unknown }>(),
     'Load New Record': props<{ registro: NewRecord }>(),
-    'Load New Record Success': props<{ message: string }>(),
+    'Load New Record Success': props<{ id: number }>(),
     'Load New Record Failure': props<{ error: unknown }>(),
     'Load Update Record': props<{ registro: NewRecord }>(),
     'Load Update Record Success': props<{ message: string }>(),

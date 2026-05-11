@@ -38,14 +38,29 @@
             }
           </mat-menu>
 
-          <button class="ribbon-btn" (click)="importarTabla()" matTooltip="Importar tabla desde archivo .srx externo">
+          <button class="ribbon-btn" [matMenuTriggerFor]="importMenu" matTooltip="Importar datos desde archivos externos">
             <mat-icon color="accent">publish</mat-icon>
             <span>Importar</span>
           </button>
+          <mat-menu #importMenu="matMenu">
+            <button mat-menu-item (click)="importarTabla()">
+              <mat-icon color="primary">settings_backup_restore</mat-icon>
+              <span>Desde Respaldo (.srx)</span>
+            </button>
+            <button mat-menu-item (click)="importarExcel()">
+              <mat-icon style="color: #4caf50;">table_view</mat-icon>
+              <span>Desde Excel o CSV</span>
+            </button>
+          </mat-menu>
 
           <button class="ribbon-btn" (click)="openDialogAjustes()" matTooltip="Configuración del Membrete y Datos del Operador">
             <mat-icon>settings</mat-icon>
             <span>Ajustes</span>
+          </button>
+
+          <button class="ribbon-btn" (click)="openThemeSelector()" matTooltip="Cambiar el tema visual de SERA">
+            <mat-icon color="accent">palette</mat-icon>
+            <span>Apariencia</span>
           </button>
 
 
@@ -82,7 +97,7 @@
               @for (col of activeTable.allColumns; track col) {
                 @if (col !== activeTable.campoSeleccion && col !== 'actions') {
                   <button mat-menu-item (click)="activeTable.toggleColumnVisibility(col); $event.stopPropagation()">
-                    <mat-icon>{{ activeTable.hiddenColumns.has(col) ? 'check_box_outline_blank' : 'check_box' }}</mat-icon>
+                    <mat-icon [color]="activeTable.hiddenColumns.has(col) ? '' : 'primary'">{{ activeTable.hiddenColumns.has(col) ? 'check_box_outline_blank' : 'check_box' }}</mat-icon>
                     {{ col.split('_').join(' ') | titlecase }}
                   </button>
                 }
@@ -100,9 +115,13 @@
         <!-- GRUPO HERRAMIENTAS -->
         <div class="ribbon-group">
           <div class="ribbon-actions">
-            <button class="ribbon-btn" (click)="activeTable.openSearchPalette()" matTooltip="Búsqueda Rápida (Ctrl + F)">
+            <button class="ribbon-btn" (click)="openGlobalSearch()" matTooltip="Búsqueda Profunda en todas las tablas (Ctrl+Shift+F)">
+              <mat-icon color="primary">manage_search</mat-icon>
+              <span>Global</span>
+            </button>
+            <button class="ribbon-btn" (click)="activeTable.openSearchPalette()" matTooltip="Búsqueda Rápida en esta tabla (Ctrl+F)">
               <mat-icon>search</mat-icon>
-              <span>Buscar</span>
+              <span>Local</span>
             </button>
 
             <button class="ribbon-btn" [ngClass]="{'active': activeTable.activeFilters.length > 0}" (click)="activeTable.openFilterDialog()" matTooltip="Editor de Filtros Múltiples">
@@ -140,6 +159,17 @@
           <span class="ribbon-group-label">Transferencia</span>
         </div>
 
+        <!-- GRUPO ANÁLISIS -->
+        <div class="ribbon-group" *ngIf="tabs.length > 0">
+          <div class="ribbon-actions">
+            <button class="ribbon-btn" (click)="showTableDashboard.set(!showTableDashboard())" [class.active]="showTableDashboard()">
+              <mat-icon color="primary">insights</mat-icon>
+              <span>Dashboard</span>
+            </button>
+          </div>
+          <span class="ribbon-group-label">Análisis</span>
+        </div>
+
       }
 
     </div>
@@ -148,12 +178,14 @@
 <div class="main-workspace">
   <!-- Si no hay pestañas, mostrar logo o pantalla vacía -->
     @if (tabs.length === 0) {
-      <div class="empty-state">
-        <mat-icon class="huge-icon">dataset</mat-icon>
-        <h2>SERA Smart Workspace</h2>
-        <p>Abre una tabla desde <strong>Archivo</strong> o crea una nueva.</p>
-      </div>
+      <app-home-dashboard></app-home-dashboard>
     }
+
+    <!-- Dashboard de tabla activa (Cortina) -->
+    <app-table-dashboard 
+      *ngIf="showTableDashboard() && tabs.length > 0"
+      [tabla]="tabs[selected.value ?? 0]">
+    </app-table-dashboard>
 
     <!-- Tabs Container -->
     @if (tabs.length > 0) {
@@ -169,7 +201,12 @@
           <mat-tab>
             <ng-template matTabLabel>
               <div class="custom-tab-label">
-                <span class="tab-title">{{ tab.split("_").join(" ") | uppercase }}</span>
+                @if (tab.startsWith('SEARCH:')) {
+                  <mat-icon style="font-size: 16px; width: 16px; height: 16px; margin-right: 8px;">search</mat-icon>
+                  <span class="tab-title">RES: {{ searchTabsData[tab].term | uppercase }}</span>
+                } @else {
+                  <span class="tab-title">{{ tab.split("_").join(" ") | uppercase }}</span>
+                }
                 <button
                   mat-icon-button
                   class="tab-close-btn"
@@ -181,16 +218,23 @@
             </ng-template>
             <!-- Contenido directo (sin lazy portal) para que @ViewChildren lo encuentre en orden -->
             <div class="tab-content-wrapper-fix">
-              <section class="tabla-container-full">
-                <app-table
-                  [tabla]="tab"
-                  (elementosSeleccionados)="elementosSeleccionados($event)"
-                  (printPdf)="openDialogRecibo($event)"
-                ></app-table>
-              </section>
+              @if (tab.startsWith('SEARCH:')) {
+                <app-search-results 
+                  [term]="searchTabsData[tab].term" 
+                  [results]="searchTabsData[tab].results"
+                  (navigateTo)="onSearchNavigate($event)">
+                </app-search-results>
+              } @else {
+                <section class="tabla-container-full">
+                  <app-table
+                    [tabla]="tab"
+                    (elementosSeleccionados)="elementosSeleccionados($event)"
+                    (printPdf)="openDialogRecibo($event)"
+                  ></app-table>
+                </section>
+              }
             </div>
           </mat-tab>
-            
         }
       </mat-tab-group>
     }

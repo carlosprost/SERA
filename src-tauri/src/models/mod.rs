@@ -20,11 +20,13 @@ pub struct NuevaTabla {
     pub nombre: String,
     /// Definición de los campos adicionales (ej: "nombre TEXT, edad INTEGER").
     pub campos: String,
+    /// Configuración visual y vínculos (JSON).
+    pub config: Option<String>,
 }
 
 /// Información de un campo de tabla, compatible con la interface `Campos`
 /// del frontend Angular (mapeada desde PRAGMA table_info de SQLite).
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Campo {
     /// Nombre del campo (mapeado desde `name` de PRAGMA table_info).
     #[serde(rename = "Field")]
@@ -88,6 +90,8 @@ pub struct RestructureTable {
     pub campos_schema: String,
     /// Lista de mapeos para copiar datos (viejo_nombre -> nuevo_nombre).
     pub mapeo: Vec<FieldMapping>,
+    /// Nueva configuración visual y vínculos (JSON).
+    pub config: Option<String>,
 }
 
 /// Configuración persistente del usuario.
@@ -111,6 +115,14 @@ pub struct UserConfig {
     pub membrete: String,
 }
 
+/// Modelo para exportar adjuntos junto con la tabla.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ExportedAdjunto {
+    pub registro_id: i64,
+    pub nombre: String,
+    pub ruta_interna: String,
+}
+
 /// Empaquetado completo de una tabla para exportación (.srx).
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ExportedTable {
@@ -118,4 +130,25 @@ pub struct ExportedTable {
     pub campos: Vec<Campo>,
     pub contenido: Vec<serde_json::Value>,
     pub visual_config: String,
+    pub adjuntos: Option<Vec<ExportedAdjunto>>,
+}
+
+/// Datos para insertar múltiples registros en bloque.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BulkRecord {
+    /// Nombre de la tabla destino.
+    pub tabla: String,
+    /// Lista de nombres de campos.
+    pub campos: Vec<String>,
+    /// Lista de registros, donde cada registro es una lista de valores (strings).
+    pub contenido: Vec<Vec<String>>,
+}
+
+/// Estadísticas globales del sistema.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GlobalStats {
+    /// Cantidad total de tablas creadas.
+    pub total_tablas: i64,
+    /// Suma total de registros en todas las tablas.
+    pub total_registros: i64,
 }

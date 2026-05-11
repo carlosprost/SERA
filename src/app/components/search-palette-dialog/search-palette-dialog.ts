@@ -11,7 +11,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
   standalone: true,
   imports: [MaterialModule, ReactiveFormsModule, CommonModule],
   templateUrl: './search-palette-dialog.html',
-  styleUrl: './search-palette-dialog.css'
+  styleUrl: './search-palette-dialog.scss'
 })
 export class SearchPaletteDialog implements OnInit, OnDestroy, AfterViewInit {
   searchControl = new FormControl('');

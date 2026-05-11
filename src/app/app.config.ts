@@ -8,6 +8,7 @@ import { provideStoreDevtools } from "@ngrx/store-devtools";
 import { storeFeature } from "./store/store.reducer";
 import { StoreEffects } from "./store/store.effects";
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,6 +17,7 @@ export const appConfig: ApplicationConfig = {
     provideEffects([StoreEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() }),
     provideAnimationsAsync(),
+    provideCharts(withDefaultRegisterables()),
   ],
 };
 

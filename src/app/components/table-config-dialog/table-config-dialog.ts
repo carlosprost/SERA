@@ -5,13 +5,15 @@ import { MaterialModule } from '../../shared/material.module';
 import { CommonModule } from '@angular/common';
 import { TableRule } from '../../interfaces/tablas.interfaces';
 import { invoke } from '@tauri-apps/api/core';
+import { MatDialog } from '@angular/material/dialog';
+import { RecetarioComponent } from '../recetario/recetario';
 
 @Component({
   selector: 'app-table-config-dialog',
   standalone: true,
   imports: [MaterialModule, ReactiveFormsModule, CommonModule],
   templateUrl: './table-config-dialog.html',
-  styleUrl: './table-config-dialog.css'
+  styleUrl: './table-config-dialog.scss'
 })
 export class TableConfigDialog implements OnInit {
   configForm: FormGroup;
@@ -19,6 +21,8 @@ export class TableConfigDialog implements OnInit {
   campos: string[] = [];
   activeTab = 0;
   showRecipes: boolean = false;
+  tablasDisponibles: any[] = [];
+  camposRemotos: { [key: string]: string[] } = {};
 
   operators = [
     { value: 'equals', viewValue: 'Es igual a' },
@@ -54,6 +58,7 @@ export class TableConfigDialog implements OnInit {
   constructor(
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
+    private dialog: MatDialog,
     public dialogRef: MatDialogRef<TableConfigDialog>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
@@ -63,8 +68,10 @@ export class TableConfigDialog implements OnInit {
     
     this.configForm = this.fb.group({
       rules: this.fb.array([]),
-      calculatedFields: this.fb.array([])
+      calculatedFields: this.fb.array([]),
+      linkedFields: this.fb.array([])
     });
+    this.cargarTablasDisponibles();
   }
 
   ngOnInit() {
@@ -77,6 +84,10 @@ export class TableConfigDialog implements OnInit {
 
   get calculatedFields(): FormArray {
     return this.configForm.get('calculatedFields') as FormArray;
+  }
+
+  get linkedFields(): FormArray {
+    return this.configForm.get('linkedFields') as FormArray;
   }
 
   createRuleGroup(rule?: any): FormGroup {
@@ -99,6 +110,30 @@ export class TableConfigDialog implements OnInit {
       formula: [cf?.formula || '', Validators.required],
       isActive: [cf?.isActive !== false]
     });
+  }
+
+  createLinkedFieldGroup(lf?: any): FormGroup {
+    const group = this.fb.group({
+      localField: [lf?.localField || '', Validators.required],
+      remoteTable: [lf?.remoteTable || '', Validators.required],
+      remoteField: [lf?.remoteField || '', Validators.required],
+      displayField: [lf?.displayField || '', Validators.required]
+    });
+
+    // Cargar campos remotos si ya tiene tabla
+    if (lf?.remoteTable) {
+      this.onRemoteTableChange(lf.remoteTable);
+    }
+
+    return group;
+  }
+
+  addLinkedField() {
+    this.linkedFields.push(this.createLinkedFieldGroup());
+  }
+
+  removeLinkedField(index: number) {
+    this.linkedFields.removeAt(index);
   }
 
   addCalculatedField() {
@@ -134,6 +169,10 @@ export class TableConfigDialog implements OnInit {
         
         if (config.calculatedFields && Array.isArray(config.calculatedFields)) {
           config.calculatedFields.forEach((cf: any) => this.calculatedFields.push(this.createCalculatedFieldGroup(cf)));
+        }
+
+        if (config.linkedFields && Array.isArray(config.linkedFields)) {
+          config.linkedFields.forEach((lf: any) => this.linkedFields.push(this.createLinkedFieldGroup(lf)));
         }
 
         this.cdr.detectChanges();
@@ -192,7 +231,8 @@ export class TableConfigDialog implements OnInit {
     
     const config = { 
       rules: this.configForm.value.rules,
-      calculatedFields: this.configForm.value.calculatedFields
+      calculatedFields: this.configForm.value.calculatedFields,
+      linkedFields: this.configForm.value.linkedFields
     };
     const configJson = JSON.stringify(config);
     
@@ -202,6 +242,34 @@ export class TableConfigDialog implements OnInit {
     } catch (e) {
       console.error("Error saving rule", e);
     }
+  }
+
+  async cargarTablasDisponibles() {
+    try {
+      this.tablasDisponibles = await invoke('get_tablas');
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.error("Error al cargar tablas para vínculos", e);
+    }
+  }
+
+  async onRemoteTableChange(nombreTabla: string) {
+    if (!nombreTabla || this.camposRemotos[nombreTabla]) return;
+    
+    try {
+      const camposRes: any[] = await invoke('get_campos', { nombreTabla });
+      this.camposRemotos[nombreTabla] = camposRes.map(c => c.Field);
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.error("Error al cargar campos de tabla remota", e);
+    }
+  }
+
+  verRecetario() {
+    this.dialog.open(RecetarioComponent, {
+      width: '700px',
+      maxWidth: '90vw'
+    });
   }
 
   dialogClose() {

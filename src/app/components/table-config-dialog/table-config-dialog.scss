@@ -2,7 +2,7 @@
   min-width: 950px;
   width: 95vw;
   max-width: 1300px;
-  max-height: 85vh;
+  max-height: 92vh; /* Un poco más de altura */
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -12,7 +12,7 @@
     justify-content: space-between;
     align-items: center;
     padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(var(--sera-text-rgb), 0.1);
     margin-bottom: 16px;
 
     h2 {
@@ -29,13 +29,14 @@
     min-height: 0;
 
     .tab-content-container {
-      padding: 24px 0;
+      padding: 24px 40px; /* Mucho más aire a los costados */
       min-height: 60vh;
       display: flex;
       flex-direction: column;
 
       .section-hint {
-        color: rgba(255, 255, 255, 0.5);
+        color: var(--sera-text-color);
+        opacity: 0.5;
         font-size: 0.85rem;
         margin-bottom: 24px;
         font-style: italic;
@@ -57,11 +58,11 @@
 
         .recipes-side {
           width: 350px;
-          height: 55vh;
-          background: rgba(0, 0, 0, 0.3);
+          flex: 1; /* También flexible */
+          background: rgba(var(--sera-text-rgb), 0.03);
           border-radius: 16px;
           padding: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(var(--sera-text-rgb), 0.1);
           animation: slideInRight 0.3s ease-out;
           overflow-y: auto;
           display: flex;
@@ -95,8 +96,8 @@
           }
 
           .recipe-card {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(var(--sera-text-rgb), 0.04);
+            border: 1px solid rgba(var(--sera-text-rgb), 0.08);
             border-radius: 12px;
             padding: 16px;
             cursor: pointer;
@@ -113,15 +114,15 @@
               font-weight: 600;
               font-size: 0.9rem;
               margin-bottom: 10px;
-              color: #fff;
+              color: var(--sera-text-color);
             }
 
             .recipe-code {
               display: block;
               font-family: 'Fira Code', 'Consolas', monospace;
               font-size: 0.7rem;
-              color: #a5d6a7;
-              background: rgba(0,0,0,0.5);
+              color: var(--sera-primary-color);
+              background: rgba(var(--sera-text-rgb), 0.05);
               padding: 8px 12px;
               border-radius: 8px;
               word-break: break-all;
@@ -141,7 +142,8 @@
     }
 
     .rules-scroll-viewport {
-      height: 55vh;
+      flex: 1; /* Ocupa el espacio restante */
+      min-height: 0;
       display: flex;
       flex-direction: column;
       overflow-y: auto;
@@ -153,7 +155,7 @@
       padding: 12px;
       margin-bottom: 20px;
       border-radius: 8px;
-      background: rgba(0, 0, 0, 0.1);
+      background: rgba(var(--sera-text-rgb), 0.03);
     }
 
     .add-button-container {
@@ -162,12 +164,13 @@
     }
 
     .rule-row {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(var(--sera-text-rgb), 0.04);
+      border-radius: 16px;
+      padding: 28px; /* Más espacio interno */
+      margin-bottom: 24px;
+      border: 1px solid rgba(var(--sera-text-rgb), 0.08);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 
       &:hover {
         background: rgba(255, 255, 255, 0.08);
@@ -203,13 +206,15 @@
             overflow: hidden;
             
             mat-button-toggle {
-              background: rgba(0,0,0,0.2);
+              background: rgba(var(--sera-text-rgb), 0.05);
               font-size: 11px;
-              color: rgba(255,255,255,0.6);
+              color: var(--sera-text-color);
+              opacity: 0.6;
 
               &.mat-button-toggle-checked {
                 background: #ffca28;
                 color: #000;
+                opacity: 1;
               }
             }
           }
@@ -237,8 +242,9 @@
           
           textarea {
             font-family: 'Fira Code', 'Consolas', monospace;
-            background: rgba(0,0,0,0.2);
-            color: #81d4fa;
+            background: rgba(var(--sera-text-rgb), 0.05) !important;
+            color: var(--sera-primary-color) !important;
+            border-radius: 4px;
           }
         }
 
@@ -271,7 +277,8 @@
               font-size: 11px;
               text-transform: uppercase;
               letter-spacing: 1px;
-              color: rgba(255,255,255,0.4);
+              color: var(--sera-text-color);
+              opacity: 0.4;
               font-weight: 700;
             }
           }
@@ -349,4 +356,56 @@
 ::ng-deep .full-width-formula .mat-mdc-form-field-subscript-wrapper,
 ::ng-deep .formula-field .mat-mdc-form-field-subscript-wrapper {
   display: block !important;
+}
+
+.no-split {
+  padding: 0 10px;
+}
+
+.relationship-row {
+  border-left: 4px solid #00bcd4 !important;
+  
+  .link-badge {
+    background: #00bcd4 !important;
+    color: #fff !important;
+  }
+}
+
+.horizontal-layout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+
+  .flex-1 {
+    flex: 1;
+  }
+
+  .link-arrow {
+    color: #00bcd4;
+    opacity: 0.6;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.1);
+  border: 2px dashed rgba(255,255,255,0.05);
+  border-radius: 12px;
+  margin-bottom: 20px;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+  }
 }

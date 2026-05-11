@@ -1,0 +1,104 @@
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--sera-surface-color);
+  color: var(--sera-primary-color);
+  margin: -24px -24px 20px -24px;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(var(--sera-text-rgb), 0.1);
+}
+
+.subtitle {
+  color: var(--sera-text-color);
+  opacity: 0.7;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.preview-section {
+  margin-bottom: 24px;
+}
+
+.preview-section h3, .mode-selection h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--sera-primary-color);
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.table-preview-container {
+  overflow-x: auto;
+  border: 1px solid rgba(var(--sera-text-rgb), 0.1);
+  border-radius: 8px;
+  background: var(--sera-bg-color);
+  max-height: 200px;
+}
+
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.preview-table th {
+  background: rgba(var(--sera-text-rgb), 0.05);
+  color: var(--sera-text-color);
+  padding: 8px;
+  text-align: left;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.preview-table td {
+  padding: 8px;
+  color: var(--sera-text-color);
+  opacity: 0.8;
+  border-top: 1px solid rgba(var(--sera-text-rgb), 0.05);
+  white-space: nowrap;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mode-selection {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgba(var(--sera-text-rgb), 0.03);
+  border-radius: 8px;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.info-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(var(--sera-primary-color-rgb, 52, 152, 219), 0.1);
+  border-left: 4px solid var(--sera-primary-color);
+  padding: 12px;
+  border-radius: 4px;
+  color: var(--sera-text-color);
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.info-alert mat-icon {
+  color: var(--sera-primary-color);
+}
+
+mat-dialog-actions {
+  padding: 16px 0 0 0;
+  border-top: 1px solid rgba(var(--sera-text-rgb), 0.1);
+}

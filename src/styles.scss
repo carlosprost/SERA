@@ -1,8 +1,45 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+/* 
+ * DEFINICIÓN DE TEMAS MATERIAL 3
+ */
+
+/* Tema Claro de Material 3 */
+$sera-light-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$azure-palette,
+    tertiary: mat.$blue-palette,
+  ),
+  typography: (
+    brand-family: 'Inter, Roboto, sans-serif',
+    plain-family: 'Inter, Roboto, sans-serif',
+  ),
+  density: (
+    scale: 0
+  ),
+));
+
+/* Tema Oscuro de Material 3 */
+$sera-dark-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: mat.$azure-palette,
+    tertiary: mat.$blue-palette,
+  ),
+  typography: (
+    brand-family: 'Inter, Roboto, sans-serif',
+    plain-family: 'Inter, Roboto, sans-serif',
+  ),
+  density: (
+    scale: 0
+  ),
+));
+
 /* 
  * @font-face manual para Material Icons.
- * Se apunta directamente a los archivos en assets/fonts para garantizar
- * la resolución correcta tanto en dev (ng serve) como en producción (Tauri build).
- * Esto evita el problema de carga diferida del mecanismo de styles externos de Angular.
  */
 @font-face {
   font-family: 'Material Icons';
@@ -31,15 +68,85 @@
   font-feature-settings: 'liga';
 }
 
-
-
 html, body { 
   height: 100%; 
   margin: 0; 
   padding: 0;
-  overflow: hidden; /* Evitar scroll dobles */
-  font-family: Roboto, "Helvetica Neue", sans-serif;
-  background-color: #1e1e1e;
+  overflow: hidden; 
+  font-family: 'Inter', Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--sera-bg-color, #1e1e1e);
+  color: var(--sera-text-color, #ffffff);
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
+}
+
+/* --- DEFINICIÓN DE TOKENS SERA --- */
+
+/* DEEP DARK */
+body.theme-dark {
+  @include mat.all-component-themes($sera-dark-theme);
+  --sera-primary-color: #38bdf8;
+  --sera-primary-rgb: 56, 189, 248;
+  --sera-bg-color: #0f172a;
+  --sera-bg-rgb: 15, 23, 42;
+  --sera-surface-color: rgba(30, 41, 59, 0.85);
+  --sera-text-color: #ffffff;
+  --sera-text-rgb: 255, 255, 255;
+  --sera-card-bg: #1e293b;
+  --sera-on-bg: #ffffff;
+  --sera-on-surface: #ffffff;
+  --sera-on-primary: #000000;
+}
+
+/* MIDNIGHT BLUE */
+body.theme-midnight {
+  @include mat.all-component-themes($sera-dark-theme);
+  --sera-primary-color: #38bdf8;
+  --sera-primary-rgb: 56, 189, 248;
+  --sera-bg-color: #0f172a;
+  --sera-bg-rgb: 15, 23, 42;
+  --sera-surface-color: rgba(30, 41, 59, 0.85);
+  --sera-text-color: #f1f5f9;
+  --sera-text-rgb: 241, 245, 249;
+  --sera-card-bg: #1e293b;
+  --sera-on-bg: #f1f5f9;
+  --sera-on-surface: #f1f5f9;
+  --sera-on-primary: #ffffff;
+}
+
+/* EMERALD FOREST */
+body.theme-emerald {
+  @include mat.all-component-themes($sera-dark-theme);
+  --sera-primary-color: #2ecc71;
+  --sera-primary-rgb: 46, 204, 113;
+  --sera-bg-color: #1b262c;
+  --sera-bg-rgb: 27, 38, 44;
+  --sera-surface-color: rgba(27, 38, 44, 0.85);
+  --sera-text-color: #bbe1fa;
+  --sera-text-rgb: 187, 225, 250;
+  --sera-card-bg: #2a3a42;
+  --sera-on-bg: #bbe1fa;
+  --sera-on-surface: #bbe1fa;
+  --sera-on-primary: #ffffff;
+}
+
+/* SOPHISTICATED LIGHT */
+body.theme-light {
+  @include mat.all-component-themes($sera-light-theme);
+  --sera-primary-color: #2563eb;
+  --sera-primary-rgb: 37, 99, 235;
+  --sera-bg-color: #f8fafc;
+  --sera-bg-rgb: 248, 250, 252;
+  --sera-surface-color: #f1f5f9;
+  --sera-text-color: #1e293b;
+  --sera-text-rgb: 30, 41, 59;
+  --sera-card-bg: #ffffff;
+  --sera-on-bg: #1e293b;
+  --sera-on-surface: #1e293b;
+  --sera-on-primary: #ffffff;
+  
+  /* Optimizaciones de UI para tema claro */
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+  .cdk-overlay-pane.mat-mdc-dialog-panel { box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; }
 }
 
 app-root {
@@ -49,14 +156,105 @@ app-root {
   overflow: hidden;
 }
 
-/* Global Material Dialog overrides to make them pop visually in dark themes */
-.cdk-overlay-pane.mat-mdc-dialog-panel {
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.7), 
-              0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-  border-radius: 16px; /* A bit more rounded for modern look */
+/* Global Material Menu & Select Overrides */
+.mat-mdc-menu-panel, .mat-mdc-select-panel {
+  background-color: var(--sera-card-bg) !important;
+  border: 1px solid rgba(var(--sera-text-rgb), 0.1) !important;
+  
+  .mat-mdc-menu-item, .mat-mdc-option {
+    color: var(--sera-text-color) !important;
+    
+    mat-icon {
+      color: var(--sera-text-color) !important;
+      opacity: 0.7;
+    }
+    
+    &:hover:not(.mat-mdc-option-disabled), &.mat-mdc-option-active {
+      background-color: rgba(var(--sera-primary-rgb), 0.1) !important;
+    }
+
+    .mdc-list-item__primary-text {
+      color: var(--sera-text-color) !important;
+    }
+  }
 }
 
-/* Custom Scrollbar for Dark Theme */
+/* Global Material Dialog overrides */
+.cdk-overlay-pane.mat-mdc-dialog-panel {
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4), 
+              0 0 0 1px rgba(var(--sera-text-rgb), 0.1) !important;
+  border-radius: 16px;
+
+  .mat-mdc-dialog-container, .mat-mdc-dialog-surface {
+    background-color: var(--sera-bg-color) !important;
+    color: var(--sera-text-color) !important;
+  }
+
+  .mat-mdc-dialog-title {
+    color: var(--sera-primary-color) !important;
+  }
+
+  .mat-mdc-dialog-content {
+    color: var(--sera-text-color) !important;
+  }
+}
+
+/* Global Form Field Overrides */
+::ng-deep .mat-mdc-text-field-wrapper {
+  background-color: rgba(var(--sera-text-rgb), 0.03) !important;
+  
+  .mdc-text-field__input {
+    color: var(--sera-on-surface) !important;
+    &::placeholder {
+      color: var(--sera-on-surface) !important;
+      opacity: 0.8 !important;
+    }
+  }
+  
+  .mdc-floating-label, 
+  .mdc-floating-label--float-above,
+  .mat-mdc-form-field-label {
+    color: var(--sera-on-surface) !important;
+    opacity: 1 !important;
+  }
+
+  &.mat-form-field-should-float .mdc-floating-label {
+    color: var(--sera-on-surface) !important;
+  }
+}
+
+::ng-deep .mat-mdc-select-value {
+  color: var(--sera-on-surface) !important;
+}
+
+::ng-deep .mat-mdc-form-field-focus-indicator {
+  color: var(--sera-primary-color) !important;
+}
+
+/* Global Disabled Button Overrides */
+.mat-mdc-button:disabled, 
+.mat-mdc-raised-button:disabled, 
+.mat-mdc-flat-button:disabled, 
+.mat-mdc-outlined-button:disabled {
+  background-color: rgba(var(--sera-text-rgb), 0.05) !important;
+  color: var(--sera-text-color) !important;
+  opacity: 0.35 !important; 
+  cursor: not-allowed !important;
+}
+
+/* Forzar color primary en componentes de selección */
+mat-checkbox, mat-slide-toggle {
+  --mdc-checkbox-selected-focus-icon-color: var(--sera-primary-color) !important;
+  --mdc-checkbox-selected-hover-icon-color: var(--sera-primary-color) !important;
+  --mdc-checkbox-selected-icon-color: var(--sera-primary-color) !important;
+  --mdc-checkbox-selected-pressed-icon-color: var(--sera-primary-color) !important;
+  
+  --mdc-switch-selected-icon-color: var(--sera-primary-color) !important;
+  --mdc-switch-selected-track-color: var(--sera-primary-color) !important;
+  --mdc-switch-selected-handle-color: #ffffff !important;
+}
+
+/* Custom Scrollbar Dynamic */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -67,17 +265,12 @@ app-root {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4a5158; /* Color gris acorde al tema oscuro */
+  background: rgba(var(--sera-text-rgb), 0.2); 
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #60686f; /* Un gris un poco más claro al pasar el mouse */
-}
-/* Firefox support */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #4a5158 transparent;
+  background: rgba(var(--sera-text-rgb), 0.3);
 }
 
 /* Paleta de Comandos (Ctrl+F) */
@@ -90,6 +283,6 @@ app-root {
 }
 
 .spotlight-backdrop {
-  background: rgba(0, 0, 0, 0.1) !important; /* Más transparente */
-  backdrop-filter: none !important; /* SIN BLUR */
+  background: rgba(var(--sera-bg-rgb), 0.5) !important;
+  backdrop-filter: none !important;
 }

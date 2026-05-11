@@ -4,7 +4,7 @@
   display: grid;
   grid-template-rows: auto 1fr; /* Ribbon arriba, Workspace resto */
   overflow: hidden;
-  background-color: #1e1e1e; /* Fondo oscuro base */
+  background-color: var(--sera-bg-color); /* Fondo reactivo */
 
   /* GLOBAL RIBBON COMPONENT */
   .ribbon-container {
@@ -12,8 +12,8 @@
     height: 130px; /* ALTO FIJO PARA EL RIBBON */
     display: flex;
     flex-direction: column;
-    background-color: #2b3035;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: var(--sera-surface-color);
+    border-bottom: 1px solid rgba(var(--sera-text-rgb), 0.1);
     padding: 4px;
     z-index: 10;
   }
@@ -34,7 +34,7 @@
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(var(--sera-text-rgb), 0.1);
     padding: 0 16px;
     min-width: max-content;
 
@@ -58,7 +58,7 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: 4px;
-    color: #e0e0e0;
+    color: var(--sera-text-color);
     padding: 4px 8px;
     cursor: pointer;
     min-width: 60px;
@@ -70,7 +70,8 @@
       width: 24px;
       height: 24px;
       margin-bottom: 4px;
-      color: #a0a0a0;
+      color: var(--sera-text-color);
+      opacity: 0.7;
     }
 
     span {
@@ -136,7 +137,8 @@
 
   .ribbon-group-label {
     font-size: 11px;
-    color: #8c8c8c;
+    color: var(--sera-text-color);
+    opacity: 0.5;
     text-transform: capitalize;
     margin-bottom: 2px;
     font-weight: 500;
@@ -152,7 +154,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background-color: #212529; /* COLOR ORIGINAL RESTAURADO */
+    background-color: var(--sera-bg-color); 
     margin: 0;
     padding: 0;
     z-index: 5;
@@ -163,7 +165,8 @@
       justify-content: center;
       align-items: center;
       height: 100%;
-      color: #717171;
+      color: var(--sera-text-color);
+      opacity: 0.5;
       text-align: center;
 
       .huge-icon {
@@ -177,7 +180,7 @@
         font-size: 24px;
         font-weight: 300;
         margin: 0;
-        color: #a0a0a0;
+        color: var(--sera-text-color);
       }
     }
 
@@ -188,8 +191,8 @@
       flex-direction: column;
 
       ::ng-deep .mat-mdc-tab-header {
-        background-color: #2b3035 !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        background-color: var(--sera-surface-color) !important;
+        border-bottom: 1px solid rgba(var(--sera-text-rgb), 0.1) !important;
       }
 
       /* NUCLEAR FIX: Forzar que el label y sus contenedores MDC tomen todo el ancho */
@@ -228,7 +231,7 @@
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          color: #e0e0e0;
+          color: var(--sera-text-color);
           font-weight: 500;
           line-height: 24px; /* Alineado con el alto del botón */
         }
@@ -248,7 +251,7 @@
             font-size: 16px !important; 
             width: 16px !important;
             height: 16px !important;
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(var(--sera-text-rgb), 0.4);
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;

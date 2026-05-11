@@ -118,8 +118,8 @@ export class StoreEffects {
       ofType(StoreActions.loadNewRecord),
       concatMap((props) =>
         this.newRecord(props.registro).pipe(
-          switchMap(message => from([
-            StoreActions.loadNewRecordSuccess({ message }),
+          switchMap(id => from([
+            StoreActions.loadNewRecordSuccess({ id }),
             StoreActions.loadContenido({ tabla: props.registro.tabla })
           ])),
           catchError(error => of(StoreActions.loadNewRecordFailure({ error }))))
@@ -211,8 +211,8 @@ export class StoreEffects {
     return from(invoke<string>('eliminar_tabla', { nombreTabla: tabla }));
   }
 
-  newRecord(registro: NewRecord): Observable<string> {
-    return from(invoke<string>('nuevo_registro', { registro }));
+  newRecord(registro: NewRecord): Observable<number> {
+    return from(invoke<number>('nuevo_registro', { registro }));
   }
 
   updateRecord(registro: NewRecord): Observable<string> {

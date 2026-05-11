@@ -22,12 +22,12 @@ export class FormulaEngine {
       if (processed.startsWith('=')) processed = processed.substring(1);
 
       // 2. Reemplazo de campos [campo] por sus valores reales
-      // Protegemos los valores para que no rompan la evaluación
+      // Soportamos [<campo>] o [campo] eliminando tags < > interiores
       processed = processed.replace(/\[(.*?)\]/g, (match, fieldName) => {
-        const val = row[fieldName];
-        if (val === undefined || val === null) return "''";
+        const cleanName = fieldName.replace(/[<>]/g, '');
+        const val = row[cleanName];
+        if (val === undefined || val === null) return "0"; // Devolvemos 0 para evitar fallos en comparaciones numéricas
         if (typeof val === 'number') return val.toString();
-        // Si es string, escapamos comillas simples
         return `'${String(val).replace(/'/g, "\\'")}'`;
       });
 
@@ -130,12 +130,10 @@ export class FormulaEngine {
    */
   private static jsOperatorFix(expr: string): string {
     return expr
-      .replace(/<>/g, '!==') // Excel NOT EQUAL
-      .replace(/(?<![=!<>])=(?!=)/g, '===')  // = simple -> === (evita reemplazar == o >=)
-      .replace(/====/g, '===') // Fix accidental conversión doble
-      .replace(/!== ===/g, '!==') // Fix accidental conversión triple
-      .replace(/AND/gi, '&&')
-      .replace(/OR/gi, '||')
-      .replace(/NOT/gi, '!');
+      .replace(/<>/g, '!==') 
+      .replace(/(?<![=!<>])=(?!=)/g, '===')
+      .replace(/\bAND\b/gi, '&&')
+      .replace(/\bOR\b/gi, '||')
+      .replace(/\bNOT\b/gi, '!');
   }
 }

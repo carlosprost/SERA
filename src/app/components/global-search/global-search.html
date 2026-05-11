@@ -1,0 +1,42 @@
+<div class="spotlight-container">
+  <div class="search-input-wrapper">
+    <mat-icon class="search-icon">search</mat-icon>
+    <input 
+      type="text" 
+      [(ngModel)]="searchTerm" 
+      (ngModelChange)="onSearch()" 
+      (keydown.enter)="onEnter()"
+      placeholder="Búsqueda global (Tablas, registros...)"
+      autofocus
+    >
+    <mat-spinner *ngIf="loading()" [diameter]="24" class="search-spinner"></mat-spinner>
+    <div class="shortcut-hint">Enter para ver todo</div>
+  </div>
+
+  <div class="results-area" *ngIf="tableNames.length > 0">
+    <div *ngFor="let tableName of tableNames" class="table-group">
+      <div class="table-header">
+        <mat-icon>table_chart</mat-icon>
+        <span>{{ tableName }}</span>
+        <span class="count-badge">{{ results()[tableName].length }}</span>
+      </div>
+      
+      <mat-nav-list>
+        <mat-list-item *ngFor="let row of results()[tableName].slice(0, 3)" (click)="selectResult(tableName, row)">
+          <mat-icon matListItemIcon>description</mat-icon>
+          <div matListItemTitle>{{ getRowSummary(row) }}</div>
+        </mat-list-item>
+      </mat-nav-list>
+    </div>
+  </div>
+
+  <div class="no-results" *ngIf="searchTerm.length >= 2 && tableNames.length === 0 && !loading()">
+    <mat-icon>search_off</mat-icon>
+    <p>No se encontraron coincidencias en ninguna tabla.</p>
+  </div>
+  
+  <div class="search-footer">
+    <span>ESC para cerrar</span>
+    <span>↑↓ para navegar</span>
+  </div>
+</div>

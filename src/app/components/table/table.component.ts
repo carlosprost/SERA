@@ -18,6 +18,7 @@ import { StoreActions } from "../../store/store.actions";
 import { selectCampos, selectContenido } from "../../store/store.selectors";
 import { CommonModule } from "@angular/common";
 import { FormularioRegistroComponent } from "../formulario-registro/formulario-registro.component";
+import { DetalleRegistroComponent } from "../detalle-registro/detalle-registro";
 import { ChangeDetectorRef, ViewChild, AfterViewInit, HostListener } from "@angular/core";
 import { TableConfigDialog } from "../table-config-dialog/table-config-dialog";
 import { TableConfig, TableRule, CalculatedField } from "../../interfaces/tablas.interfaces";
@@ -57,6 +58,13 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
   calculatedFields: CalculatedField[] = [];
   activeFilters: FilterRule[] = [];
   lastSearchValue: string = '';
+  
+  // Vínculos Relacionales
+  linkedFields: any[] = [];
+  dictionaries: { [key: string]: { [id: string]: string } } = {};
+
+  // Configuración de visualización
+  allowAttachments: boolean = true;
 
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -74,7 +82,18 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subcriptions = [
       this.campos.subscribe({
         next: (campos) => {
+          // VALIDACIÓN: Solo actualizamos si los campos corresponden a esta tabla
+          // El ID de la tabla siempre tiene el formato id_{nombre_tabla}
+          const expectedId = `id_${this.tabla.toLowerCase()}`;
+          const hasCorrectId = campos.some(c => c.Field.toLowerCase() === expectedId);
+
+          if (!hasCorrectId && campos.length > 0) return;
+
           this.allColumns = [this.campoSeleccion];
+          
+          if (this.allowAttachments) {
+            this.allColumns.push('sera_adjuntos');
+          }
 
           campos.forEach((campo) => {
             if (campo.Field !== `id_${this.tabla}`) {
@@ -174,6 +193,25 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  openDetalleRegistro(row: any) {
+    const dialogRef = this.dialog.open(DetalleRegistroComponent, {
+      width: '95vw',
+      height: '90vh',
+      maxWidth: '98vw',
+      data: {
+        tabla: this.tabla,
+        row: row
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.action === 'edit') {
+        const id = row['id_' + this.tabla];
+        this.openDialogUploadRegistro(id);
+      }
+    });
+  }
+
   eliminarRegistro(id: string) {
     const tablaAEleiminar: DeleteRecord = {
       tabla: this.tabla,
@@ -222,7 +260,37 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   refresh() {
+    this.dictionaries = {}; // Limpiamos traducciones viejas antes de refrescar
+    this.selection.clear(); // Limpiamos selección al refrescar
     this.store.dispatch(StoreActions.loadContenido({ tabla: this.tabla }));
+  }
+
+  desmarcarTodo() {
+    this.selection.clear();
+    this.elementosSeleccionados.emit(this.selection);
+  }
+
+  async eliminarSeleccionados() {
+    const total = this.selection.selected.length;
+    if (total === 0) return;
+
+    if (confirm(`¿Estás seguro de que deseás eliminar estos ${total} registros? Esta acción no se puede deshacer.`)) {
+      const idKey = `id_${this.tabla}`;
+      
+      try {
+        // En lugar de borrar de a uno, enviamos una lista de IDs para que el backend lo haga en una transacción
+        for (const row of this.selection.selected) {
+          const id = row[idKey];
+          await invoke('eliminar_registro', { tabla: this.tabla, id });
+        }
+        
+        this.snackBar.open(`${total} registros eliminados correctamente`, 'OK', { duration: 3000 });
+        this.refresh();
+      } catch (e) {
+        console.error("Error en eliminación masiva:", e);
+        this.snackBar.open("Error al eliminar algunos registros", "Cerrar", { duration: 5000 });
+      }
+    }
   }
 
   applyAdvancedFilters() {
@@ -299,10 +367,24 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
         const config: TableConfig = JSON.parse(configJson);
         this.tableRules = config.rules || [];
         this.calculatedFields = config.calculatedFields || [];
+        this.linkedFields = config.linkedFields || [];
+        this.allowAttachments = config.allowAttachments !== false;
+        
+        if (this.linkedFields.length > 0) {
+          await this.buildDictionaries();
+        } else {
+          this.dictionaries = {};
+        }
       } else {
         this.tableRules = [];
         this.calculatedFields = [];
+        this.linkedFields = [];
+        this.allowAttachments = true;
+        this.dictionaries = {};
       }
+      
+      // Forzamos actualización de columnas después de cargar config
+      this.store.dispatch(StoreActions.loadCampos({ tabla: this.tabla }));
     } catch (e) {
       console.error("Error loading table rules:", e);
       this.tableRules = [];
@@ -381,8 +463,16 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
 
       switch (rule.operator) {
         case 'equals':
+          if (strRuleVal.includes(' or ')) {
+            const targets = strRuleVal.split(' or ');
+            return targets.some(t => strRowVal === t.trim());
+          }
           return strRowVal === strRuleVal;
         case 'contains':
+          if (strRuleVal.includes(' or ')) {
+            const targets = strRuleVal.split(' or ');
+            return targets.some(t => strRowVal.includes(t.trim()));
+          }
           return strRowVal.includes(strRuleVal);
         case 'lt':
           return Number(rowValue) < Number(rule.value);
@@ -399,6 +489,31 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
     return false;
   }
 
+
+  async buildDictionaries() {
+    this.dictionaries = {};
+    for (const link of this.linkedFields) {
+      try {
+        const res: any[] = await invoke('get_contenido', { tabla: link.remoteTable });
+        const dict: { [id: string]: string } = {};
+        // El backend devuelve el array directamente
+        res.forEach((row: any) => {
+          dict[String(row[link.remoteField])] = String(row[link.displayField]);
+        });
+        this.dictionaries[link.localField] = dict;
+      } catch (e) {
+        console.error(`Error construyendo diccionario para ${link.localField}:`, e);
+      }
+    }
+  }
+
+  translateValue(column: string, value: any): string {
+    if (this.dictionaries[column]) {
+      const translation = this.dictionaries[column][String(value)];
+      return translation !== undefined ? translation : `ID: ${value}`;
+    }
+    return value;
+  }
 
   openConfigDialog() {
     const camposActuales = this.allColumns.filter(c => c !== this.campoSeleccion && c !== 'actions');

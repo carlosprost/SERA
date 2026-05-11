@@ -100,9 +100,9 @@ export const reducer = createReducer(
     error: error,
   })),
   on(StoreActions.loadNewRecord, (state) => state),
-  on(StoreActions.loadNewRecordSuccess, (state, { message }) => ({
+  on(StoreActions.loadNewRecordSuccess, (state, { id }) => ({
     ...state,
-    message: message,
+    message: id.toString(),
   })),
   on(StoreActions.loadNewRecordFailure, (state, { error }) => ({
     ...state,

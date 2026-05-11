@@ -1,32 +1,193 @@
 :host {
   display: block;
   width: 100%;
-  height: 100%; /* FORZAR ALTO */
-}
-
-table {
-  width: 100%;
-  table-layout: auto;
-  min-width: 600px;
-}
-
-tr.element-row:not(.expanded-row):hover {
-  background: rgba(255, 255, 255, 0.04);
-  cursor: pointer;
-}
-
-.mat-icon-button {
-  width: 36px;
-  height: 36px;
-  line-height: 36px;
-  mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-  }
+  height: 100%;
 }
 
 .table-container {
   overflow-x: auto;
   border-radius: 4px;
+}
+
+table {
+  width: 100%;
+  background-color: transparent !important;
+}
+
+::ng-deep .mat-mdc-header-row {
+  background-color: var(--sera-surface-color) !important;
+}
+
+::ng-deep .mat-mdc-header-cell {
+  color: var(--sera-text-color) !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid rgba(var(--sera-text-rgb), 0.1) !important;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+::ng-deep .mat-mdc-cell {
+  color: var(--sera-text-color) !important;
+  border-bottom: 1px solid rgba(var(--sera-text-rgb), 0.05) !important;
+}
+
+// Columna de Selección (Checkbox)
+[class*="mat-column-select"] {
+  width: 42px !important;
+  max-width: 42px !important;
+  min-width: 42px !important;
+  padding: 0 !important;
+  text-align: center !important;
+
+  .mat-mdc-checkbox {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+// Columna de Adjuntos
+.mat-column-sera_adjuntos {
+  width: 50px !important;
+  max-width: 50px !important;
+  min-width: 50px !important;
+  padding: 0 !important;
+  text-align: center !important;
+  border-right: 1px solid rgba(var(--sera-text-rgb), 0.05) !important;
+}
+
+.adj-header-container, .adj-cell-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.adj-cell-container {
+  cursor: pointer;
+  &:hover {
+    .adjuntos-cell {
+      transform: scale(1.1);
+      color: #2ecc71;
+    }
+  }
+}
+
+.adjuntos-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sera-primary-color);
+  opacity: 0.8;
+  transition: all 0.2s ease;
+
+  mat-icon {
+    font-size: 20px;
+  }
+
+  .adj-badge {
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    background: #e74c3c;
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    min-width: 15px;
+    height: 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #1a1a1a;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    z-index: 2;
+  }
+}
+
+tr.element-row:not(.expanded-row):hover {
+  background: rgba(var(--sera-primary-rgb), 0.08) !important;
+}
+
+.mat-icon-button {
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  color: var(--sera-on-surface);
+  opacity: 0.8;
+  
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    opacity: 1;
+    color: var(--sera-primary-color);
+  }
+}
+
+.bulk-action-bar {
+  position: fixed;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center; /* Centrado horizontal garantizado */
+  z-index: 99999;
+  pointer-events: none; /* Para que no bloquee clics fuera de la barra */
+  animation: bulkSlideUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  .bulk-bar-content {
+    pointer-events: auto; /* Reactivamos clics para los botones */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+    padding: 12px 30px;
+    background: var(--sera-bg-color);
+    border: 2px solid var(--sera-primary-color);
+    border-radius: 50px;
+    min-width: 500px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.9);
+
+    .selection-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+
+      span, strong {
+        color: var(--sera-text-color) !important;
+        font-size: 1rem;
+      }
+
+      mat-icon {
+        color: var(--sera-primary-color, #00bcd4) !important;
+      }
+
+      strong {
+        color: var(--sera-primary-color, #00bcd4) !important;
+        font-size: 1.2rem;
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+
+      .btn-bulk {
+        border-radius: 25px;
+        padding: 0 20px;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+@keyframes bulkSlideUp {
+  from { transform: translateY(100px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

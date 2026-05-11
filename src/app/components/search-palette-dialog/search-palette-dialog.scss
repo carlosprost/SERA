@@ -1,16 +1,18 @@
 .palette-container {
   display: flex;
   align-items: center;
-  background-color: #1e1e1e;
-  border-radius: 8px;
+  background-color: var(--sera-bg-color);
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   padding: 8px 16px;
   width: 100%;
   box-sizing: border-box;
+  border: 1px solid rgba(var(--sera-text-rgb), 0.1);
 
   .search-icon {
-    color: #8c8c8c;
+    color: var(--sera-text-color);
+    opacity: 0.5;
     margin-right: 12px;
     font-size: 28px;
     width: 28px;
@@ -22,22 +24,25 @@
     flex: 1;
     background: transparent;
     border: none;
-    color: #e0e0e0;
+    color: var(--sera-text-color);
     font-size: 20px;
     font-family: 'Inter', Roboto, sans-serif;
     outline: none;
     height: 48px;
 
     &::placeholder {
-      color: #5c5c5c;
+      color: var(--sera-text-color);
+      opacity: 0.3;
       font-weight: 400;
     }
   }
 
   .clear-btn {
-    color: #8c8c8c;
+    color: var(--sera-text-color);
+    opacity: 0.5;
     &:hover {
-      color: #ffffff;
+      opacity: 1;
+      color: var(--sera-primary-color);
     }
   }
 }

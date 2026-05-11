@@ -16,17 +16,50 @@ fn main() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
-            // Obtener el directorio de datos de la app (ej: %APPDATA%\sera en Windows)
-            let data_dir = app
-                .path()
-                .app_data_dir()
-                .expect("[SERA] No se pudo obtener el directorio de datos de la aplicación");
+            let data_dir = app.path().app_data_dir().expect("[SERA] No se pudo obtener el directorio de datos");
+            let db_path = data_dir.join("sera.db");
+
+            // MIGRACIÓN: De 'SERA' (v1/Legacy) a 'WolfTeI.SERADesktop' (Store/v2)
+            let old_data_dir = data_dir.parent().unwrap().join("SERA");
+            let db_exists_and_not_empty = db_path.exists() && std::fs::metadata(&db_path).map(|m| m.len()).unwrap_or(0) > 100;
+
+            if old_data_dir.exists() && !db_exists_and_not_empty {
+                println!("[SERA] Identificada migración pendiente desde la carpeta original...");
+                let _ = std::fs::create_dir_all(&data_dir);
+                let old_db = old_data_dir.join("sera.db");
+                if old_db.exists() {
+                    let _ = std::fs::copy(&old_db, &db_path);
+                }
+                
+                let old_attachments = old_data_dir.join("attachments");
+                let new_attachments = data_dir.join("attachments");
+                if old_attachments.exists() {
+                    let _ = std::fs::create_dir_all(&new_attachments);
+                    if let Ok(entries) = std::fs::read_dir(old_attachments) {
+                        for entry in entries.flatten() {
+                            let path = entry.path();
+                            if path.is_file() {
+                                let dest = new_attachments.join(path.file_name().unwrap());
+                                let _ = std::fs::copy(path, dest);
+                            }
+                        }
+                    }
+                }
+                println!("[SERA] Migración para Windows Store completada con éxito.");
+            }
 
             // Crear el directorio si no existe
             std::fs::create_dir_all(&data_dir)
                 .expect("[SERA] No se pudo crear el directorio de datos");
 
+            // Crear carpeta de adjuntos
+            let attachments_dir = data_dir.join("attachments");
+            std::fs::create_dir_all(&attachments_dir)
+                .expect("[SERA] No se pudo crear el directorio de adjuntos");
+
             let db_path = data_dir.join("sera.db");
+            println!("[SERA] Data Directory: {:?}", data_dir);
+            println!("[SERA] Database Path: {:?}", db_path);
 
             // Inicializar el esquema de la base de datos
             database::inicializar_db(db_path.as_path())
@@ -53,6 +86,15 @@ fn main() {
             commands::reestructurar_tabla,
             commands::exportar_tabla,
             commands::importar_tabla,
+            commands::importar_bulk,
+            commands::get_adjuntos,
+            commands::guardar_adjunto,
+            commands::eliminar_adjunto,
+            commands::abrir_adjunto,
+            commands::get_adjunto_base64,
+            commands::get_global_stats,
+            commands::open_attachments_folder,
+            commands::search_global,
         ])
         .run(tauri::generate_context!())
         .expect("[SERA] Error al inicializar la aplicación");

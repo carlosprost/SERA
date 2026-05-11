@@ -18,7 +18,8 @@ import { MatIconModule } from '@angular/material/icon';
       <div class="about-header text-center">
         <img src="assets/icon.png" alt="SERA Logo" class="about-logo">
         <h1 class="about-title">SERA</h1>
-        <p class="about-version">Versión 3.0.4 "Orion"</p>
+        <p class="about-version">Versión 3.1.0 "Ares"</p>
+        <p class="about-patch-code">Pegasus-310</p>
       </div>
       
       <div class="about-content">
@@ -50,16 +51,16 @@ import { MatIconModule } from '@angular/material/icon';
         </div>
       </div>
 
-      <mat-dialog-actions align="center" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
-        <button mat-button mat-dialog-close style="color: #666;">CERRAR</button>
+      <mat-dialog-actions align="center" class="dialog-actions-custom">
+        <button mat-button mat-dialog-close class="close-btn">CERRAR</button>
       </mat-dialog-actions>
     </div>
   `,
   styles: [`
     .about-container {
       padding: 32px 24px;
-      background: linear-gradient(145deg, #1e1e1e, #2b3035);
-      color: #e0e0e0;
+      background: var(--sera-bg-color);
+      color: var(--sera-text-color);
       border-radius: 12px;
       max-width: 450px;
     }
@@ -67,15 +68,14 @@ import { MatIconModule } from '@angular/material/icon';
       width: 96px;
       height: 96px;
       margin-bottom: 12px;
-      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.2));
     }
     .about-title {
       font-size: 36px;
       margin: 0;
       font-weight: 800;
       letter-spacing: 4px;
-      color: #fff;
-      text-shadow: 0 0 20px rgba(255,255,255,0.1);
+      color: var(--sera-text-color);
     }
     .about-version {
       font-size: 13px;
@@ -85,18 +85,28 @@ import { MatIconModule } from '@angular/material/icon';
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+    .about-patch-code {
+      font-size: 10px;
+      color: var(--sera-text-color);
+      opacity: 0.4;
+      margin-top: -2px;
+      font-family: 'Courier New', Courier, monospace;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
     .about-content {
       margin: 28px 0;
     }
     .description {
       font-size: 15px;
       line-height: 1.6;
-      color: #b0b0b0;
+      color: var(--sera-text-color);
+      opacity: 0.8;
       text-align: center;
       margin-bottom: 24px;
     }
     .info-card {
-      background: rgba(0,0,0,0.2);
+      background: rgba(var(--sera-text-rgb), 0.05);
       border-radius: 8px;
       padding: 16px;
       margin-bottom: 24px;
@@ -113,8 +123,8 @@ import { MatIconModule } from '@angular/material/icon';
     .info-text {
       display: flex;
       flex-direction: column;
-      .label { font-size: 10px; color: #666; text-transform: uppercase; line-height: 1; }
-      .val { font-size: 13px; color: #bbb; }
+      .label { font-size: 10px; color: var(--sera-text-color); opacity: 0.5; text-transform: uppercase; line-height: 1; }
+      .val { font-size: 13px; color: var(--sera-text-color); opacity: 0.9; }
     }
     .author-banner {
       display: flex;
@@ -122,11 +132,12 @@ import { MatIconModule } from '@angular/material/icon';
       justify-content: center;
       gap: 12px;
       padding: 10px 20px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(var(--sera-text-rgb), 0.03);
+      border: 1px solid rgba(var(--sera-text-rgb), 0.05);
       border-radius: 50px;
       font-size: 14px;
-      color: #888;
+      color: var(--sera-text-color);
+      opacity: 0.8;
       .author-logo-img {
         width: 32px;
         height: 32px;
@@ -135,6 +146,14 @@ import { MatIconModule } from '@angular/material/icon';
         border: 1px solid rgba(76, 175, 80, 0.3);
       }
       strong { color: #4caf50; }
+    }
+    .dialog-actions-custom {
+      border-top: 1px solid rgba(var(--sera-text-rgb), 0.1);
+      padding-top: 16px;
+    }
+    .close-btn {
+      color: var(--sera-text-color) !important;
+      opacity: 0.6;
     }
     .text-center { text-align: center; }
   `]

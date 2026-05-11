@@ -1,0 +1,85 @@
+<div class="dashboard-container">
+  
+  <!-- Header de Bienvenida -->
+  <header class="welcome-header">
+    <div class="greeting">
+      <div class="brand-row">
+        <mat-icon class="huge-icon">dataset</mat-icon>
+        <h1>SERA Smart Workspace</h1>
+      </div>
+      <p class="subtitle">Hola, {{ config()?.user?.nombre || 'Usuario' }}. Abre una tabla desde <b>Archivo</b> o crea una nueva para comenzar.</p>
+    </div>
+    <div class="app-badge">
+      <span class="version">v3.2.0 Ares</span>
+      <span class="status-dot"></span>
+      <span class="status-text">Sistema Activo</span>
+    </div>
+  </header>
+
+  <mat-divider></mat-divider>
+
+  <!-- Grilla de Estadísticas -->
+  <section class="stats-grid">
+    <mat-card class="stat-card tables-card">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>table_chart</mat-icon>
+        </div>
+        <div class="stat-info">
+          <span class="label">Tablas Creadas</span>
+          <span class="value">{{ stats().total_tablas }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card records-card">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>analytics</mat-icon>
+        </div>
+        <div class="stat-info">
+          <span class="label">Registros Totales</span>
+          <span class="value">{{ stats().total_registros }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card security-card">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>security</mat-icon>
+        </div>
+        <div class="stat-info">
+          <span class="label">Seguridad de Datos</span>
+          <span class="value">AES-256</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </section>
+
+  <!-- Acciones Rápidas -->
+  <section class="quick-actions">
+    <h3>Acciones Rápidas</h3>
+    <div class="actions-buttons">
+      <button mat-flat-button color="primary" class="action-btn" (click)="createNewTable()">
+        <mat-icon>add</mat-icon>
+        Nueva Tabla
+      </button>
+      <button mat-stroked-button class="action-btn" (click)="importExcel()">
+        <mat-icon>file_upload</mat-icon>
+        Importar Excel
+      </button>
+      <button mat-stroked-button class="action-btn" (click)="openAttachments()">
+        <mat-icon>folder_open</mat-icon>
+        Adjuntos
+      </button>
+    </div>
+  </section>
+
+  <!-- Footer Decorativo -->
+  <footer class="dashboard-footer">
+    <mat-icon>shield</mat-icon>
+    <span>Protegido por WolfTeI Phoenix Engine</span>
+  </footer>
+
+</div>

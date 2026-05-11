@@ -26,7 +26,7 @@
         mat-divider{
             width: 100%;
             margin-bottom: 10px;
-            background-color: rgb(186, 185, 185);
+            background-color: rgba(var(--sera-text-rgb), 0.1);
         }
       }
     }
