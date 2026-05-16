@@ -234,19 +234,13 @@ export class AppComponent implements AfterViewInit, OnInit {
       width: "650px",
       data: { 
         message: "Configurar Reporte",
-        campos: camposDisponibles
+        campos: camposDisponibles,
+        datos: dataSource.length > 0 ? dataSource : this.elementos.selected.map(item => ({ ...item }))
       },
     });
 
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if (result) {
-        await this.pdfService.generarPdf(
-          this.elementPDF.nativeElement,
-          result,
-          datos.length > 0 ? datos : this.elementos.selected
-        );
-        this.snackBar.open("Documento PDF generado correctamente", "", { duration: 3000 });
-      }
+    dialogRef.afterClosed().subscribe((result) => {
+      // El PDF ahora se genera directamente en el diálogo mostrando un spinner interactivo.
     });
   }
 

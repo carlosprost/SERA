@@ -52,7 +52,7 @@ El motor de fórmulas (`FormulaEngine`) aplica las siguientes protecciones:
 
 | OWASP ID | Vulnerabilidad | Mecanismo Implementado en v3.2 |
 |---|---|---|
-| **A03** | Inyección | Validación de identificadores en V-Engine y filtrado de columnas en Importador. |
+| **A03** | Inyección | Validación de identificadores en V-Engine, filtrado de columnas en Importador y escape nativo de strings mediante `textContent` en reportes PDF. |
 | **A04** | Diseño Inseguro | Gestión condicional de adjuntos y limpieza automática de datos huérfanos. |
 | **A07** | Fallos de Identificación | Derivación de llaves AES mediante SHA-256 a partir de claves de usuario. |
 | **A08** | Fallos de Integridad | Limpieza física de archivos tras eliminación de metadatos. |

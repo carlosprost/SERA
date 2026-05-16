@@ -1,5 +1,7 @@
-import { Component, Inject, inject } from "@angular/core";
+import { Component, Inject, inject, signal } from "@angular/core";
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { MatSnackBar } from "@angular/material/snack-bar";
+import { PdfService } from "../../services/pdf.service";
 import { MatButtonModule } from "@angular/material/button";
 import {
   MAT_DIALOG_DATA,
@@ -47,15 +49,20 @@ import { CommonModule } from "@angular/common";
 })
 export class ReciboComponent {
   fb = inject(FormBuilder);
+  pdfService = inject(PdfService);
+  snackBar = inject(MatSnackBar);
 
   formularioRecibo!: FormGroup;
   
+  /** Señal reactiva para indicar si se está generando el reporte. */
+  generando = signal(false);
+
   /** Lista de configuración de columnas: nombre y si está seleccionada. */
   camposConfig: { nombre: string, seleccionado: boolean }[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<ReciboComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { message: string, campos: string[] }
+    @Inject(MAT_DIALOG_DATA) public data: { message: string, campos: string[], datos: any[] }
   ) {
     this.createForm();
     this.initCampos();
@@ -82,7 +89,7 @@ export class ReciboComponent {
     moveItemInArray(this.camposConfig, event.previousIndex, event.currentIndex);
   }
 
-  save() {
+  async save() {
     // Retornamos el formulario + la lista de columnas seleccionadas en el orden actual.
     const result = {
       ...this.formularioRecibo.value,
@@ -90,6 +97,22 @@ export class ReciboComponent {
         .filter(c => c.seleccionado)
         .map(c => c.nombre)
     };
-    this.dialogRef.close(result);
+
+    this.generando.set(true);
+
+    try {
+      await this.pdfService.generarPdf(
+        null,
+        result,
+        this.data.datos
+      );
+      this.snackBar.open("Documento PDF generado correctamente", "", { duration: 3000 });
+      this.dialogRef.close(result);
+    } catch (error) {
+      console.error("[SERA] Error generando reporte PDF:", error);
+      this.snackBar.open("Error al generar el documento PDF", "Cerrar", { duration: 5000 });
+    } finally {
+      this.generando.set(false);
+    }
   }
 }

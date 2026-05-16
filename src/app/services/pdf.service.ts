@@ -26,7 +26,7 @@ export class PdfService {
    * @param contenido - Array de registros seleccionados de la tabla.
    */
   async generarPdf(
-    contenedor: HTMLDivElement,
+    contenedor: HTMLDivElement | null,
     config: {
       titulo: string,
       descripcion: string,
@@ -36,8 +36,21 @@ export class PdfService {
     },
     contenido: any[]
   ): Promise<void> {
-    this.construirContenidoHtml(contenedor, config, contenido);
-    await this.exportarComoPDF(contenedor, config.titulo);
+    let tempContainer = contenedor;
+    let appended = false;
+    if (!tempContainer) {
+      tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '-9999px';
+      document.body.appendChild(tempContainer);
+      appended = true;
+    }
+    this.construirContenidoHtml(tempContainer, config, contenido);
+    await this.exportarComoPDF(tempContainer, config.titulo);
+    if (appended && tempContainer) {
+      document.body.removeChild(tempContainer);
+    }
   }
 
   /**
@@ -189,7 +202,7 @@ export class PdfService {
       el.style.textAlign = 'left';
     }
     if (clase) el.classList.add(clase);
-    if (contenido) el.innerHTML = contenido;
+    if (contenido) el.textContent = contenido;
     return el;
   }
 
