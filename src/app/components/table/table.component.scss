@@ -5,13 +5,18 @@
 }
 
 .table-container {
-  overflow-x: auto;
-  border-radius: 4px;
-}
-
-table {
+  overflow: auto;
+  max-height: calc(100vh - 200px); /* Ajustar según el layout */
   width: 100%;
-  background-color: transparent !important;
+  border-radius: 4px;
+  position: relative;
+
+  table {
+    width: 100%;
+    min-width: max-content; /* Fuerza el scroll horizontal si hay muchas columnas */
+    background-color: transparent !important;
+    border-collapse: separate; /* Necesario para sticky headers */
+  }
 }
 
 ::ng-deep .mat-mdc-header-row {
