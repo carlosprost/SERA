@@ -289,6 +289,8 @@ pub fn eliminar_adjunto(app_handle: AppHandle, db_path: State<DbPath>, id: i64) 
 
 #[tauri::command]
 pub fn abrir_adjunto(app_handle: AppHandle, ruta_relativa: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+
     let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
     let full_path = app_dir.join(ruta_relativa);
     
@@ -296,11 +298,8 @@ pub fn abrir_adjunto(app_handle: AppHandle, ruta_relativa: String) -> Result<(),
         return Err("El archivo no existe".to_string());
     }
 
-    #[cfg(target_os = "windows")]
-    {
-        use std::process::Command;
-        Command::new("explorer").arg(full_path).spawn().map_err(|e| e.to_string())?;
-    }
+    let path_str = full_path.to_string_lossy().to_string();
+    app_handle.opener().open_path(path_str, None::<&str>).map_err(|e| e.to_string())?;
     
     Ok(())
 }

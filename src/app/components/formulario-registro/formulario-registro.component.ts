@@ -203,7 +203,8 @@ export class FormularioRegistroComponent implements OnInit {
         
         for (const adj of this.tempAdjuntos) {
           await invoke('guardar_adjunto', { 
-            pathOriginal: adj.ruta, 
+            pathOrigen: adj.ruta, 
+            nombre: adj.nombre,
             tabla: this.TableName, 
             registroId: id 
           });
@@ -247,7 +248,8 @@ export class FormularioRegistroComponent implements OnInit {
     if (this.isUpload) {
       try {
         await invoke('guardar_adjunto', { 
-          pathOriginal: path, 
+          pathOrigen: path, 
+          nombre: path.split(/[\\/]/).pop() || 'Archivo',
           tabla: this.TableName, 
           registroId: parseInt(this.id) 
         });

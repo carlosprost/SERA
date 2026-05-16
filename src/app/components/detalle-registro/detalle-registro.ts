@@ -408,7 +408,7 @@ export class DetalleRegistroComponent implements OnInit {
 
   async abrirAdjunto(ruta: string) {
     try {
-      await invoke('abrir_adjunto', { ruta: ruta });
+      await invoke('abrir_adjunto', { rutaRelativa: ruta });
     } catch (e) {
       console.error(e);
     }
