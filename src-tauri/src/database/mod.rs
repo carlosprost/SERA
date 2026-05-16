@@ -345,10 +345,35 @@ pub fn actualizar_registro(db_path: &Path, record: &NewRecord) -> Result<()> {
 
 pub fn eliminar_registro(db_path: &Path, record: &DeleteRecord) -> Result<()> {
     validar_nombre_identificador(&record.tabla)?;
+    println!("[SERA] Intentando eliminar registro - Tabla: '{}', ID: {}", record.tabla, record.ids);
+    
     let conn = abrir_conn(db_path)?;
-    let sql = format!("DELETE FROM \"{tabla}\" WHERE id_{tabla} = ?1", tabla = record.tabla);
-    conn.execute(&sql, params![record.ids])?;
-    Ok(())
+    
+    // Blindamos tanto el nombre de la tabla como el nombre de la columna ID con comillas dobles
+    let sql = format!("DELETE FROM \"{tabla}\" WHERE \"id_{tabla}\" = ?1", tabla = record.tabla);
+    
+    match conn.execute(&sql, params![record.ids]) {
+        Ok(affected) => {
+            if affected == 0 {
+                // Fallback por si la columna se llama simplemente 'id' (importaciones viejas o manuales)
+                println!("[SERA] No se encontró id_{}, intentando con columna 'id'...", record.tabla);
+                let sql_fallback = format!("DELETE FROM \"{tabla}\" WHERE \"id\" = ?1", tabla = record.tabla);
+                conn.execute(&sql_fallback, params![record.ids])?;
+            }
+            println!("[SERA] Eliminación exitosa.");
+            Ok(())
+        },
+        Err(e) => {
+            println!("[SERA] Error en primer intento de eliminación: {}", e);
+            // Re-intentar con columna 'id' por las dudas
+            let sql_fallback = format!("DELETE FROM \"{tabla}\" WHERE \"id\" = ?1", tabla = record.tabla);
+            conn.execute(&sql_fallback, params![record.ids]).map_err(|e| {
+                println!("[SERA] Error crítico en eliminación: {}", e);
+                e
+            })?;
+            Ok(())
+        }
+    }
 }
 
 pub fn importar_bulk(db_path: &Path, bulk: &BulkRecord) -> Result<()> {
@@ -477,7 +502,7 @@ pub fn importar_tabla(db_path: &Path, nombre_tabla: String, package: crate::mode
     let tx = conn.transaction()?;
 
     // 1. Crear la tabla física
-    let mut sql_create = format!("CREATE TABLE IF NOT EXISTS \"{}\" (id INTEGER PRIMARY KEY AUTOINCREMENT", nombre_tabla);
+    let mut sql_create = format!("CREATE TABLE IF NOT EXISTS \"{nombre}\" (id_{nombre} INTEGER PRIMARY KEY AUTOINCREMENT", nombre = nombre_tabla);
     
     let mut campos_finales = if package.campos.is_empty() {
         println!("[SERA] No se encontraron campos definidos. Deduciendo de los datos...");

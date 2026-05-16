@@ -81,7 +81,8 @@ pub fn actualizar_registro(db_path: State<DbPath>, registro: NewRecord) -> Resul
 }
 
 #[tauri::command]
-pub fn eliminar_registro(db_path: State<DbPath>, delete_record: DeleteRecord) -> Result<String, String> {
+pub fn eliminar_registro(db_path: State<DbPath>, tabla: String, id: i64) -> Result<String, String> {
+    let delete_record = DeleteRecord { tabla, ids: id };
     database::eliminar_registro(&db_path.0, &delete_record).map(|_| "exito".to_string()).map_err(|e| e.to_string())
 }
 

@@ -278,15 +278,23 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
     const total = this.selection.selected.length;
     if (total === 0) return;
 
-    if (confirm(`¿Estás seguro de que deseás eliminar estos ${total} registros? Esta acción no se puede deshacer.`)) {
-      const idKey = `id_${this.tabla}`;
-      
-      try {
-        // En lugar de borrar de a uno, enviamos una lista de IDs para que el backend lo haga en una transacción
-        for (const row of this.selection.selected) {
-          const id = row[idKey];
-          await invoke('eliminar_registro', { tabla: this.tabla, id });
+    // Nota: Se eliminó window.confirm porque Tauri v2 lo bloquea por defecto sin permisos específicos.
+    try {
+      // En lugar de borrar de a uno, enviamos una lista de IDs para que el backend lo haga en una transacción
+      for (const row of this.selection.selected) {
+        // Buscamos la columna ID dinámicamente (la que empieza con id_)
+        const idKey = Object.keys(row).find(key => key.toLowerCase().startsWith('id_')) || 'id';
+        const id = row[idKey];
+        
+        console.log(`[SERA Debug] Eliminando en '${this.tabla}'. Columna ID encontrada: '${idKey}', Valor: ${id}`);
+
+        if (id === undefined || id === null) {
+          console.warn("[SERA Debug] No se pudo encontrar el ID para el registro:", row);
+          continue;
         }
+
+        await invoke('eliminar_registro', { tabla: this.tabla, id: parseInt(id) });
+      }
         
         this.snackBar.open(`${total} registros eliminados correctamente`, 'OK', { duration: 3000 });
         this.refresh();
@@ -294,7 +302,6 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
         console.error("Error en eliminación masiva:", e);
         this.snackBar.open("Error al eliminar algunos registros", "Cerrar", { duration: 5000 });
       }
-    }
   }
 
   applyAdvancedFilters() {
