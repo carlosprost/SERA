@@ -2,13 +2,17 @@
   display: block;
   width: 100%;
   box-sizing: border-box;
-  padding: 24px; /* Aumentado para dar aire */
+  padding: 48px 24px 24px 24px; /* Aumentado considerablemente arriba para evitar que el label se corte */
   overflow-x: hidden;
 
-  .formulario {
+    .formulario {
     display: flex;
     flex-direction: column;
     gap: 12px; /* Más espacio entre campos */
+
+    & > div:first-child {
+      margin-top: 15px; /* Espacio extra para que el primer label no se corte */
+    }
 
     div {
       width: 100%;
@@ -59,4 +63,9 @@
   color: var(--sera-text-color);
   opacity: 0.6;
   font-size: 14px;
+}
+
+[mat-dialog-title] {
+  padding-top: 12px;
+  margin-bottom: 0;
 }

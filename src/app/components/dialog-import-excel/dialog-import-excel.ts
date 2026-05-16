@@ -59,8 +59,8 @@ export class DialogImportExcel {
     try {
       if (this.mode === 'new') {
         // 1. Crear la tabla
-        // Inferimos campos como TEXT
-        const camposSql = this.headers.map(h => `${h} TEXT`).join(", ");
+        // Inferimos campos como TEXT y los envolvemos en comillas para soportar espacios/acentos
+        const camposSql = this.headers.map(h => `"${h}" TEXT`).join(", ");
         await invoke('crear_tabla', { tabla: { nombre: this.tableName, campos: camposSql } });
       }
 
@@ -76,7 +76,7 @@ export class DialogImportExcel {
       };
 
       // 3. Ejecutar bulk insert
-      await invoke('importar_bulk', { registro: bulkData });
+      await invoke('importar_bulk', { bulk: bulkData });
 
       this.dialogRef.close({ success: true, tableName: targetTable });
     } catch (error) {

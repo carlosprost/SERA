@@ -303,7 +303,7 @@ pub fn get_contenido(db_path: &Path, tabla: &str) -> Result<Vec<Value>> {
 
 // ─── REGISTROS ────────────────────────────────────────────────────────────────
 
-pub fn nuevo_registro(db_path: &Path, record: &NewRecord) -> Result<()> {
+pub fn nuevo_registro(db_path: &Path, record: &NewRecord) -> Result<i64> {
     validar_nombre_identificador(&record.tabla)?;
     let conn = abrir_conn(db_path)?;
 
@@ -319,7 +319,7 @@ pub fn nuevo_registro(db_path: &Path, record: &NewRecord) -> Result<()> {
     let valores: Vec<rusqlite::types::Value> = record.contenido.iter().map(|v| rusqlite::types::Value::Text(v.clone())).collect();
     stmt.execute(rusqlite::params_from_iter(valores.iter()))?;
 
-    Ok(())
+    Ok(conn.last_insert_rowid())
 }
 
 pub fn actualizar_registro(db_path: &Path, record: &NewRecord) -> Result<()> {

@@ -96,7 +96,11 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
           }
 
           campos.forEach((campo) => {
-            if (campo.Field !== `id_${this.tabla}`) {
+            const fieldLower = campo.Field.toLowerCase();
+            const isId = fieldLower === 'id' || fieldLower.startsWith('id_');
+            const isSystem = fieldLower.startsWith('sera_');
+
+            if (!isId && !isSystem) {
               this.allColumns.push(campo.Field);
             }
           });

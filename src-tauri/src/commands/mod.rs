@@ -71,8 +71,8 @@ pub fn get_contenido(db_path: State<DbPath>, tabla: String) -> Result<Vec<Value>
 // ─── REGISTROS ────────────────────────────────────────────────────────────────
 
 #[tauri::command]
-pub fn nuevo_registro(db_path: State<DbPath>, registro: NewRecord) -> Result<String, String> {
-    database::nuevo_registro(&db_path.0, &registro).map(|_| "exito".to_string()).map_err(|e| e.to_string())
+pub fn nuevo_registro(db_path: State<DbPath>, registro: NewRecord) -> Result<i64, String> {
+    database::nuevo_registro(&db_path.0, &registro).map_err(|e| e.to_string())
 }
 
 #[tauri::command]

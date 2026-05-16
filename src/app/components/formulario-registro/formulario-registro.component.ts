@@ -64,7 +64,11 @@ export class FormularioRegistroComponent implements OnInit {
           const contenidoTabla = this.data.contenido;
 
           campos.forEach((campo) => {
-            if (campo.Field.toLowerCase() !== `id_${this.TableName}`) {
+            const fieldLower = campo.Field.toLowerCase();
+            const isId = fieldLower === 'id' || fieldLower.startsWith('id_');
+            const isSystem = fieldLower.startsWith('sera_');
+
+            if (!isId && !isSystem) {
               let field: FormFields = {
                 field: campo.Field,
                 label: campo.Field,
@@ -177,14 +181,14 @@ export class FormularioRegistroComponent implements OnInit {
       const val = this.newRegister.value[field.field];
 
       if (field.type === 'date' && val instanceof Date) {
-        contenido.push(`"${val.toISOString().slice(0, 19).replace('T', ' ')}"`);
+        contenido.push(val.toISOString().slice(0, 19).replace('T', ' '));
       } else if (field.type === 'boolean') {
         contenido.push(val ? "1" : "0");
       } else if (field.type === 'number' || field.type === 'select') {
         // Los vínculos se guardan como el ID seleccionado (valor numérico)
         contenido.push(`${val}`);
       } else {
-        contenido.push(`"${val}"`);
+        contenido.push(`${val}`);
       }
     });
 
