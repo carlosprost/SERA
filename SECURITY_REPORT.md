@@ -1,16 +1,18 @@
-# SECURITY_REPORT.md — SERA v3.3.0 "Ares"
+# SECURITY_REPORT.md — SERA v3.4.0 "Zeus"
 **WolfTeI | Sistema de Expedientes de Registro Avanzado**
-*Última actualización: 2026-05-16 — Release v3.3.0 (Phoenix-330)*
+*Última actualización: 2026-05-17 — Release v3.4.0 (Phoenix-340)*
 
 ---
 
-## 1. Auditoría de Stack y Dependencias (v3.3.0)
+## 1. Auditoría de Stack y Dependencias (v3.4.0)
 
 ### Componentes Críticos
 - **SERA V-Engine (Fórmulas):** Motor de evaluación virtual desarrollado in-house. Utiliza un sandbox mediante la creación de contextos aislados para evitar la ejecución de código arbitrario (XSS/RCE).
 - **Relational Engine:** Capa intermedia que gestiona la traducción de IDs numéricos a etiquetas legibles mediante diccionarios en memoria, evitando cruces de datos no autorizados.
 - **Asynchronous PDF Engine (v3.2.1):** Generador de reportes en PDF aislado que crea contenedores en memoria del DOM efímeros y desinfecta todos los campos para prevenir ejecuciones en el canvas de captura.
 - **Relational Portability Packager (v3.3.0):** Compilador recursivo de dependencias relacionales que empaqueta una tabla y todas sus tablas vinculadas (directa e indirectamente) con sus respectivos adjuntos físicos de manera unificada y encriptada en un único archivo `.srx`.
+- **BI Aggregation Engine (v3.4.0):** Motor de agregación analítica de datos a nivel cliente que valida tipos y previene inyecciones lógicas o desbordamiento de memoria al calcular acumulados en vivo (Suma y Promedio).
+- **Dynamic CSS Color Sanitizer (v3.4.0):** Validador estricto que parsea y desinfecta códigos hexadecimales y colores inline de entrada (`getValidColor`), previniendo ataques de inyección de estilos lógicos (CSS Injection).
 
 | Dependencia | Versión | Rol de Seguridad / Aporte a la Confidencialidad |
 |---|---|---|
@@ -19,6 +21,7 @@
 | `aes-gcm` | 0.10.x | Cifrado criptográfico simétrico AEAD para exportación e importación segura (.srx). |
 | `html2canvas` / `jspdf` | 1.4.x / 2.5.x | Captura gráfica A4 y empaquetado final de PDF a nivel cliente sin llamadas externas. |
 | `zip` | 2.2.x | Generación e importación de contenedores seguros con compresión Deflate para adjuntos y datos. |
+| `chart.js` / `ng2-charts` | 4.5.x / 10.0.x | Renderizado analítico seguro aislado en canvas HTML5 sin dependencias de red externas. |
 
 ---
 

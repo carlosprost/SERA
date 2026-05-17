@@ -3,7 +3,6 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MaterialModule } from '../../shared/material.module';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
-import { FormularioRegistroComponent } from '../formulario-registro/formulario-registro.component';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 // Importación específica para evitar errores de compilador
@@ -29,14 +28,43 @@ import * as pdfjsLib from 'pdfjs-dist';
       </div>
 
       <div class="content">
-        <div class="data-grid">
-          @for (campo of campos; track campo.Field) {
-            @if (campo.Field !== 'id_' + data.tabla && campo.Field !== 'sera_adjuntos_count') {
-              <div class="data-item">
-                <span class="label">{{ campo.Field.split('_').join(' ') | uppercase }}</span>
-                <span class="value">{{ data.row[campo.Field] || '-' }}</span>
-              </div>
+        <div class="data-grid-container">
+          <div class="data-grid">
+            @for (campo of campos; track campo.Field) {
+              @if (campo.Field !== 'id_' + data.tabla && campo.Field !== 'sera_adjuntos_count') {
+                <div class="data-item">
+                  <span class="label">{{ campo.Field.split('_').join(' ') | uppercase }}</span>
+                  <span class="value">{{ data.row[campo.Field] || '-' }}</span>
+                </div>
+              }
             }
+          </div>
+
+          <!-- SECCIÓN DE DETALLES DE VÍNCULOS EN OTRA LÍNEA -->
+          @if (linkedDataDetails.length > 0) {
+            <div class="linked-details-section">
+              <h3 class="section-title">
+                <mat-icon>hub</mat-icon> Información Vinculada
+              </h3>
+              <div class="linked-cards-container">
+                @for (detail of linkedDataDetails; track detail.title) {
+                  <div class="linked-detail-card">
+                    <div class="card-header">
+                      <span class="link-badge">VÍNCULO</span>
+                      <h4>{{ detail.title }}</h4>
+                    </div>
+                    <div class="card-content-grid">
+                      @for (f of detail.fields; track f.field) {
+                        <div class="sub-data-item">
+                          <span class="sub-label">{{ f.label }}</span>
+                          <span class="sub-value">{{ f.value }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
           }
         </div>
 
@@ -123,14 +151,20 @@ import * as pdfjsLib from 'pdfjs-dist';
       background: var(--sera-bg-color);
     }
 
-    .data-grid {
+    .data-grid-container {
       flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
       padding: 32px;
+    }
+
+    .data-grid {
       display: flex;
       flex-flow: row wrap;
       align-content: flex-start;
       gap: 16px;
-      overflow-y: auto;
     }
 
     .data-item {
@@ -154,6 +188,105 @@ import * as pdfjsLib from 'pdfjs-dist';
       .value {
         font-size: 15px;
         color: var(--sera-text-color);
+      }
+    }
+
+    .linked-details-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+      animation: fadeIn 0.3s ease-out;
+
+      .section-title {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--sera-primary-color);
+        opacity: 0.9;
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+
+      .linked-cards-container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .linked-detail-card {
+        background: rgba(var(--sera-primary-color-rgb, 33, 150, 243), 0.02);
+        border: 1px solid rgba(var(--sera-primary-color-rgb), 0.1);
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+        .card-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+
+          .link-badge {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            background: var(--sera-primary-color);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+          }
+
+          h4 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--sera-text-color);
+          }
+        }
+
+        .card-content-grid {
+          display: flex;
+          flex-flow: row wrap;
+          gap: 14px;
+          background: rgba(0, 0, 0, 0.15);
+          padding: 12px 16px;
+          border-radius: 8px;
+          border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .sub-data-item {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 110px;
+          flex: 1 1 auto;
+
+          .sub-label {
+            font-size: 10px;
+            color: var(--sera-text-color);
+            opacity: 0.5;
+            font-weight: 700;
+            letter-spacing: 1px;
+          }
+
+          .sub-value {
+            font-size: 13px;
+            color: var(--sera-text-color);
+            font-weight: 500;
+          }
+        }
       }
     }
 
@@ -277,12 +410,20 @@ import * as pdfjsLib from 'pdfjs-dist';
       justify-content: flex-end;
       gap: 12px;
     }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DetalleRegistroComponent implements OnInit {
   campos: any[] = [];
   adjuntos: any[] = [];
+  
+  linkedFields: any[] = [];
+  linkedDataDetails: any[] = [];
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { tabla: string, row: any },
@@ -294,6 +435,7 @@ export class DetalleRegistroComponent implements OnInit {
 
   async ngOnInit() {
     await this.cargarCampos();
+    await this.cargarDatosVinculados();
     await this.cargarAdjuntos();
   }
 
@@ -303,6 +445,75 @@ export class DetalleRegistroComponent implements OnInit {
       this.cdr.detectChanges();
     } catch (e) {
       console.error(e);
+    }
+  }
+
+  async cargarDatosVinculados() {
+    try {
+      const configJson: string = await invoke('get_tabla_config', { nombreTabla: this.data.tabla });
+      if (configJson && configJson.trim() !== '' && configJson !== '{}') {
+        const config = JSON.parse(configJson);
+        this.linkedFields = config.linkedFields || [];
+      } else {
+        this.linkedFields = [];
+      }
+
+      this.linkedDataDetails = [];
+
+      for (const link of this.linkedFields) {
+        const localValue = this.data.row[link.localField];
+        if (localValue === undefined || localValue === null || localValue === '') {
+          continue;
+        }
+
+        try {
+          // Obtener campos de la tabla remota
+          const remoteFields: any[] = await invoke('get_campos', { tabla: link.remoteTable });
+          // Obtener todos los registros de la tabla remota
+          const remoteData: any[] = await invoke('get_contenido', { tabla: link.remoteTable });
+
+          // Filtrar campos útiles (excluyendo IDs primarios/foráneos y campos del sistema)
+          const validRemoteFields = remoteFields.filter((cf: any) => 
+            cf.Key !== 'PRI' && 
+            !cf.Field.toLowerCase().includes('id') && 
+            !cf.Field.toLowerCase().startsWith('sera_')
+          );
+
+          // Buscar el registro coincidente en la tabla remota
+          const matchedRow = remoteData.find(row => String(row[link.remoteField]) === String(localValue));
+          if (!matchedRow) continue;
+
+          // Valor a mostrar principal
+          const mainDisplayVal = String(matchedRow[link.displayField] || matchedRow[validRemoteFields[0]?.Field] || localValue);
+
+          // Actualizar el valor en la fila actual para que la grilla principal del detalle lo muestre traducido
+          this.data.row = {
+            ...this.data.row,
+            [link.localField]: mainDisplayVal
+          };
+
+          // Si la tabla remota tiene más de 1 columna de contenido útil, mostramos sección dedicada
+          if (validRemoteFields.length > 1) {
+            const extraDataList = validRemoteFields.map(f => ({
+              field: f.Field,
+              label: f.Field.split('_').join(' ').toUpperCase(),
+              value: matchedRow[f.Field] || '-'
+            }));
+
+            this.linkedDataDetails.push({
+              title: link.localField.split('_').join(' ').toUpperCase(),
+              mainValue: mainDisplayVal,
+              fields: extraDataList
+            });
+          }
+        } catch (err) {
+          console.error(`Error procesando vínculo para campo ${link.localField}:`, err);
+        }
+      }
+
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.error("Error al cargar vínculos en detalle:", e);
     }
   }
 
