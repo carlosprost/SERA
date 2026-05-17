@@ -4,6 +4,19 @@ Este documento detalla las funcionalidades planificadas para las próximas versi
 
 ---
 
+## 💎 Estrategia de Producto y Monetización
+El modelo de negocio de SERA mantiene la filosofía **sin suscripciones** y privacidad total (100% offline). La rentabilidad se basará en:
+
+1. **Core Gratuito Intocable:** Las herramientas base, el motor relacional (V-Engine), las reglas visuales, el borrado masivo y el buscador Spotlight seguirán siendo 100% gratuitos para maximizar la adopción.
+2. **Licencia SERA Pro (Pago Único):** Desbloqueo mediante *In-App Purchase* en la Microsoft Store para entornos de alta exigencia. Esta licencia perpetua activará funcionalidades "Power User":
+   - **LAN Sync** (Sincronización P2P en red local).
+   - **SERA Copilot** (IA Local).
+   - **Workflows** (Automatizaciones en segundo plano).
+   - **Bóveda Biométrica** (Cifrado selectivo por columnas).
+3. **Kits por Industria (Add-ons):** Venta en tienda interna de plantillas pre-configuradas (archivos `.srx`) orientadas a nichos específicos (Ej: *SERA Legal*, *SERA Policial*, *SERA Inventario Pyme*).
+
+---
+
 ## 🔮 Próximos Hitos: Ciclo Poseidón (v4.x) y Atenea (v5.x)
 
 ### 1. 🤖 SERA Copilot: IA 100% Local (Privacy-First)
