@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { invoke } from '@tauri-apps/api/core';
+import { AppInfoService } from '../../services/app-info.service';
 
 @Component({
   selector: 'app-about-dialog',
@@ -19,8 +20,8 @@ import { invoke } from '@tauri-apps/api/core';
       <div class="about-header text-center">
         <img src="assets/icon.png" alt="SERA Logo" class="about-logo">
         <h1 class="about-title">SERA</h1>
-        <p class="about-version">Versión 4.0.0 "Poseidón"</p>
-        <p class="about-patch-code">Orion-400</p>
+        <p class="about-version">{{ appInfo.etiquetaCompleta() }}</p>
+        <p class="about-patch-code">{{ appInfo.patchCode() }}</p>
       </div>
       
       <div class="about-content">
@@ -200,6 +201,8 @@ import { invoke } from '@tauri-apps/api/core';
   `]
 })
 export class AboutDialogComponent {
+  readonly appInfo = inject(AppInfoService);
+
   openStore() {
     invoke('abrir_url', { url: 'ms-windows-store://pdp/?ProductId=9N0DK1TGM63J' })
       .catch(err => console.error('Error al abrir la Microsoft Store:', err));

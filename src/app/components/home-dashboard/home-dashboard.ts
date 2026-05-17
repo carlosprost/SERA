@@ -10,6 +10,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { UiService } from '../../services/ui.service';
 import { ConfigData } from '../../interfaces/configData.interfaces';
+import { AppInfoService } from '../../services/app-info.service';
 
 interface GlobalStats {
   total_tablas: number;
@@ -39,7 +40,8 @@ export class HomeDashboardComponent implements OnInit {
 
   constructor(
     private store: Store,
-    private uiService: UiService
+    private uiService: UiService,
+    public appInfo: AppInfoService
   ) {}
 
   ngOnInit() {

@@ -12,6 +12,7 @@ import { MaterialModule } from '../../shared/material.module';
 import { ThemeService } from '../../services/theme';
 import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
+import { AppInfoService } from '../../services/app-info.service';
 
 @Component({
   selector: 'app-config-data-dialog',
@@ -53,6 +54,7 @@ export class ConfigDataDialogComponent {
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
     public themeService: ThemeService,
+    public appInfo: AppInfoService,
     public dialogRef: MatDialogRef<ConfigDataDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
