@@ -5,13 +5,29 @@
     #searchInput
     [formControl]="searchControl" 
     class="palette-input" 
-    placeholder="Escribe para buscar registros... (Enter o Esc para cerrar)" 
-    (keydown.enter)="closeDialog()" 
+    placeholder="Buscar en esta tabla..." 
     (keydown.escape)="closeDialog()"
   />
+
+  <!-- Indicador de coincidencias -->
+  @if (matchCount) {
+    <span class="match-indicator" [class.no-match]="matchCount === 'Sin resultados'">
+      {{ matchCount }}
+    </span>
+  }
+
+  <!-- Botón para vaciar/limpiar el campo de texto -->
   @if (searchControl.value) {
-    <button mat-icon-button (click)="searchControl.setValue(''); searchInput.focus()" class="clear-btn">
-      <mat-icon>close</mat-icon>
+    <button mat-icon-button (click)="searchControl.setValue(''); searchInput.focus()" class="clear-btn" matTooltip="Limpiar texto">
+      <mat-icon>backspace</mat-icon>
     </button>
   }
+
+  <!-- Separador Vertical -->
+  <div class="vertical-separator"></div>
+
+  <!-- Botón de Cierre Dedicado (Siempre Visible) -->
+  <button mat-icon-button (click)="closeDialog()" class="close-btn" matTooltip="Cerrar buscador (Esc)">
+    <mat-icon>close</mat-icon>
+  </button>
 </div>

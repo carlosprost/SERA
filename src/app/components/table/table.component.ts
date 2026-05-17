@@ -250,18 +250,29 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
 
 
   openSearchPalette() {
-    this.dialog.open(SearchPaletteDialog, {
+    const dialogRef = this.dialog.open(SearchPaletteDialog, {
       width: '450px',
       position: { top: '140px', right: '20px' },
       panelClass: 'spotlight-dialog-panel', 
-      backdropClass: 'spotlight-backdrop',
+      hasBackdrop: false, // NO BLOQUEA Clics en la tabla de atrás
       data: {
         initialValue: this.lastSearchValue,
         onSearch: (val: string) => {
           this.lastSearchValue = val;
           this.applyDataSourceSearch(val);
+          return {
+            filtered: this.dataSource.filteredData.length,
+            total: this.dataSource.data.length
+          };
         }
       }
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      // Al cerrar la paleta de búsqueda local, limpiamos el filtro y restablecemos todos los registros
+      this.lastSearchValue = '';
+      this.applyDataSourceSearch('');
+      this.cdr.detectChanges();
     });
   }
 

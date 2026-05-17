@@ -274,11 +274,18 @@ mat-checkbox, mat-slide-toggle {
 }
 
 /* Paleta de Comandos (Ctrl+F) */
-.spotlight-dialog-panel {
-  .mat-mdc-dialog-container {
+.cdk-overlay-pane.spotlight-dialog-panel {
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  border: none !important;
+
+  .mat-mdc-dialog-container, .mat-mdc-dialog-surface {
     background: transparent !important;
+    background-color: transparent !important;
     box-shadow: none !important;
+    border-radius: 0 !important;
     padding: 0 !important;
+    border: none !important;
   }
 }
 

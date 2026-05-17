@@ -16,6 +16,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 export class SearchPaletteDialog implements OnInit, OnDestroy, AfterViewInit {
   searchControl = new FormControl('');
   private sub: Subscription = new Subscription();
+  matchCount: string = '';
 
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
@@ -31,15 +32,32 @@ export class SearchPaletteDialog implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit() {
     this.sub = this.searchControl.valueChanges
       .pipe(
-        debounceTime(150), // Pequeño debounce para no saturar al tipear
+        debounceTime(150), // Pequeño debaunce para no saturar al tipear
         distinctUntilChanged()
       )
       .subscribe(val => {
-        // Retornamos el valor tipeado en tiempo real sin cerrar el modal
-        if (this.data.onSearch) {
-          this.data.onSearch(val);
-        }
+        this.updateMatches(val || '');
       });
+
+    // Cargar indicador inicial si ya vino con valor cargado
+    if (this.data && this.data.initialValue) {
+      setTimeout(() => {
+        this.updateMatches(this.data.initialValue);
+      }, 100);
+    }
+  }
+
+  private updateMatches(val: string) {
+    if (this.data.onSearch) {
+      const res = this.data.onSearch(val);
+      if (res) {
+        if (val.trim() === '') {
+          this.matchCount = '';
+        } else {
+          this.matchCount = res.filtered === 0 ? 'Sin resultados' : `${res.filtered} de ${res.total}`;
+        }
+      }
+    }
   }
 
   ngAfterViewInit() {
