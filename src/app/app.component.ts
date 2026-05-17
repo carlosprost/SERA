@@ -154,8 +154,8 @@ export class AppComponent implements AfterViewInit, OnInit {
     }
     // Ctrl + F para búsqueda local en la tabla activa
     else if (event.ctrlKey && !event.shiftKey && (event.key === 'F' || event.key === 'f')) {
+      event.preventDefault(); // Evitamos que el WebView intercepte y abra el buscador nativo de Edge
       if (this.activeTable) {
-        event.preventDefault();
         this.activeTable.openSearchPalette();
       }
     }
