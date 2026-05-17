@@ -161,6 +161,9 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy() {
     this.subcriptions.forEach((sub) => sub.unsubscribe());
+    if (this.searchDialogRef) {
+      this.searchDialogRef.close();
+    }
   }
 
   emitSelected(row: any) {
@@ -251,7 +254,7 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
 
 
   openSearchPalette() {
-    const dialogRef = this.dialog.open(SearchPaletteDialog, {
+    this.searchDialogRef = this.dialog.open(SearchPaletteDialog, {
       width: '450px',
       position: { top: '140px', right: '20px' },
       panelClass: 'spotlight-dialog-panel', 
@@ -269,10 +272,11 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     });
 
-    dialogRef.afterClosed().subscribe(() => {
+    this.searchDialogRef.afterClosed().subscribe(() => {
       // Al cerrar la paleta de búsqueda local, limpiamos el filtro y restablecemos todos los registros
       this.lastSearchValue = '';
       this.applyDataSourceSearch('');
+      this.searchDialogRef = null;
       this.cdr.detectChanges();
     });
   }
