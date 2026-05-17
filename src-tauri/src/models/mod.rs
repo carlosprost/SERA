@@ -116,7 +116,7 @@ pub struct UserConfig {
 }
 
 /// Modelo para exportar adjuntos junto con la tabla.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExportedAdjunto {
     pub registro_id: i64,
     pub nombre: String,
@@ -124,13 +124,19 @@ pub struct ExportedAdjunto {
 }
 
 /// Empaquetado completo de una tabla para exportación (.srx).
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExportedTable {
     pub nombre: String,
     pub campos: Vec<Campo>,
     pub contenido: Vec<serde_json::Value>,
     pub visual_config: String,
     pub adjuntos: Option<Vec<ExportedAdjunto>>,
+}
+
+/// Paquete multi-tabla para exportación (.srx).
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ExportPackage {
+    pub tablas: Vec<ExportedTable>,
 }
 
 /// Datos para insertar múltiples registros en bloque.

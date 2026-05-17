@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, ViewChildren, QueryList, ChangeDetectorRef, AfterViewInit, OnInit, signal, HostListener } from "@angular/core";
+import { Component, ElementRef, ViewChild, ViewChildren, QueryList, ChangeDetectorRef, NgZone, AfterViewInit, OnInit, signal, HostListener } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { SelectionModel } from "@angular/cdk/collections";
 import { FormControl } from "@angular/forms";
@@ -103,7 +103,8 @@ export class AppComponent implements AfterViewInit, OnInit {
     private pdfService: PdfService,
     public themeService: ThemeService, // Inyectamos para activar el effect
     private uiService: UiService,
-    public cdr: ChangeDetectorRef
+    public cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {
     this.store.dispatch(StoreActions.loadStores());
     this.store.dispatch(StoreActions.loadListadoTablas());
@@ -295,25 +296,85 @@ export class AppComponent implements AfterViewInit, OnInit {
     });
   }
 
-  /** Abre el dialog de confirmación para eliminar una tabla. */
   eliminarTabla(nombre_tabla: string) {
-    const dialogRef = this.dialog.open(DialogDeleteComponent, {
-      width: "250px",
-      data: {
-        title: "¿Seguro que desea eliminar la tabla?",
-        message: "Perderá todos los datos de los registros.",
-        tabla: nombre_tabla,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result && result.reload) {
-        // Si la tabla eliminada estaba abierta en los tabs, la removemos de forma limpia
-        const index = this.tabs.indexOf(nombre_tabla);
-        if (index !== -1) {
-          this.removeTab(index);
+    // 1. Consultar la configuración de la tabla para buscar vínculos activos
+    invoke<string>('get_tabla_config', { nombreTabla: nombre_tabla }).then(configStr => {
+      this.ngZone.run(() => {
+        let linkedTables: string[] = [];
+        try {
+          const config = JSON.parse(configStr);
+          if (config && config.linkedFields && Array.isArray(config.linkedFields)) {
+            linkedTables = config.linkedFields
+              .map((lf: any) => lf.remoteTable)
+              .filter((val: string, index: number, self: string[]) => val && self.indexOf(val) === index);
+          }
+        } catch (e) {
+          console.error("Error al parsear config de tabla:", e);
         }
-      }
+
+        // 2. Abre el diálogo pasando la lista de tablas vinculadas
+        const dialogRef = this.dialog.open(DialogDeleteComponent, {
+          width: "400px",
+          data: {
+            title: "¿Eliminar tabla?",
+            message: `¿Seguro que deseas eliminar la tabla "${nombre_tabla}"? Perderás todos sus registros y adjuntos físicos asociados permanentemente.`,
+            tabla: nombre_tabla,
+            linkedTables: linkedTables
+          },
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+          if (result && result.reload) {
+            this.ngZone.run(() => {
+              const eliminadas: string[] = result.eliminadas || [nombre_tabla];
+              
+              // Si las tablas eliminadas estaban abiertas en los tabs, las removemos de forma limpia
+              eliminadas.forEach(t => {
+                const index = this.tabs.findIndex(tab => tab.toLowerCase() === t.toLowerCase());
+                if (index !== -1) {
+                  this.removeTab(index);
+                }
+              });
+
+              // Forzar la recarga del catálogo en el Store
+              this.store.dispatch(StoreActions.loadListadoTablas());
+
+              let msg = '';
+              if (eliminadas.length === 1) {
+                msg = `Tabla "${nombre_tabla}" eliminada correctamente`;
+              } else {
+                msg = `Se eliminaron la tabla "${nombre_tabla}" y ${eliminadas.length - 1} tablas vinculadas`;
+              }
+              this.snackBar.open(msg, "Cerrar", { duration: 4000 });
+            });
+          }
+        });
+      });
+    }).catch(err => {
+      console.error("Error al obtener config para eliminar tabla:", err);
+      // Fallback a diálogo simple si hay error de Rust
+      this.ngZone.run(() => {
+        const dialogRef = this.dialog.open(DialogDeleteComponent, {
+          width: "350px",
+          data: {
+            title: "¿Eliminar tabla?",
+            message: `¿Seguro que deseas eliminar la tabla "${nombre_tabla}"? Perderás todos los registros.`,
+            tabla: nombre_tabla,
+          },
+        });
+        dialogRef.afterClosed().subscribe((result) => {
+          if (result && result.reload) {
+            this.ngZone.run(() => {
+              const index = this.tabs.indexOf(nombre_tabla);
+              if (index !== -1) {
+                this.removeTab(index);
+              }
+              this.store.dispatch(StoreActions.loadListadoTablas());
+              this.snackBar.open(`Tabla "${nombre_tabla}" eliminada`, "Cerrar", { duration: 3000 });
+            });
+          }
+        });
+      });
     });
   }
 
@@ -401,10 +462,14 @@ export class AppComponent implements AfterViewInit, OnInit {
             password: password || null,
             incluirAdjuntos 
           });
-          this.snackBar.open(`Tabla "${nombreTabla}" exportada correctamente`, "Cerrar", { duration: 3000 });
+          this.ngZone.run(() => {
+            this.snackBar.open(`Tabla "${nombreTabla}" exportada correctamente`, "Cerrar", { duration: 3000 });
+          });
         } catch (error) {
           console.error("[SERA] Error al exportar:", error);
-          this.snackBar.open("Error al exportar tabla: " + error, "Cerrar", { duration: 5000 });
+          this.ngZone.run(() => {
+            this.snackBar.open("Error al exportar tabla: " + error, "Cerrar", { duration: 5000 });
+          });
         }
       });
     });
@@ -438,20 +503,24 @@ export class AppComponent implements AfterViewInit, OnInit {
     try {
       // 2. Intentar importar directamente con llave interna (password null)
       const nombreImportado = await invoke<string>('importar_tabla', { path, nuevoNombre: null, password: null });
-      this.confirmarImportacion(nombreImportado);
+      this.ngZone.run(() => {
+        this.confirmarImportacion(nombreImportado);
+      });
     } catch (error: any) {
-      const errorStr = error.toString().toLowerCase();
+      this.ngZone.run(() => {
+        const errorStr = error.toString().toLowerCase();
 
-      // 3. Si falla por descifrado, pedir contraseña
-      if (errorStr.includes("descifrado") || errorStr.includes("contraseña") || errorStr.includes("decrypt")) {
-        this.reintentarImportacionConPassword(path);
-      } 
-      // 4. Si falla por conflicto de nombre
-      else if (errorStr.includes("already exists") || errorStr.includes("ya existe")) {
-        this.resolverConflictoImportacion(path);
-      } else {
-        this.snackBar.open("Error al importar: " + error, "Cerrar", { duration: 5000 });
-      }
+        // 3. Si falla por descifrado, pedir contraseña
+        if (errorStr.includes("descifrado") || errorStr.includes("contraseña") || errorStr.includes("decrypt")) {
+          this.reintentarImportacionConPassword(path);
+        } 
+        // 4. Si falla por conflicto de nombre
+        else if (errorStr.includes("already exists") || errorStr.includes("ya existe")) {
+          this.resolverConflictoImportacion(path);
+        } else {
+          this.snackBar.open("Error al importar: " + error, "Cerrar", { duration: 5000 });
+        }
+      });
     }
   }
 
@@ -471,14 +540,18 @@ export class AppComponent implements AfterViewInit, OnInit {
 
       try {
         const res = await invoke<string>('importar_tabla', { path, nuevoNombre: null, password });
-        this.confirmarImportacion(res);
+        this.ngZone.run(() => {
+          this.confirmarImportacion(res);
+        });
       } catch (e: any) {
-        const eStr = e.toString().toLowerCase();
-        if (eStr.includes("exists") || eStr.includes("ya existe")) {
-          this.resolverConflictoImportacion(path, password);
-        } else {
-          this.snackBar.open("Contraseña incorrecta o archivo corrupto", "Cerrar", { duration: 5000 });
-        }
+        this.ngZone.run(() => {
+          const eStr = e.toString().toLowerCase();
+          if (eStr.includes("exists") || eStr.includes("ya existe")) {
+            this.resolverConflictoImportacion(path, password);
+          } else {
+            this.snackBar.open("Contraseña incorrecta o archivo corrupto", "Cerrar", { duration: 5000 });
+          }
+        });
       }
     });
   }
@@ -497,9 +570,13 @@ export class AppComponent implements AfterViewInit, OnInit {
       if (nuevoNombre) {
         try {
           const res = await invoke<string>('importar_tabla', { path, nuevoNombre, password: passwordUsed });
-          this.confirmarImportacion(res);
+          this.ngZone.run(() => {
+            this.confirmarImportacion(res);
+          });
         } catch (e) {
-          this.snackBar.open("Error al reintentar importación: " + e, "Cerrar", { duration: 5000 });
+          this.ngZone.run(() => {
+            this.snackBar.open("Error al reintentar importación: " + e, "Cerrar", { duration: 5000 });
+          });
         }
       }
     });
@@ -507,8 +584,15 @@ export class AppComponent implements AfterViewInit, OnInit {
 
 
   /** Finaliza el proceso de importación y actualiza la UI. */
-  private confirmarImportacion(nombre: string) {
-    this.snackBar.open(`Tabla "${nombre}" importada y lista para usar`, "¡Éxito!", { duration: 4000 });
+  private confirmarImportacion(nombreList: string) {
+    const nombres = nombreList.split(',').map(n => n.trim());
+    let mensaje = '';
+    if (nombres.length === 1) {
+      mensaje = `Tabla "${nombres[0]}" importada y lista para usar`;
+    } else {
+      mensaje = `Se importó la tabla "${nombres[0]}" junto con ${nombres.length - 1} tablas vinculadas`;
+    }
+    this.snackBar.open(mensaje, "¡Éxito!", { duration: 5000 });
     // Forzar recarga del listado de tablas en el Store
     this.store.dispatch(StoreActions.loadListadoTablas());
   }

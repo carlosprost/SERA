@@ -1,15 +1,16 @@
-# SECURITY_REPORT.md — SERA v3.2.1 "Ares"
+# SECURITY_REPORT.md — SERA v3.3.0 "Ares"
 **WolfTeI | Sistema de Expedientes de Registro Avanzado**
-*Última actualización: 2026-05-16 — Release v3.2.1 (Phoenix-321)*
+*Última actualización: 2026-05-16 — Release v3.3.0 (Phoenix-330)*
 
 ---
 
-## 1. Auditoría de Stack y Dependencias (v3.2.1)
+## 1. Auditoría de Stack y Dependencias (v3.3.0)
 
 ### Componentes Críticos
 - **SERA V-Engine (Fórmulas):** Motor de evaluación virtual desarrollado in-house. Utiliza un sandbox mediante la creación de contextos aislados para evitar la ejecución de código arbitrario (XSS/RCE).
 - **Relational Engine:** Capa intermedia que gestiona la traducción de IDs numéricos a etiquetas legibles mediante diccionarios en memoria, evitando cruces de datos no autorizados.
 - **Asynchronous PDF Engine (v3.2.1):** Generador de reportes en PDF aislado que crea contenedores en memoria del DOM efímeros y desinfecta todos los campos para prevenir ejecuciones en el canvas de captura.
+- **Relational Portability Packager (v3.3.0):** Compilador recursivo de dependencias relacionales que empaqueta una tabla y todas sus tablas vinculadas (directa e indirectamente) con sus respectivos adjuntos físicos de manera unificada y encriptada en un único archivo `.srx`.
 
 | Dependencia | Versión | Rol de Seguridad / Aporte a la Confidencialidad |
 |---|---|---|
@@ -17,6 +18,7 @@
 | `rusqlite` | 0.32.x | Protección contra SQL Injection mediante Prepared Statements y parámetros tipados en SQLite. |
 | `aes-gcm` | 0.10.x | Cifrado criptográfico simétrico AEAD para exportación e importación segura (.srx). |
 | `html2canvas` / `jspdf` | 1.4.x / 2.5.x | Captura gráfica A4 y empaquetado final de PDF a nivel cliente sin llamadas externas. |
+| `zip` | 2.2.x | Generación e importación de contenedores seguros con compresión Deflate para adjuntos y datos. |
 
 ---
 
@@ -47,12 +49,14 @@ Todos los comandos del backend de Rust se encuentran protegidos mediante el aisl
     2. Los archivos solo se abren con la API nativa de Tauri a través de asociaciones controladas por el sistema operativo, limitando ejecuciones involuntarias.
     3. `get_adjunto_base64` resuelve el archivo y añade el MIME type exacto tras validar que la ruta relativa existe estrictamente dentro de la carpeta aislada del usuario.
 
-### E. Endpoints de Portabilidad (Paquetes .srx)
+### E. Endpoints de Portabilidad (Paquetes .srx Relacionales — v3.3.0)
 - `exportar_tabla`, `importar_tabla`
-  - **Nivel de Seguridad:** Criptografía Simétrica AEAD (AES-256-GCM) y Validación de Esquemas.
+  - **Nivel de Seguridad:** Criptografía Simétrica AEAD (AES-256-GCM), Descubrimiento Recursivo y Mitigación de Colisiones.
   - **Control:** 
-    1. Si el usuario define contraseña, se deriva una llave criptográfica robusta para descifrar el payload.
-    2. `importar_tabla` implementa detección de formato flexible (ZIP/SRX) y **descarta/filtra automáticamente cualquier columna de sistema o virtual inyectada** en el JSON para prevenir la manipulación ilegítima del catálogo.
+    1. **Búsqueda Recursiva de Vínculos:** El backend analiza el catálogo y la configuración JSON de la tabla origen para identificar todas las tablas vinculadas. Esto se repite para cada tabla descubierta, consolidando un grafo completo sin redundancias ni ciclos.
+    2. **Empaquetado de Adjuntos Unificado:** Si se activa la exportación de adjuntos, el motor barra todas las tablas involucradas, recolecta sus archivos en `app_data_dir/attachments/` y los inyecta en el contenedor ZIP con rutas sanitizadas.
+    3. **Prevención de Colisión de Datos (Importación):** `importar_tabla` realiza inserciones mediante Prepared Statements usando la instrucción `INSERT OR IGNORE`. Si una tabla vinculada ya existe o si un registro con la misma llave primaria ya está registrado, el motor descarta el registro conflictivo de forma silenciosa e integra los nuevos de manera segura, impidiendo la corrupción de la base de datos y violaciones a restricciones de clave única.
+    4. **Detección Flexible:** Al descifrar el payload, el importador autodetecta si el paquete es de tipo `ExportPackage` (relacional v3.3.0) o de tipo `ExportedTable` (legacy/simple), procesándolo adecuadamente sin romper retrocompatibilidad.
 
 ---
 
@@ -72,16 +76,16 @@ Para evitar inyección HTML y XSS (OWASP A03):
 
 ---
 
-## 4. Matriz de Prevención de Vulnerabilidades (OWASP v3.2.1)
+## 4. Matriz de Prevención de Vulnerabilidades (OWASP v3.3.0)
 
-| OWASP ID | Vulnerabilidad | Mecanismo Implementado en v3.2.1 |
+| OWASP ID | Vulnerabilidad | Mecanismo Implementado en v3.3.0 |
 |---|---|---|
 | **A03** | Inyección | Prepared Statements en Rust, escape de strings mediante `textContent` en reportes PDF, y sandbox léxico en motor de fórmulas. |
 | **A04** | Diseño Inseguro | Separación estricta de responsabilidades (SoC), control granular de adjuntos y cleanups automáticos de cascada. |
 | **A07** | Fallos de Identificación | Derivación de llaves AES-256-GCM mediante SHA-256 para paquetes encriptados `.srx`. |
-| **A08** | Fallos de Integridad | Filtro y descarte de columnas técnicas/virtuales al importar respaldos, y generación de UUIDs para adjuntos físicos. |
+| **A08** | Fallos de Integridad | Inserción con mitigación de duplicados (`INSERT OR IGNORE`), auto-detección flexible de paquetes relacionales/legacy, y UUIDs para adjuntos físicos. |
 | **Phoenix** | Motor de Fórmulas | ✅ Sanitizado | Aislamiento completo de variables y evaluación en un contexto local restringido. |
 
 ---
 
-*Este reporte certifica que SERA v3.2.1 "Ares" mantiene y robustece los controles de seguridad integral, extendiendo la mitigación XSS en la generación asíncrona de reportes bajo el ciclo Phoenix-321.*
+*Este reporte certifica que SERA v3.3.0 "Ares" mantiene y robustece los controles de seguridad integral, extendiendo la mitigación XSS, la integridad referencial de exportaciones conjuntas, y el blindaje ante colisiones primarias de base de datos.*

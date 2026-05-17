@@ -5,7 +5,7 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::{State, AppHandle, Manager};
 use crate::database;
-use crate::models::{Campo, ConfigData, DeleteRecord, ExportedTable, NewRecord, NuevaTabla, RestructureTable, Tabla, BulkRecord, GlobalStats};
+use crate::models::{Campo, ConfigData, DeleteRecord, ExportedTable, ExportPackage, NewRecord, NuevaTabla, RestructureTable, Tabla, BulkRecord, GlobalStats};
 use crate::security::CryptoProvider;
 use serde_json::Value;
 
@@ -94,23 +94,110 @@ pub fn importar_bulk(db_path: State<DbPath>, bulk: BulkRecord) -> Result<String,
 // ─── EXPORTACIÓN / IMPORTACIÓN SRX ───────────────────────────────────────────
 
 #[tauri::command]
-pub fn exportar_tabla(db_path: State<DbPath>, nombre_tabla: String, path: String, password: Option<String>, _incluir_adjuntos: bool) -> Result<String, String> {
-    let campos = database::get_campos(&db_path.0, &nombre_tabla).map_err(|e| e.to_string())?;
-    let contenido = database::get_contenido(&db_path.0, &nombre_tabla).map_err(|e| e.to_string())?;
-    let visual_config = database::get_tabla_config(&db_path.0, &nombre_tabla).unwrap_or_default();
-    
-    let package = ExportedTable {
-        nombre: nombre_tabla,
-        campos,
-        contenido,
-        visual_config,
-        adjuntos: None, // Por ahora no exportamos adjuntos físicos en el SRX simple
+pub fn exportar_tabla(app_handle: tauri::AppHandle, db_path: State<DbPath>, nombre_tabla: String, path: String, password: Option<String>, incluir_adjuntos: bool) -> Result<String, String> {
+    // 1. Encontrar todas las tablas relacionadas recursivamente
+    let mut tablas_a_exportar = vec![nombre_tabla.clone()];
+    let mut index = 0;
+    while index < tablas_a_exportar.len() {
+        let tabla_actual = tablas_a_exportar[index].clone();
+        if let Ok(config_str) = database::get_tabla_config(&db_path.0, &tabla_actual) {
+            if let Ok(config_val) = serde_json::from_str::<serde_json::Value>(&config_str) {
+                if let Some(linked_fields) = config_val.get("linkedFields").and_then(|v| v.as_array()) {
+                    for link in linked_fields {
+                        if let Some(remote_table) = link.get("remoteTable").and_then(|v| v.as_str()) {
+                            let remote_table_lower = remote_table.to_lowercase();
+                            let exists = tablas_a_exportar.iter().any(|t| t.to_lowercase() == remote_table_lower);
+                            if !exists {
+                                if database::get_campos(&db_path.0, &remote_table_lower).is_ok() {
+                                    tablas_a_exportar.push(remote_table_lower);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        index += 1;
+    }
+
+    println!("[SERA] Tablas identificadas para exportar: {:?}", tablas_a_exportar);
+
+    // 2. Construir el paquete de datos
+    let mut tablas_empaquetadas = Vec::new();
+    let mut todos_los_adjuntos_fisicos = Vec::new();
+
+    let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+
+    for tabla in &tablas_a_exportar {
+        let campos = database::get_campos(&db_path.0, tabla).map_err(|e| e.to_string())?;
+        let contenido = database::get_contenido(&db_path.0, tabla).map_err(|e| e.to_string())?;
+        let visual_config = database::get_tabla_config(&db_path.0, tabla).unwrap_or_default();
+
+        // Obtener metadatos de los adjuntos de esta tabla de la base de datos
+        let mut adjuntos_meta = None;
+        if let Ok(adjuntos) = database::get_todos_los_adjuntos_de_tabla(&db_path.0, tabla) {
+            if !adjuntos.is_empty() {
+                if incluir_adjuntos {
+                    // Coleccionar rutas de archivos físicos para empaquetarlos
+                    for adj in &adjuntos {
+                        let ruta_fisica = app_dir.join(&adj.ruta_interna);
+                        if ruta_fisica.exists() {
+                            todos_los_adjuntos_fisicos.push((adj.ruta_interna.clone(), ruta_fisica));
+                        }
+                    }
+                }
+                adjuntos_meta = Some(adjuntos);
+            }
+        }
+
+        tablas_empaquetadas.push(ExportedTable {
+            nombre: tabla.clone(),
+            campos,
+            contenido,
+            visual_config,
+            adjuntos: adjuntos_meta,
+        });
+    }
+
+    let package = ExportPackage {
+        tablas: tablas_empaquetadas,
     };
-    
+
     let json_data = serde_json::to_vec(&package).map_err(|e| e.to_string())?;
     let encrypted_data = CryptoProvider::encrypt(&json_data, password).map_err(|e| e.to_string())?;
-    fs::write(path, encrypted_data).map_err(|e| e.to_string())?;
-    
+
+    // 3. Escribir el archivo final (.srx)
+    if incluir_adjuntos && !todos_los_adjuntos_fisicos.is_empty() {
+        // Empaquetar como un ZIP cifrado
+        println!("[SERA] Generando contenedor ZIP (.srx) con adjuntos físicos...");
+        let zip_file = fs::File::create(&path).map_err(|e| e.to_string())?;
+        let mut zip = zip::ZipWriter::new(zip_file);
+        
+        let options = zip::write::SimpleFileOptions::default()
+            .compression_method(zip::CompressionMethod::Deflated)
+            .unix_permissions(0o755);
+
+        // A. Escribir el archivo de datos cifrado 'data.sera'
+        use std::io::Write;
+        zip.start_file("data.sera", options).map_err(|e| e.to_string())?;
+        zip.write_all(&encrypted_data).map_err(|e| e.to_string())?;
+
+        // B. Escribir los adjuntos físicos en la subcarpeta 'attachments/'
+        for (ruta_relativa, ruta_fisica) in todos_los_adjuntos_fisicos {
+            let file_name = ruta_relativa.split(|c| c == '\\' || c == '/').last().unwrap_or("archivo");
+            let zip_path = format!("attachments/{}", file_name);
+
+            zip.start_file(zip_path, options).map_err(|e| e.to_string())?;
+            let file_content = fs::read(&ruta_fisica).map_err(|e| e.to_string())?;
+            zip.write_all(&file_content).map_err(|e| e.to_string())?;
+        }
+
+        zip.finish().map_err(|e| e.to_string())?;
+    } else {
+        // Escribir el archivo cifrado directo
+        fs::write(path, encrypted_data).map_err(|e| e.to_string())?;
+    }
+
     Ok("exito".to_string())
 }
 
@@ -180,24 +267,38 @@ pub fn importar_tabla(app_handle: tauri::AppHandle, db_path: State<DbPath>, path
         CryptoProvider::decrypt(&raw_data, password).map_err(|e| e.to_string())?
     };
 
-    // INTENTO DE PARSEO FLEXIBLE
-    let package: ExportedTable = match serde_json::from_slice::<ExportedTable>(&decrypted_data) {
-        Ok(p) => p,
-        Err(e) => {
-            println!("[SERA] Error en parseo estricto: {}. Intentando modo legacy/flexible...", e);
-            let v: Value = serde_json::from_slice(&decrypted_data).map_err(|_| "[SERA] El archivo no es un JSON válido".to_string())?;
+    // INTENTO DE PARSEO DE NUEVO FORMATO RELACIONAL MULTI-TABLA O LEGACY SINGLE-TABLA
+    let mut tablas_a_importar = Vec::new();
+
+    if let Ok(multi_package) = serde_json::from_slice::<ExportPackage>(&decrypted_data) {
+        println!("[SERA] Detectado paquete multi-tabla (.srx relacional) con {} tablas.", multi_package.tablas.len());
+        tablas_a_importar = multi_package.tablas;
+    } else if let Ok(single_package) = serde_json::from_slice::<ExportedTable>(&decrypted_data) {
+        println!("[SERA] Detectado paquete de tabla simple legacy.");
+        tablas_a_importar = vec![single_package];
+    } else {
+        println!("[SERA] Error en parseo estricto. Intentando modo legacy/flexible...");
+        let v: Value = serde_json::from_slice(&decrypted_data).map_err(|_| "[SERA] El archivo no es un JSON válido".to_string())?;
+        
+        if v.is_array() {
+            tablas_a_importar = vec![ExportedTable {
+                nombre: "tabla_importada".to_string(),
+                campos: Vec::new(),
+                contenido: v.as_array().unwrap().clone(),
+                visual_config: "".to_string(),
+                adjuntos: None,
+            }];
+        } else if v.is_object() {
+            let obj = v.as_object().unwrap();
             
-            // Si es un array directo, son los registros
-            if v.is_array() {
-                ExportedTable {
-                    nombre: "tabla_importada".to_string(),
-                    campos: Vec::new(),
-                    contenido: v.as_array().unwrap().clone(),
-                    visual_config: "".to_string(),
-                    adjuntos: None,
+            // ¿Viene un campo 'tablas' o 'tables'?
+            if let Some(tablas_val) = obj.get("tablas").or(obj.get("tables")) {
+                if let Ok(t_list) = serde_json::from_value::<Vec<ExportedTable>>(tablas_val.clone()) {
+                    tablas_a_importar = t_list;
                 }
-            } else if v.is_object() {
-                let obj = v.as_object().unwrap();
+            }
+            
+            if tablas_a_importar.is_empty() {
                 let contenido = obj.get("contenido").or(obj.get("data")).or(obj.get("rows"))
                     .and_then(|c| c.as_array())
                     .cloned()
@@ -205,7 +306,6 @@ pub fn importar_tabla(app_handle: tauri::AppHandle, db_path: State<DbPath>, path
                 
                 let nombre = obj.get("nombre").and_then(|n| n.as_str()).unwrap_or("tabla_importada").to_string();
                 
-                // BUSCAR CONFIGURACIÓN VISUAL LEGACY
                 let config_legacy = obj.get("visual_config")
                     .or(obj.get("config"))
                     .or(obj.get("visual"))
@@ -213,43 +313,59 @@ pub fn importar_tabla(app_handle: tauri::AppHandle, db_path: State<DbPath>, path
                     .map(|v| if v.is_string() { v.as_str().unwrap().to_string() } else { v.to_string() })
                     .unwrap_or_else(|| "{}".to_string());
 
-                // BUSCAR DEFINICIÓN DE CAMPOS LEGACY
                 let campos_legacy = if let Some(c_val) = obj.get("campos").or(obj.get("columns")) {
                     serde_json::from_value::<Vec<crate::models::Campo>>(c_val.clone()).unwrap_or_default()
                 } else {
                     Vec::new()
                 };
 
-                // BUSCAR ADJUNTOS LEGACY (_sera_adjuntos)
                 let adjuntos_raw = obj.get("_sera_adjuntos").or(obj.get("adjuntos")).or(obj.get("attachments"));
                 let mut adjuntos_final = None;
 
                 if let Some(a_val) = adjuntos_raw {
                     if let Ok(a_list) = serde_json::from_value::<Vec<crate::models::ExportedAdjunto>>(a_val.clone()) {
                         adjuntos_final = Some(a_list);
-                        println!("[SERA] Se encontraron {} adjuntos en el paquete legacy.", adjuntos_final.as_ref().unwrap().len());
                     }
                 }
 
-                ExportedTable {
+                tablas_a_importar = vec![ExportedTable {
                     nombre,
                     campos: campos_legacy,
                     contenido,
                     visual_config: config_legacy,
                     adjuntos: adjuntos_final,
-                }
-            } else {
-                return Err("[SERA] No se pudo determinar la estructura de los datos".to_string());
+                }];
             }
+        } else {
+            return Err("[SERA] No se pudo determinar la estructura de los datos".to_string());
         }
-    };
-    
-    let nombre_final = nuevo_nombre.unwrap_or(package.nombre.clone());
-    
-    // Ejecutar la importación real en la base de datos
-    database::importar_tabla(&db_path.0, nombre_final.clone(), package).map_err(|e| e.to_string())?;
-    
-    Ok(nombre_final)
+    }
+
+    if tablas_a_importar.is_empty() {
+        return Err("[SERA] No se encontraron tablas válidas para importar".to_string());
+    }
+
+    let mut nombres_importados = Vec::new();
+
+    // La primera tabla es la principal
+    let main_table = &tablas_a_importar[0];
+    let nombre_final = nuevo_nombre.unwrap_or_else(|| main_table.nombre.clone());
+
+    // Ejecutar la importación de la tabla principal
+    database::importar_tabla(&db_path.0, nombre_final.clone(), main_table.clone()).map_err(|e| e.to_string())?;
+    nombres_importados.push(nombre_final.clone());
+
+    // Importar el resto de las tablas vinculadas
+    for tabla_vinculada in tablas_a_importar.iter().skip(1) {
+        println!("[SERA] Importando tabla vinculada adjunta: {}", tabla_vinculada.nombre);
+        if let Err(e) = database::importar_tabla(&db_path.0, tabla_vinculada.nombre.clone(), tabla_vinculada.clone()) {
+            println!("[SERA] Advertencia al importar tabla vinculada {}: {}", tabla_vinculada.nombre, e);
+        } else {
+            nombres_importados.push(tabla_vinculada.nombre.clone());
+        }
+    }
+
+    Ok(nombres_importados.join(", "))
 }
 
 // ─── ADJUNTOS ─────────────────────────────────────────────────────────────────

@@ -1,8 +1,27 @@
-<h1 mat-dialog-title>{{data.title}}</h1>
-<div mat-dialog-content>
-  {{data.message}}
-</div>
-<div mat-dialog-actions align="center">
-  <button mat-button mat-dialog-close>No</button>
-  <button mat-button mat-dialog-close (click)="onSubmit()">Sí</button>
-</div>
+<h2 mat-dialog-title style="font-weight: 600; color: #ff5252; display: flex; align-items: center; gap: 8px;">
+  <mat-icon color="warn">warning</mat-icon>
+  {{data.title}}
+</h2>
+<mat-dialog-content style="min-width: 320px; font-size: 14px; line-height: 1.5; color: #e0e0e0;">
+  <p>{{data.message}}</p>
+
+  @if (linkedTables && linkedTables.length > 0) {
+    <div style="margin-top: 16px; padding: 12px; border-radius: 8px; background: rgba(244, 67, 54, 0.08); border: 1px solid rgba(244, 67, 54, 0.25);">
+      <p style="font-weight: 600; margin: 0 0 8px 0; color: #ff8a80; font-size: 13px;">
+        ⚠️ Esta tabla tiene vínculos activos con:
+      </p>
+      <ul style="margin: 0 0 12px 16px; padding: 0; font-size: 13px; color: #cfd8dc;">
+        @for (lt of linkedTables; track lt) {
+          <li style="margin-bottom: 4px;">{{lt}}</li>
+        }
+      </ul>
+      <mat-checkbox [(ngModel)]="eliminarVinculadas" color="warn" style="font-size: 12px; font-weight: 500;">
+        ¿Eliminar también las tablas vinculadas?
+      </mat-checkbox>
+    </div>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end" style="gap: 8px; padding: 12px 24px 20px 24px;">
+  <button mat-button (click)="dialogClose()">Cancelar</button>
+  <button mat-flat-button color="warn" (click)="onSubmit()">Eliminar</button>
+</mat-dialog-actions>

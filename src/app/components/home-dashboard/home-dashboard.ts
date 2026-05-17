@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { Store } from '@ngrx/store';
-import { selectConfigData } from '../../store/store.selectors';
+import { selectConfigData, selectTablas } from '../../store/store.selectors';
 import { invoke } from '@tauri-apps/api/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { UiService } from '../../services/ui.service';
@@ -44,6 +44,10 @@ export class HomeDashboardComponent implements OnInit {
 
   ngOnInit() {
     this.loadStats();
+    // Recargar estadísticas reactivamente cuando cambie la lista de tablas en el Store
+    this.store.select(selectTablas).subscribe(() => {
+      this.loadStats();
+    });
   }
 
   async loadStats() {

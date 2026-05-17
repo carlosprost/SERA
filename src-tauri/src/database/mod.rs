@@ -417,6 +417,22 @@ pub fn get_adjuntos(db_path: &Path, tabla: &str, registro_id: i64) -> Result<Vec
     Ok(results)
 }
 
+pub fn get_todos_los_adjuntos_de_tabla(db_path: &Path, tabla: &str) -> Result<Vec<crate::models::ExportedAdjunto>> {
+    let conn = abrir_conn(db_path)?;
+    let mut stmt = conn.prepare("SELECT registro_id, archivo_nombre, archivo_ruta_relativa FROM _sera_adjuntos WHERE tabla_nombre = ?")?;
+    let rows = stmt.query_map(params![tabla], |row| {
+        Ok(crate::models::ExportedAdjunto {
+            registro_id: row.get(0)?,
+            nombre: row.get(1)?,
+            ruta_interna: row.get(2)?,
+        })
+    })?;
+
+    let mut results = Vec::new();
+    for r in rows { results.push(r?); }
+    Ok(results)
+}
+
 pub fn insertar_adjunto(db_path: &Path, tabla: &str, registro_id: i64, nombre: &str, ruta: &str) -> Result<i64> {
     let conn = abrir_conn(db_path)?;
     conn.execute(
@@ -577,7 +593,7 @@ pub fn importar_tabla(db_path: &Path, nombre_tabla: String, package: crate::mode
 
             let columns = col_names.join(", ");
             let ques = placeholders.join(", ");
-            let mut stmt = tx.prepare(&format!("INSERT INTO \"{}\" ({}) VALUES ({})", nombre_tabla, columns, ques))?;
+            let mut stmt = tx.prepare(&format!("INSERT OR IGNORE INTO \"{}\" ({}) VALUES ({})", nombre_tabla, columns, ques))?;
             
             let params: Vec<&dyn rusqlite::ToSql> = vals_strings.iter().map(|s| s as &dyn rusqlite::ToSql).collect();
             stmt.execute(rusqlite::params_from_iter(params))?;
@@ -594,7 +610,7 @@ pub fn importar_tabla(db_path: &Path, nombre_tabla: String, package: crate::mode
             };
 
             tx.execute(
-                "INSERT INTO _sera_adjuntos (tabla_nombre, registro_id, archivo_nombre, archivo_ruta_relativa) VALUES (?, ?, ?, ?)",
+                "INSERT OR IGNORE INTO _sera_adjuntos (tabla_nombre, registro_id, archivo_nombre, archivo_ruta_relativa) VALUES (?, ?, ?, ?)",
                 params![nombre_tabla, adj.registro_id, adj.nombre, ruta_final]
             )?;
         }
