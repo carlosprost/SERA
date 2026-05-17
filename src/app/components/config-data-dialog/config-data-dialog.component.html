@@ -16,7 +16,7 @@
         (click)="setTab('general')"
       >
         <mat-icon>account_circle</mat-icon>
-        <span>Operador Judicial</span>
+        <span>Perfil Operador</span>
       </button>
 
       <button 
@@ -59,51 +59,51 @@
     @if (activeTab === 'general') {
       <div class="section-panel">
         <div class="panel-header">
-          <h3>Datos del Operador</h3>
-          <p>Esta información se imprimirá en el membrete oficial y en la cabecera de las actas de exportación PDF de tus investigaciones.</p>
+          <h3>Perfil del Operador / Organización</h3>
+          <p>Esta información se utilizará para personalizar los reportes, membretes de exportación y firmas de tus bases de datos.</p>
         </div>
 
         <form [formGroup]="formConfigurations" class="settings-form">
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field-half">
               <mat-label>Nombre Completo</mat-label>
-              <input matInput formControlName="nombre" placeholder="Ej. Carlos Alberto Prost" />
+              <input matInput formControlName="nombre" placeholder="Ej. Juan González" />
               <mat-icon matSuffix>person</mat-icon>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="form-field-half">
-              <mat-label>Grado / Cargo</mat-label>
-              <input matInput formControlName="grado" placeholder="Ej. Oficial Inspector / Analista Principal" />
+              <mat-label>Cargo / Rol</mat-label>
+              <input matInput formControlName="grado" placeholder="Ej. Administrador de Inventario / Analista de Datos" />
               <mat-icon matSuffix>badge</mat-icon>
             </mat-form-field>
           </div>
 
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field-full">
-              <mat-label>Institución Judicial / Policial</mat-label>
-              <input matInput formControlName="institucion" placeholder="Ej. DDI Morón - Policía de la Provincia de Buenos Aires" />
+              <mat-label>Organización / Empresa</mat-label>
+              <input matInput formControlName="institucion" placeholder="Ej. Distribuidora Central S.A." />
               <mat-icon matSuffix>account_balance</mat-icon>
             </mat-form-field>
           </div>
 
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field-half">
-              <mat-label>Dependencia</mat-label>
-              <input matInput formControlName="dependencia" placeholder="Ej. Oficina de Investigaciones Especiales" />
+              <mat-label>Departamento / Área</mat-label>
+              <input matInput formControlName="dependencia" placeholder="Ej. Logística e Inventario" />
               <mat-icon matSuffix>lan</mat-icon>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="form-field-half">
-              <mat-label>Oficina / Jurisdicción</mat-label>
-              <input matInput formControlName="oficina" placeholder="Ej. Morón / San Martín" />
+              <mat-label>Sucursal / Ubicación</mat-label>
+              <input matInput formControlName="oficina" placeholder="Ej. Sucursal Central - Buenos Aires" />
               <mat-icon matSuffix>location_on</mat-icon>
             </mat-form-field>
           </div>
 
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field-full">
-              <mat-label>Ruta Física del Logotipo del Membrete</mat-label>
-              <input matInput formControlName="membrete" placeholder="Ej. C:\SERA\assets\logo_ddi_moron.png" />
+              <mat-label>Logotipo Corporativo (Membrete)</mat-label>
+              <input matInput formControlName="membrete" placeholder="Ej. C:\SERA\assets\logo_empresa.png" />
               <mat-icon matSuffix>image</mat-icon>
             </mat-form-field>
           </div>
@@ -307,24 +307,24 @@
         </div>
 
         <div class="audit-logs-section">
-          <h4>Registro de Auditoría Reciente (Logs)</h4>
+          <h4>Registro de Auditoría Reciente (Logs - ISO 27001)</h4>
           <div class="logs-container">
-            <div class="log-entry">
-              <span class="log-time">[10:15:30]</span>
-              <span class="log-msg">Sesión judicial de operador iniciada correctamente.</span>
-            </div>
-            <div class="log-entry">
-              <span class="log-time">[11:42:05]</span>
-              <span class="log-msg">Copia de seguridad en caliente generada en el almacenamiento local.</span>
-            </div>
-            <div class="log-entry">
-              <span class="log-time">[12:05:14]</span>
-              <span class="log-msg text-green">Firma criptográfica SHA-256 verificada con éxito para la importación.</span>
-            </div>
-            <div class="log-entry">
-              <span class="log-time">[12:15:20]</span>
-              <span class="log-msg">Claves de cifrado AES cargadas en memoria segura.</span>
-            </div>
+            @if (auditLogs.length === 0) {
+              <div class="no-logs">No se han registrado eventos de auditoría aún.</div>
+            } @else {
+              @for (log of auditLogs; track log.id) {
+                <div class="log-entry">
+                  <span class="log-time">[{{ log.fecha ? log.fecha.split(' ')[1] : '00:00:00' }}]</span>
+                  <span 
+                    class="log-msg" 
+                    [class.text-green]="log.categoria === 'SUCCESS'" 
+                    [class.text-orange]="log.categoria === 'WARNING'"
+                  >
+                    {{ log.mensaje }}
+                  </span>
+                </div>
+              }
+            }
           </div>
         </div>
       </div>

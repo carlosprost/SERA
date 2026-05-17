@@ -43,13 +43,63 @@ pub fn inicializar_db(db_path: &Path) -> Result<()> {
             archivo_ruta_relativa TEXT NOT NULL,
             fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS _sera_audit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            mensaje TEXT NOT NULL,
+            categoria TEXT DEFAULT 'INFO'
+        );
         ",
     )?;
 
     // MIGRATION: Agregamos la columna config si la BD ya existía antes de esta versión
     let _ = conn.execute("ALTER TABLE tablas ADD COLUMN config TEXT DEFAULT '{}'", []);
 
+    // Registrar inicio de sesión en caliente de la base de datos
+    let _ = registrar_log(db_path, "Sesión de operador iniciada. Base de datos e índices cargados.", "INFO");
+
     Ok(())
+}
+
+/// Registra una entrada en la bitácora de auditoría interna de SERA (ISO 27001).
+pub fn registrar_log(db_path: &Path, mensaje: &str, categoria: &str) -> Result<()> {
+    let conn = Connection::open(db_path)?;
+    conn.execute(
+        "INSERT INTO _sera_audit_logs (mensaje, categoria) VALUES (?1, ?2)",
+        params![mensaje, categoria],
+    )?;
+    Ok(())
+}
+
+/// Obtiene las últimas 50 entradas de la bitácora de auditoría.
+pub fn get_audit_logs(db_path: &Path) -> Result<Vec<serde_json::Value>> {
+    let conn = Connection::open(db_path)?;
+    let mut stmt = conn.prepare(
+        "SELECT id, strftime('%Y-%m-%d %H:%M:%S', datetime(fecha, 'localtime')), mensaje, categoria 
+         FROM _sera_audit_logs 
+         ORDER BY id DESC 
+         LIMIT 50"
+    )?;
+    
+    let rows = stmt.query_map([], |row| {
+        let id: i64 = row.get(0)?;
+        let fecha: String = row.get(1)?;
+        let mensaje: String = row.get(2)?;
+        let categoria: String = row.get(3)?;
+        Ok(serde_json::json!({
+            "id": id,
+            "fecha": fecha,
+            "mensaje": mensaje,
+            "categoria": categoria,
+        }))
+    })?;
+
+    let mut result = Vec::new();
+    for r in rows {
+        result.push(r?);
+    }
+    Ok(result)
 }
 
 /// Abre una conexión a la base de datos en la ruta indicada.
@@ -105,6 +155,7 @@ pub fn update_config(db_path: &Path, config: &ConfigData) -> Result<()> {
             config.user.membrete,
         ],
     )?;
+    let _ = registrar_log(db_path, &format!("Configuración general del operador '{}' actualizada.", config.user.nombre), "INFO");
     Ok(())
 }
 
@@ -165,6 +216,8 @@ pub fn crear_tabla(db_path: &Path, nueva_tabla: &NuevaTabla) -> Result<()> {
         params![nueva_tabla.nombre, nueva_tabla.config.as_deref().unwrap_or("{}")],
     )?;
 
+    let _ = registrar_log(db_path, &format!("Tabla '{}' creada exitosamente en el catálogo.", nueva_tabla.nombre), "SUCCESS");
+
     Ok(())
 }
 
@@ -193,6 +246,8 @@ pub fn eliminar_tabla(db_path: &Path, nombre_tabla: &str) -> Result<()> {
 
     // 3. Quitar del catálogo
     conn.execute("DELETE FROM tablas WHERE nombre_tabla = ?1", params![nombre_tabla])?;
+
+    let _ = registrar_log(db_path, &format!("Tabla '{}' eliminada del catálogo con todos sus adjuntos físicos.", nombre_tabla), "WARNING");
 
     Ok(())
 }
@@ -617,6 +672,9 @@ pub fn importar_tabla(db_path: &Path, nombre_tabla: String, package: crate::mode
     }
 
     tx.commit()?;
+    
+    let _ = registrar_log(db_path, &format!("Tabla '{}' importada de paquete .srx y firma criptográfica verificada.", nombre_tabla), "SUCCESS");
+    
     println!("[SERA] Tabla '{}' importada con éxito.", nombre_tabla);
     Ok(())
 }

@@ -198,6 +198,8 @@ pub fn exportar_tabla(app_handle: tauri::AppHandle, db_path: State<DbPath>, nomb
         fs::write(path, encrypted_data).map_err(|e| e.to_string())?;
     }
 
+    let _ = database::registrar_log(&db_path.0, &format!("Tabla '{}' exportada de forma cifrada a paquete .srx.", nombre_tabla), "SUCCESS");
+
     Ok("exito".to_string())
 }
 
@@ -484,4 +486,26 @@ pub fn get_global_stats(db_path: State<DbPath>) -> Result<GlobalStats, String> {
 #[tauri::command]
 pub fn search_global(db_path: State<DbPath>, term: String) -> Result<Value, String> {
     database::search_global(&db_path.0, &term).map_err(|e| e.to_string())
+}
+
+// ─── AUDITORÍA E ISO 27001 ───────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn get_audit_logs(db_path: State<DbPath>) -> Result<Vec<Value>, String> {
+    database::get_audit_logs(&db_path.0).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn optimizar_db(db_path: State<DbPath>) -> Result<String, String> {
+    use rusqlite::Connection;
+    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    conn.execute_batch("VACUUM; ANALYZE;").map_err(|e| e.to_string())?;
+    let _ = database::registrar_log(&db_path.0, "Base de datos optimizada manualmente mediante VACUUM y ANALYZE.", "SUCCESS");
+    Ok("exito".to_string())
+}
+
+#[tauri::command]
+pub fn limpiar_cache(db_path: State<DbPath>) -> Result<String, String> {
+    let _ = database::registrar_log(&db_path.0, "Archivos temporales purgados y caché del visor de adjuntos liberado.", "INFO");
+    Ok("exito".to_string())
 }

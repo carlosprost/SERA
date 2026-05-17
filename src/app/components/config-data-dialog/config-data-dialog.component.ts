@@ -10,6 +10,7 @@ import { StoreActions } from '../../store/store.actions';
 import { selectConfigData } from '../../store/store.selectors';
 import { MaterialModule } from '../../shared/material.module';
 import { ThemeService } from '../../services/theme';
+import { invoke } from '@tauri-apps/api/core';
 
 @Component({
   selector: 'app-config-data-dialog',
@@ -37,6 +38,7 @@ export class ConfigDataDialogComponent {
   
   loadingDb = signal<boolean>(false);
   loadingCache = signal<boolean>(false);
+  auditLogs: any[] = [];
 
   constructor(
     private store: Store,
@@ -71,8 +73,19 @@ export class ConfigDataDialogComponent {
     });
   }
 
+  async cargarLogs() {
+    try {
+      this.auditLogs = await invoke<any[]>('get_audit_logs');
+    } catch (err) {
+      console.error("Error al cargar logs de auditoría:", err);
+    }
+  }
+
   setTab(tab: string) {
     this.activeTab = tab;
+    if (tab === 'security') {
+      this.cargarLogs();
+    }
   }
 
   selectTheme(themeId: string) {
@@ -96,25 +109,37 @@ export class ConfigDataDialogComponent {
     );
   }
 
-  optimizarDB() {
+  async optimizarDB() {
     this.loadingDb.set(true);
-    setTimeout(() => {
-      this.loadingDb.set(false);
+    try {
+      await invoke('optimizar_db');
       this.snackBar.open("Mantenimiento SQLite completo: Índices y grillas compactadas (VACUUM)", "ÉXITO", {
         duration: 3500,
         panelClass: ['snackbar-exito']
       });
-    }, 1200);
+      await this.cargarLogs();
+    } catch (err) {
+      console.error("Error al optimizar base de datos:", err);
+      this.snackBar.open("Error al realizar el mantenimiento SQLite", "ERROR", { duration: 3000 });
+    } finally {
+      this.loadingDb.set(false);
+    }
   }
 
-  limpiarCache() {
+  async limpiarCache() {
     this.loadingCache.set(true);
-    setTimeout(() => {
-      this.loadingCache.set(false);
+    try {
+      await invoke('limpiar_cache');
       this.snackBar.open("Archivos temporales purgados y caché del visor liberado.", "ÉXITO", {
         duration: 3000
       });
-    }, 1000);
+      await this.cargarLogs();
+    } catch (err) {
+      console.error("Error al limpiar caché:", err);
+      this.snackBar.open("Error al limpiar archivos temporales", "ERROR", { duration: 3000 });
+    } finally {
+      this.loadingCache.set(false);
+    }
   }
 
   dialogClose() {

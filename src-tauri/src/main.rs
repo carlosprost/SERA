@@ -97,6 +97,9 @@ fn main() {
             commands::get_global_stats,
             commands::open_attachments_folder,
             commands::search_global,
+            commands::get_audit_logs,
+            commands::optimizar_db,
+            commands::limpiar_cache,
         ])
         .run(tauri::generate_context!())
         .expect("[SERA] Error al inicializar la aplicación");
