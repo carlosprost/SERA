@@ -56,7 +56,7 @@ export class StoreEffects {
       ofType(StoreActions.loadCampos),
       concatMap((props) =>
         this.getCampos(props.tabla).pipe(
-          map(campos => StoreActions.loadCamposSuccess({ campos })),
+          map(campos => StoreActions.loadCamposSuccess({ tabla: props.tabla, campos })),
           catchError(error => of(StoreActions.loadCamposFailure({ error }))))
       )
     );
@@ -67,7 +67,7 @@ export class StoreEffects {
       ofType(StoreActions.loadContenido),
       concatMap((props) =>
         this.getContenido(props.tabla).pipe(
-          map(contenido => StoreActions.loadContenidoSuccess({ contenido })),
+          map(contenido => StoreActions.loadContenidoSuccess({ tabla: props.tabla, contenido })),
           catchError(error => of(StoreActions.loadContenidoFailure({ error }))))
       )
     );

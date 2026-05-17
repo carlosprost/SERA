@@ -9,8 +9,8 @@ export const storeFeatureKey = 'store';
 export interface State {
   data: ConfigData;
   tablas: Tablas[];
-  campos: Campos[];
-  contenido: any;
+  campos: { [tabla: string]: Campos[] };
+  contenido: { [tabla: string]: any[] };
   message: string;
   error: unknown;
 }
@@ -28,8 +28,8 @@ export const initialState: State = {
     },
   },
   tablas: [],
-  campos: [],
-  contenido: [],
+  campos: {},
+  contenido: {},
   message: '',
   error: null,
 };
@@ -64,18 +64,24 @@ export const reducer = createReducer(
     error: error,
   })),
   on(StoreActions.loadCampos, (state) => state),
-  on(StoreActions.loadCamposSuccess, (state, { campos }) => ({
+  on(StoreActions.loadCamposSuccess, (state, { tabla, campos }) => ({
     ...state,
-    campos: campos,
+    campos: {
+      ...state.campos,
+      [tabla.toLowerCase()]: campos
+    },
   })),
   on(StoreActions.loadCamposFailure, (state, { error }) => ({
     ...state,
     error: error,
   })),
   on(StoreActions.loadContenido, (state) => state),
-  on(StoreActions.loadContenidoSuccess, (state, { contenido }) => ({
+  on(StoreActions.loadContenidoSuccess, (state, { tabla, contenido }) => ({
     ...state,
-    contenido: contenido,
+    contenido: {
+      ...state.contenido,
+      [tabla.toLowerCase()]: contenido
+    },
   })),
   on(StoreActions.loadContenidoFailure, (state, { error }) => ({
     ...state,

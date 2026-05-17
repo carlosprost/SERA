@@ -11,7 +11,7 @@ import { SelectionModel } from "@angular/cdk/collections";
 import { MatDialog } from "@angular/material/dialog";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { Store } from "@ngrx/store";
-import { Observable, Subscription } from "rxjs";
+import { Observable, Subscription, map } from "rxjs";
 import { Campos } from "../../interfaces/campos.interfaces";
 import { DeleteRecord } from "../../interfaces/registros.interfaces";
 import { StoreActions } from "../../store/store.actions";
@@ -76,8 +76,12 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
-    this.campos = this.store.select(selectCampos);
-    this.contenido = this.store.select(selectContenido);
+    this.campos = this.store.select(selectCampos).pipe(
+      map(m => m[this.tabla.toLowerCase()] || [])
+    );
+    this.contenido = this.store.select(selectContenido).pipe(
+      map(m => m[this.tabla.toLowerCase()] || [])
+    );
     this.campoSeleccion = `select${this.tabla}`;
     this.subcriptions = [
       this.campos.subscribe({

@@ -161,8 +161,8 @@ pub fn crear_tabla(db_path: &Path, nueva_tabla: &NuevaTabla) -> Result<()> {
     conn.execute_batch(&sql_create)?;
 
     conn.execute(
-        "INSERT OR IGNORE INTO tablas (nombre_tabla) VALUES (?1)",
-        params![nueva_tabla.nombre],
+        "INSERT OR REPLACE INTO tablas (nombre_tabla, config) VALUES (?1, ?2)",
+        params![nueva_tabla.nombre, nueva_tabla.config.as_deref().unwrap_or("{}")],
     )?;
 
     Ok(())
@@ -241,8 +241,8 @@ pub fn reestructurar_tabla(db_path: &Path, info: &RestructureTable) -> Result<()
     tx.execute_batch(&format!("ALTER TABLE \"{temp_name}\" RENAME TO \"{nombre_nuevo}\"", temp_name = temp_name, nombre_nuevo = info.nombre_nuevo))?;
 
     tx.execute(
-        "UPDATE tablas SET nombre_tabla = ?1 WHERE nombre_tabla = ?2",
-        params![info.nombre_nuevo, info.nombre_viejo],
+        "UPDATE tablas SET nombre_tabla = ?1, config = ?2 WHERE nombre_tabla = ?3",
+        params![info.nombre_nuevo, info.config.as_deref().unwrap_or("{}"), info.nombre_viejo],
     )?;
 
     tx.commit()?;
@@ -526,8 +526,12 @@ pub fn importar_tabla(db_path: &Path, nombre_tabla: String, package: crate::mode
         package.campos.clone()
     };
 
-    // Filtrar campos virtuales para la creación física
-    campos_finales.retain(|c| !c.field.starts_with("sera_") && c.field != "id");
+    // Filtrar campos virtuales y la columna primary key id_{nombre_tabla} para la creación física
+    let id_col_name = format!("id_{}", nombre_tabla);
+    campos_finales.retain(|c| {
+        let field_lower = c.field.to_lowercase();
+        !field_lower.starts_with("sera_") && field_lower != "id" && field_lower != id_col_name.to_lowercase()
+    });
 
     for campo in &campos_finales {
         sql_create.push_str(&format!(", \"{}\" TEXT", campo.field));
@@ -547,6 +551,19 @@ pub fn importar_tabla(db_path: &Path, nombre_tabla: String, package: crate::mode
             let mut col_names: Vec<String> = Vec::new();
             let mut placeholders: Vec<String> = Vec::new();
             let mut vals_strings = Vec::new();
+
+            // Preservar llave primaria original
+            if let Some(id_val) = obj.get(&id_col_name) {
+                col_names.push(format!("\"{}\"", id_col_name));
+                placeholders.push("?".to_string());
+                vals_strings.push(if id_val.is_string() {
+                    id_val.as_str().unwrap().to_string()
+                } else if id_val.is_null() {
+                    "".to_string()
+                } else {
+                    id_val.to_string()
+                });
+            }
 
             for campo in &campos_finales {
                 col_names.push(format!("\"{}\"", campo.field));

@@ -307,7 +307,13 @@ export class AppComponent implements AfterViewInit, OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      // El effect de Redux maneja la recarga automáticamente al finalizar
+      if (result && result.reload) {
+        // Si la tabla eliminada estaba abierta en los tabs, la removemos de forma limpia
+        const index = this.tabs.indexOf(nombre_tabla);
+        if (index !== -1) {
+          this.removeTab(index);
+        }
+      }
     });
   }
 
@@ -319,7 +325,7 @@ export class AppComponent implements AfterViewInit, OnInit {
     // Si la tabla es la activa, usamos los campos del Store
     if (tablaActual === this.tabs[this.selected.value ?? 0]) {
       this.store.select(selectCampos).subscribe(fields => {
-        this.mostrarDialogEditor(tablaActual, fields);
+        this.mostrarDialogEditor(tablaActual, fields[tablaActual.toLowerCase()] || []);
       }).unsubscribe();
     } else {
       // Si es una tabla del menú que no está en el tab activo, pedimos los campos a Rust

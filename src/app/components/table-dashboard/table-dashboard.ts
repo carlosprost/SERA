@@ -9,7 +9,7 @@ import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 import { Store } from '@ngrx/store';
 import { selectCampos, selectContenido } from '../../store/store.selectors';
-import { combineLatest, filter, take } from 'rxjs';
+import { combineLatest, filter, take, map } from 'rxjs';
 
 @Component({
   selector: 'app-table-dashboard',
@@ -73,20 +73,21 @@ export class TableDashboardComponent implements OnChanges {
   }
 
   loadAndAnalyze() {
+    const tableLower = this.tabla.toLowerCase();
     combineLatest([
-      this.store.select(selectCampos),
-      this.store.select(selectContenido)
+      this.store.select(selectCampos).pipe(map(m => m[tableLower] || [])),
+      this.store.select(selectContenido).pipe(map(m => m[tableLower] || []))
     ]).pipe(
       filter(([campos, contenido]) => campos.length > 0 && contenido.length > 0),
       take(1)
     ).subscribe(([campos, contenido]) => {
       // Filtrar campos útiles para análisis (no IDs)
-      const validFields = campos.filter(c => c.Key !== 'PRI' && !c.Field.toLowerCase().includes('id'));
+      const validFields = campos.filter((c: any) => c.Key !== 'PRI' && !c.Field.toLowerCase().includes('id'));
       this.availableFields.set(validFields);
       this.cachedData = contenido;
 
       // Si no hay campo seleccionado, tomamos el primero sugerido (ej: CATEGORIA o ESTADO)
-      if (!this.selectedField || !validFields.find(f => f.Field === this.selectedField)) {
+      if (!this.selectedField || !validFields.find((f: any) => f.Field === this.selectedField)) {
         this.selectedField = validFields[0]?.Field || '';
       }
 

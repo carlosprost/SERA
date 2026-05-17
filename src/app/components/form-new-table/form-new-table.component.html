@@ -27,44 +27,46 @@
     <!-- Drag and Drop List para Campos -->
     <div formArrayName="fields" class="fields-list" cdkDropList (cdkDropListDropped)="drop($event)">
       @for (fieldCtrl of fields.controls; track fieldCtrl; let i = $index) {
-        <div class="field-row" [formGroupName]="i" cdkDrag>
-          <!-- Drag Handle -->
-          <div class="drag-handle" cdkDragHandle>
-            <mat-icon>drag_indicator</mat-icon>
-          </div>
+        <div class="field-row-wrapper" [formGroupName]="i" cdkDrag>
+          <div class="field-row-main">
+            <!-- Drag Handle -->
+            <div class="drag-handle" cdkDragHandle>
+              <mat-icon>drag_indicator</mat-icon>
+            </div>
 
-          <!-- Nombre del Campo -->
-          <mat-form-field appearance="outline" class="flex-field">
-            <mat-label>Nombre de Columna</mat-label>
-            <input matInput type="text" formControlName="name" placeholder="Ej: fecha_recepcion"/>
-            @if (fieldCtrl.get('name')?.hasError('required')) {
-              <mat-error>Requerido</mat-error>
-            }
-          </mat-form-field>
-
-          <!-- Tipo de Dato -->
-          <mat-form-field appearance="outline" class="flex-field">
-            <mat-label>Tipo de Dato</mat-label>
-            <mat-select formControlName="type">
-              @for (type of dataTypes; track type.value) {
-                <mat-option [value]="type.value">{{ type.viewValue }}</mat-option>
+            <!-- Nombre del Campo -->
+            <mat-form-field appearance="outline" class="flex-field">
+              <mat-label>Nombre de Columna</mat-label>
+              <input matInput type="text" formControlName="name" placeholder="Ej: fecha_recepcion"/>
+              @if (fieldCtrl.get('name')?.hasError('required')) {
+                <mat-error>Requerido</mat-error>
               }
-            </mat-select>
-          </mat-form-field>
-
-          <!-- Opciones extras -->
-          <div class="field-options">
-            <mat-checkbox formControlName="notNull" color="primary">Requerido (No Nulo)</mat-checkbox>
-            <mat-form-field appearance="outline" class="default-value">
-               <mat-label>Valor Defecto</mat-label>
-               <input matInput type="text" formControlName="defaultValue" placeholder="Opcional"/>
             </mat-form-field>
-          </div>
 
-          <!-- Botón Eliminar -->
-          <button mat-icon-button color="warn" type="button" (click)="removeField(i)" [disabled]="fields.length === 1" matTooltip="Eliminar columna">
-            <mat-icon>delete</mat-icon>
-          </button>
+            <!-- Tipo de Dato -->
+            <mat-form-field appearance="outline" class="flex-field">
+              <mat-label>Tipo de Dato</mat-label>
+              <mat-select formControlName="type">
+                @for (type of dataTypes; track type.value) {
+                  <mat-option [value]="type.value">{{ type.viewValue }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <!-- Opciones extras -->
+            <div class="field-options">
+              <mat-checkbox formControlName="notNull" color="primary">Requerido (No Nulo)</mat-checkbox>
+              <mat-form-field appearance="outline" class="default-value">
+                 <mat-label>Valor Defecto</mat-label>
+                 <input matInput type="text" formControlName="defaultValue" placeholder="Opcional"/>
+              </mat-form-field>
+            </div>
+
+            <!-- Botón Eliminar -->
+            <button mat-icon-button color="warn" type="button" (click)="removeField(i)" [disabled]="fields.length === 1" matTooltip="Eliminar columna">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
 
           <!-- CONFIGURACIÓN DE VÍNCULO (Se muestra solo si el tipo es LINK) -->
           @if (fieldCtrl.get('type')?.value === 'LINK') {

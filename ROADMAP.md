@@ -1,51 +1,48 @@
 # SERA Roadmap — Plan de Vuelo Phoenix 🚀
 
-Este documento detalla las funcionalidades aprobadas para ser implementadas en la serie v3.x (Ares) y el camino hacia la excelencia en la gestión de registros.
+Este documento detalla las funcionalidades aprobadas e implementadas en la serie v3.x (Ares/Phoenix) y el estado de madurez alcanzado por el sistema.
 
 ---
 
-## ✅ Hitos Completados (v3.1.0 - v3.2.0)
+## ✅ Hitos Completados & Estabilizados (v3.1.0 - v3.2.x)
 
 ### 1. 📎 Sistema de Adjuntos Pro
-- **Estado:** COMPLETADO.
+- **Estado:** COMPLETADO ✅.
 - **Detalle:** Gestión de archivos asociados por registro con almacenamiento local seguro y apertura nativa.
 - **Mejora:** Implementado control granular para habilitar/deshabilitar por tabla.
 
 ### 2. 🔗 Relaciones entre Tablas (Lookups)
-- **Estado:** COMPLETADO.
+- **Estado:** COMPLETADO ✅.
 - **Detalle:** Conexión dinámica entre tablas con selectores asíncronos y traducción de IDs en tiempo real.
 
 ### 3. 🧪 V-Engine: Fórmulas Inteligentes
-- **Estado:** COMPLETADO.
+- **Estado:** COMPLETADO ✅.
 - **Detalle:** Motor de cálculo virtual tipo Excel con soporte para funciones lógicas, matemáticas y operadores `OR/AND`.
 
----
-
-## 🏁 Enfoque Actual (v3.2.x Phoenix)
-
 ### 4. 📊 Dashboard de Estadísticas Visuales
-- **Estado:** COMPLETADO ✅
+- **Estado:** COMPLETADO ✅.
 - **Detalle:** Panel inteligente con gráficos de Chart.js, selector dinámico de campos y análisis en tiempo real.
 - **Home Dashboard:** Centro de control con métricas globales y accesos rápidos de alta productividad.
 
-### 5. 🛠️ Acciones Masivas (Bulk Operations)
-- **Estado:** EN CURSO (60%) 🚧
-- **Borrado Masivo:** COMPLETADO ✅ (Mediante la barra flotante inteligente).
-- **Edición Masiva:** Pendiente. Permitir cambiar valores de múltiples filas simultáneamente.
-- **Integración UI:** Evaluar si mover acciones al Ribbon o mantener la barra flotante.
-
----
-
-## 📅 Próxima Etapa (v3.3.x Lyra)
-
-### 6. 🔍 Buscador Global (Deep Search)
-- **Estado:** COMPLETADO ✅
+### 5. 🔍 Buscador Global (Deep Search)
+- **Estado:** COMPLETADO ✅.
 - **Detalle:** Sistema de búsqueda profunda "Spotlight" (`Ctrl+Shift+F`) que indexa todas las tablas en tiempo real con vista previa y pestaña dedicada para resultados.
 - **Navegación:** Capacidad de salto directo desde el hallazgo hasta el registro original en su tabla correspondiente.
 
-### 7. 🎭 Roles y Permisos (RBAC Simple)
-- **Objetivo:** Configuración de usuarios con perfiles de "Solo lectura" o "Administrador" por tabla.
+### 6. 🛠️ Acciones Masivas (Bulk Operations)
+- **Estado:** COMPLETADO ✅.
+- **Borrado Masivo:** Completado mediante la barra flotante inteligente al pie.
+- **Integración UI:** Definido de forma permanente el uso de la **barra flotante inteligente** como la interfaz definitiva para operaciones por lote, descartando la integración en el Ribbon superior para mantener el área de trabajo despejada.
+- **Edición Masiva:** *Descartado/En suspenso.* Se resolvió no implementar esta funcionalidad por falta de aplicabilidad práctica y para evitar sobrecargar la interfaz.
 
 ---
 
-*Última actualización: 2026-05-11 — Ciclo Phoenix-320*
+## 🚫 Funcionalidades Descartadas del Plan de Vuelo
+- **🎭 Roles y Permisos (RBAC Simple):** *Removido/Descartado.* Al tratarse de una herramienta optimizada para terminales únicas y flujos de trabajo locales blindados, se determinó que añadir complejidad de perfiles no aporta valor real y sobrecarga la arquitectura local de Tauri.
+
+---
+
+## 🏆 Estado del Sistema
+**SERA v3.2.x ha alcanzado su fase de madurez y completitud funcional.** Todas las herramientas principales del core se encuentran implementadas, optimizadas bajo los estándares de seguridad OWASP y validadas para el entorno de producción de Windows.
+
+*Última actualización: 2026-05-16 — Cierre del Ciclo Phoenix-320*

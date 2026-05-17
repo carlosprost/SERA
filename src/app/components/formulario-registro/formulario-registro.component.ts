@@ -5,7 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { NewRecord } from '../../interfaces/registros.interfaces';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Campos } from '../../interfaces/campos.interfaces';
 import { FormFields } from '../../interfaces/form.interfaces';
 import { StoreActions } from '../../store/store.actions';
@@ -52,7 +52,9 @@ export class FormularioRegistroComponent implements OnInit {
     this.TableName = data.tabla.toLowerCase();
     this.id = data.id;
     this.isUpload = data.upload;
-    this.campos = this.store.select(selectCampos);
+    this.campos = this.store.select(selectCampos).pipe(
+      map(m => m[this.TableName] || [])
+    );
   }
 
   ngOnInit() {
@@ -104,7 +106,7 @@ export class FormularioRegistroComponent implements OnInit {
         try {
           const res: any[] = await invoke('get_contenido', { tabla: link.remoteTable });
           // El backend devuelve el array directamente, no dentro de .data
-          this.optionsMap[link.localField] = res.map((row: any) => ({
+          this.optionsMap[link.localField.toLowerCase()] = res.map((row: any) => ({
             value: row[link.remoteField],
             label: row[link.displayField]
           }));
@@ -140,7 +142,7 @@ export class FormularioRegistroComponent implements OnInit {
   }
 
   normalizarTipo(type: string, fieldName: string = ''): string {
-    if (this.linkedFields.some(lf => lf.localField === fieldName)) {
+    if (this.linkedFields.some(lf => lf.localField.toLowerCase() === fieldName.toLowerCase())) {
       return 'select';
     }
 

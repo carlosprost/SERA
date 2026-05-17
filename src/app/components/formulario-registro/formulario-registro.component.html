@@ -24,7 +24,7 @@
           <mat-form-field appearance="outline">
             <mat-label>{{field.label.split('_').join(' ')}}</mat-label>
             <mat-select [formControlName]="field.field">
-              @for (option of optionsMap[field.field]; track option.value) {
+              @for (option of optionsMap[field.field.toLowerCase()]; track option.value) {
                 <mat-option [value]="option.value">{{ option.label }}</mat-option>
               }
             </mat-select>
