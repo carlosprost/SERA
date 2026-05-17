@@ -38,23 +38,28 @@ El modelo de negocio de SERA mantiene la filosofía **sin suscripciones** y priv
 - **Estado:** APROBADO ✅
 - **Detalle:** Protocolo de sincronización directa entre computadoras en la misma oficina (red WiFi/LAN). Trabajo colaborativo sin salir a internet.
 
-### 5. 🔐 Bóveda de Campos Biométricos (Cifrado Selectivo)
+### 5. 🔔 Modo "System Tray" (Ejecución Silenciosa)
+- **Estado:** APROBADO ✅
+- **Detalle:** Minimizar SERA al área de notificaciones (junto al reloj de Windows).
+- **Objetivo:** Fundamental para que los *Workflows* automáticos, la sincronización *LAN Sync* y la *API Local* sigan operando en segundo plano sin estorbar en la barra de tareas.
+
+### 6. 🔐 Bóveda de Campos Biométricos (Cifrado Selectivo)
 - **Estado:** EN PLANIFICACIÓN 📝
 - **Detalle:** Marcar columnas específicas como "Ultrasensibles" (`[********]`). Para revelarlas, SERA pedirá la huella digital o el PIN a través de la integración nativa con Windows Hello.
 
-### 6. 🗺️ Georreferenciación y Mapas Offline
+### 7. 🗺️ Georreferenciación y Mapas Offline
 - **Estado:** EN PLANIFICACIÓN 📝
 - **Detalle:** Visualización de coordenadas/direcciones en un mapa renderizado localmente para análisis táctico e inteligencia, sin rastreo de terceros.
 
-### 7. 📤 Buzón de Ingreso Offline (Data Dropzones)
+### 8. 📤 Buzón de Ingreso Offline (Data Dropzones)
 - **Estado:** EN PLANIFICACIÓN 📝
 - **Detalle:** Exportación de formularios web HTML sueltos. Permite que terceros llenen información offline, generen un archivo `.srx-data` encriptado, y se incorporen arrastrándolos a SERA.
 
-### 8. ⏳ Máquina del Tiempo (Historial de Revisiones)
+### 9. ⏳ Máquina del Tiempo (Historial de Revisiones)
 - **Estado:** EN PLANIFICACIÓN 📝
 - **Detalle:** Snapshotting por cada registro. Permite ver qué campos cambiaron, cuándo y revertir modificaciones específicas (Rollback estilo control de versiones).
 
-### 9. 🪪 OCR y Extracción Inteligente de Imágenes
+### 10. 🪪 OCR y Extracción Inteligente de Imágenes
 - **Estado:** EN ANÁLISIS / POSTERGADO 🕒
 - **Detalle:** Extraer texto automáticamente de fotos (DNI, expedientes) arrastradas a SERA usando OCR local.
 
