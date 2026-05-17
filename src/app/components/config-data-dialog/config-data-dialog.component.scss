@@ -215,13 +215,14 @@
   margin-bottom: 24px;
   max-height: 330px;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 4px;
 
   .theme-card {
     background: var(--sera-surface-color, #0a1017);
     border: 1px solid rgba(var(--sera-text-rgb, 255, 255, 255), 0.08);
     border-radius: 10px;
-    padding: 10px;
+    padding: 12px;
     cursor: pointer;
     transition: all 0.2s ease-out;
     display: flex;
@@ -272,6 +273,7 @@
       flex-direction: column;
       gap: 2px;
       overflow: hidden;
+      min-width: 0;
 
       .theme-name {
         font-weight: 600;
@@ -283,9 +285,7 @@
         font-size: 0.75rem;
         color: var(--sera-text-color, #64748b);
         opacity: 0.75;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        overflow: hidden;
+        line-height: 1.35;
       }
     }
   }
