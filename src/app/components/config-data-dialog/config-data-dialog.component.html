@@ -126,7 +126,7 @@
               [class.active]="themeService.currentTheme() === theme.id"
               (click)="selectTheme(theme.id)"
             >
-              <div class="theme-preview" [style.backgroundColor]="theme.background">
+              <div class="theme-preview" [style.background]="theme.background">
                 <div class="color-dot" [style.backgroundColor]="theme.primary"></div>
                 @if (themeService.currentTheme() === theme.id) {
                   <div class="active-badge">
@@ -141,6 +141,62 @@
             </div>
           }
         </div>
+
+        <!-- PERSONALIZADOR DE COLOR (SOLO SI EL TEMA ES CUSTOM) -->
+        @if (themeService.currentTheme() === 'theme-custom') {
+          <div class="customizer-panel">
+            <h4 class="customizer-title">
+              <mat-icon>palette</mat-icon> Personalizar colores del tema
+            </h4>
+            <div class="customizer-grid">
+              
+              <div class="picker-card">
+                <div class="picker-info">
+                  <span class="picker-label">Color de Acento</span>
+                  <span class="picker-desc">Botones y detalles activos</span>
+                </div>
+                <div class="picker-wrapper">
+                  <input type="color" [value]="themeService.customColors().primary" (input)="updateCustomColor('primary', $event)">
+                  <span class="color-hex">{{ themeService.customColors().primary }}</span>
+                </div>
+              </div>
+
+              <div class="picker-card">
+                <div class="picker-info">
+                  <span class="picker-label">Fondo de la App</span>
+                  <span class="picker-desc">Lienzo principal de fondo</span>
+                </div>
+                <div class="picker-wrapper">
+                  <input type="color" [value]="themeService.customColors().bg" (input)="updateCustomColor('bg', $event)">
+                  <span class="color-hex">{{ themeService.customColors().bg }}</span>
+                </div>
+              </div>
+
+              <div class="picker-card">
+                <div class="picker-info">
+                  <span class="picker-label">Superficies y Tarjetas</span>
+                  <span class="picker-desc">Paneles y diálogos de datos</span>
+                </div>
+                <div class="picker-wrapper">
+                  <input type="color" [value]="themeService.customColors().card" (input)="updateCustomColor('card', $event)">
+                  <span class="color-hex">{{ themeService.customColors().card }}</span>
+                </div>
+              </div>
+
+              <div class="picker-card">
+                <div class="picker-info">
+                  <span class="picker-label">Texto Principal</span>
+                  <span class="picker-desc">Títulos y lecturas de datos</span>
+                </div>
+                <div class="picker-wrapper">
+                  <input type="color" [value]="themeService.customColors().text" (input)="updateCustomColor('text', $event)">
+                  <span class="color-hex">{{ themeService.customColors().text }}</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        }
 
         <div class="visual-toggles">
           <div class="toggle-card">

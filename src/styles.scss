@@ -149,6 +149,11 @@ body.theme-light, .theme-light {
   .cdk-overlay-pane.mat-mdc-dialog-panel { box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; }
 }
 
+/* CUSTOM THEME */
+body.theme-custom, .theme-custom {
+  @include mat.all-component-themes($sera-dark-theme);
+}
+
 app-root {
   display: block;
   height: 100vh;

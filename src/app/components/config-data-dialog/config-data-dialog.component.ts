@@ -80,6 +80,13 @@ export class ConfigDataDialogComponent {
     this.snackBar.open(`Tema visual cambiado a ${themeId.toUpperCase()}`, "OK", { duration: 2500 });
   }
 
+  updateCustomColor(key: 'primary' | 'bg' | 'card' | 'text', event: any) {
+    const color = event.target.value;
+    const current = { ...this.themeService.customColors() };
+    current[key] = color;
+    this.themeService.setCustomColors(current);
+  }
+
   toggleAnimations() {
     this.animationsEnabled = !this.animationsEnabled;
     this.snackBar.open(

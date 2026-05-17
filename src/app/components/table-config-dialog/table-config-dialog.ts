@@ -47,14 +47,6 @@ export class TableConfigDialog implements OnInit {
     { title: 'Texto en Mayúsculas', formula: 'MAYUS([<campo_texto>])' }
   ];
 
-  colors = [
-    { value: 'transparent', viewValue: 'Ninguno' },
-    { value: 'rgba(255, 0, 0, 0.15)', viewValue: 'Fondo Rojo (Alerta)' },
-    { value: 'rgba(0, 255, 0, 0.15)', viewValue: 'Fondo Verde (Éxito)' },
-    { value: 'rgba(255, 255, 0, 0.15)', viewValue: 'Fondo Amarillo (Aviso)' },
-    { value: 'rgba(0, 150, 255, 0.15)', viewValue: 'Fondo Azul (Info)' }
-  ];
-
   constructor(
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
@@ -270,6 +262,51 @@ export class TableConfigDialog implements OnInit {
       width: '700px',
       maxWidth: '90vw'
     });
+  }
+
+  toggleBackground(rule: any, event: any) {
+    const isChecked = event.target.checked;
+    rule.patchValue({
+      backgroundColor: isChecked ? '#38bdf8' : 'transparent'
+    });
+  }
+
+  toggleTextColor(rule: any, event: any) {
+    const isChecked = event.target.checked;
+    rule.patchValue({
+      textColor: isChecked ? '#ffffff' : ''
+    });
+  }
+
+  updateColor(rule: any, controlName: string, event: any) {
+    rule.patchValue({
+      [controlName]: event.target.value
+    });
+  }
+
+  getValidColor(val: string, fallback: string): string {
+    if (!val || val === 'transparent') {
+      return fallback;
+    }
+    if (val.startsWith('rgba')) {
+      if (val.includes('255, 0, 0')) return '#ff0000';
+      if (val.includes('0, 255, 0')) return '#00ff00';
+      if (val.includes('255, 255, 0')) return '#ffff00';
+      if (val.includes('0, 150, 255')) return '#0096ff';
+      
+      const matches = val.match(/\d+/g);
+      if (matches && matches.length >= 3) {
+        const r = parseInt(matches[0], 10);
+        const g = parseInt(matches[1], 10);
+        const b = parseInt(matches[2], 10);
+        return '#' + [r, g, b].map(x => {
+          const hex = x.toString(16);
+          return hex.length === 1 ? '0' + hex : hex;
+        }).join('');
+      }
+      return fallback;
+    }
+    return val;
   }
 
   dialogClose() {

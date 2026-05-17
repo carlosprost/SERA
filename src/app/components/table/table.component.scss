@@ -33,7 +33,7 @@
 }
 
 ::ng-deep .mat-mdc-cell {
-  color: var(--sera-text-color) !important;
+  color: inherit;
   border-bottom: 1px solid rgba(var(--sera-text-rgb), 0.05) !important;
 }
 

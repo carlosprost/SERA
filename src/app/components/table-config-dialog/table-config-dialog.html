@@ -6,6 +6,9 @@
         <mat-icon>science</mat-icon>
         Ver Recetario
       </button>
+      <button mat-icon-button (click)="dialogClose()" type="button" class="btn-close-dialog" title="Cerrar ventana">
+        <mat-icon>close</mat-icon>
+      </button>
     </div>
   </div>
 
@@ -99,22 +102,49 @@
                           }
                         </div>
 
-                        <!-- ESTILO COMÚN -->
+                        <!-- ESTILO COMÚN PERSONALIZADO -->
                         <div class="style-row-container">
-                          <mat-form-field appearance="outline" class="color-picker-field">
-                            <mat-label>Color de Fondo</mat-label>
-                            <mat-select formControlName="backgroundColor">
-                              <mat-option value="transparent">Sin Fondo (Transparente)</mat-option>
-                              @for (color of colors; track color.value) {
-                                <mat-option [value]="color.value">
-                                  <div class="color-sample-container">
-                                    <div class="color-dot" [style.backgroundColor]="color.value"></div>
-                                    {{ color.viewValue }}
+                          <div class="custom-pickers-card">
+                            <span class="card-section-title">Estilo de la Regla</span>
+                            
+                            <div class="pickers-flex">
+                              <!-- CONTROL FONDO -->
+                              <div class="custom-picker-item">
+                                <label class="picker-checkbox-label">
+                                  <input type="checkbox"
+                                         [checked]="rule.get('backgroundColor')?.value !== 'transparent' && rule.get('backgroundColor')?.value !== ''"
+                                         (change)="toggleBackground(rule, $event)">
+                                  <span>Fondo Personalizado</span>
+                                </label>
+                                @if (rule.get('backgroundColor')?.value !== 'transparent' && rule.get('backgroundColor')?.value !== '') {
+                                  <div class="picker-input-wrapper">
+                                    <input type="color"
+                                           [value]="getValidColor(rule.get('backgroundColor')?.value, '#38bdf8')"
+                                           (input)="updateColor(rule, 'backgroundColor', $event)">
+                                    <span class="color-hex-code">{{ rule.get('backgroundColor')?.value }}</span>
                                   </div>
-                                </mat-option>
-                              }
-                            </mat-select>
-                          </mat-form-field>
+                                }
+                              </div>
+
+                              <!-- CONTROL TEXTO -->
+                              <div class="custom-picker-item">
+                                <label class="picker-checkbox-label">
+                                  <input type="checkbox"
+                                         [checked]="rule.get('textColor')?.value !== '' && rule.get('textColor')?.value !== 'inherit'"
+                                         (change)="toggleTextColor(rule, $event)">
+                                  <span>Texto Personalizado</span>
+                                </label>
+                                @if (rule.get('textColor')?.value !== '' && rule.get('textColor')?.value !== 'inherit') {
+                                  <div class="picker-input-wrapper">
+                                    <input type="color"
+                                           [value]="getValidColor(rule.get('textColor')?.value, '#ffffff')"
+                                           (input)="updateColor(rule, 'textColor', $event)">
+                                    <span class="color-hex-code">{{ rule.get('textColor')?.value }}</span>
+                                  </div>
+                                }
+                              </div>
+                            </div>
+                          </div>
 
                           <div class="live-preview-box" [style.backgroundColor]="rule.get('backgroundColor')?.value" [style.color]="rule.get('textColor')?.value">
                             VISTA PREVIA

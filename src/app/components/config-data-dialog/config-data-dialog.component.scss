@@ -589,3 +589,110 @@
   width: 100%;
   height: 100%;
 }
+
+// CUSTOM THEME CUSTOMIZER
+.customizer-panel {
+  background: rgba(var(--sera-text-rgb, 255, 255, 255), 0.02);
+  border: 1px solid rgba(var(--sera-text-rgb, 255, 255, 255), 0.06);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+  animation: panelFadeIn 0.3s ease-out;
+
+  .customizer-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--sera-primary-color, #00bcd4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .customizer-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .picker-card {
+    background: var(--sera-surface-color, #0a1017);
+    border: 1px solid rgba(var(--sera-text-rgb, 255, 255, 255), 0.05);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    .picker-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+
+      .picker-label {
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--sera-text-color, #f1f5f9);
+      }
+
+      .picker-desc {
+        font-size: 0.68rem;
+        color: var(--sera-text-color, #64748b);
+        opacity: 0.65;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+    }
+
+    .picker-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+
+      input[type="color"] {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        width: 28px;
+        height: 28px;
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+
+        &::-webkit-color-swatch-wrapper {
+          padding: 0;
+        }
+
+        &::-webkit-color-swatch {
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          border-radius: 50%;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+      }
+
+      .color-hex {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.75rem;
+        color: var(--sera-text-color, #f1f5f9);
+        opacity: 0.75;
+        font-weight: 600;
+        text-transform: uppercase;
+        width: 55px;
+      }
+    }
+  }
+}
