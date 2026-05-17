@@ -422,6 +422,13 @@ pub fn abrir_adjunto(app_handle: AppHandle, ruta_relativa: String) -> Result<(),
 }
 
 #[tauri::command]
+pub fn abrir_url(app_handle: AppHandle, url: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app_handle.opener().open_path(url, None::<&str>).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
 pub fn get_adjunto_base64(app_handle: AppHandle, ruta_relativa: String) -> Result<String, String> {
     let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
     let full_path = app_dir.join(&ruta_relativa);

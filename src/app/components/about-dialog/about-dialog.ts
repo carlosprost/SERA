@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { invoke } from '@tauri-apps/api/core';
 
 @Component({
   selector: 'app-about-dialog',
@@ -43,6 +44,13 @@ import { MatIconModule } from '@angular/material/icon';
               <span class="val">AES-256-GCM (Grado Militar)</span>
             </div>
           </div>
+        </div>
+
+        <div class="store-badge-container">
+          <button mat-flat-button class="ms-store-btn" (click)="openStore()">
+            <mat-icon>shopping_bag</mat-icon>
+            <span>Ver en Microsoft Store</span>
+          </button>
         </div>
 
         <div class="author-banner">
@@ -109,7 +117,7 @@ import { MatIconModule } from '@angular/material/icon';
       background: rgba(var(--sera-text-rgb), 0.05);
       border-radius: 8px;
       padding: 16px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -125,6 +133,39 @@ import { MatIconModule } from '@angular/material/icon';
       flex-direction: column;
       .label { font-size: 10px; color: var(--sera-text-color); opacity: 0.5; text-transform: uppercase; line-height: 1; }
       .val { font-size: 13px; color: var(--sera-text-color); opacity: 0.9; }
+    }
+    .store-badge-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .ms-store-btn {
+      background: rgba(var(--sera-primary-rgb, 56, 189, 248), 0.08) !important;
+      color: var(--sera-primary-color) !important;
+      border: 1px solid rgba(var(--sera-primary-rgb, 56, 189, 248), 0.15) !important;
+      border-radius: 50px !important;
+      padding: 10px 24px !important;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.5px;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      transition: all 0.25s ease !important;
+      cursor: pointer;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      &:hover {
+        background: var(--sera-primary-color) !important;
+        color: var(--sera-on-primary, #ffffff) !important;
+        box-shadow: 0 4px 12px rgba(var(--sera-primary-rgb, 56, 189, 248), 0.3);
+        transform: translateY(-1px);
+      }
     }
     .author-banner {
       display: flex;
@@ -158,4 +199,9 @@ import { MatIconModule } from '@angular/material/icon';
     .text-center { text-align: center; }
   `]
 })
-export class AboutDialogComponent {}
+export class AboutDialogComponent {
+  openStore() {
+    invoke('abrir_url', { url: 'ms-windows-store://pdp/?ProductId=9N0DK1TGM63J' })
+      .catch(err => console.error('Error al abrir la Microsoft Store:', err));
+  }
+}

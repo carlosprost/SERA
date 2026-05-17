@@ -92,6 +92,7 @@ fn main() {
             commands::guardar_adjunto,
             commands::eliminar_adjunto,
             commands::abrir_adjunto,
+            commands::abrir_url,
             commands::get_adjunto_base64,
             commands::get_global_stats,
             commands::open_attachments_folder,
