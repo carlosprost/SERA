@@ -28,7 +28,7 @@
             </thead>
             <tbody>
               <tr *ngFor="let row of results[tableName]">
-                <td *ngFor="let key of getKeys(row)">{{ row[key] }}</td>
+                <td *ngFor="let key of getKeys(row)" [innerHTML]="highlight(row[key], term)"></td>
                 <td>
                   <button mat-icon-button color="primary" (click)="goToRow(tableName, row)" matTooltip="Ver en tabla">
                     <mat-icon>open_in_new</mat-icon>

@@ -30,4 +30,15 @@ export class SearchResultsComponent {
   goToRow(tabla: string, row: any) {
     this.navigateTo.emit({ tabla, row });
   }
+
+  highlight(text: any, search: string): string {
+    if (text === null || text === undefined) return '';
+    const str = String(text);
+    if (!search || !search.trim()) {
+      return str;
+    }
+    const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`(${escapedSearch})`, 'gi');
+    return str.replace(regex, '<mark class="search-highlight">$1</mark>');
+  }
 }

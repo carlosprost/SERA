@@ -58,6 +58,7 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
   calculatedFields: CalculatedField[] = [];
   activeFilters: FilterRule[] = [];
   lastSearchValue: string = '';
+  private searchDialogRef: any = null;
   
   // Vínculos Relacionales
   linkedFields: any[] = [];

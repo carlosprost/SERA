@@ -273,8 +273,8 @@ mat-checkbox, mat-slide-toggle {
   background: rgba(var(--sera-text-rgb), 0.3);
 }
 
-/* Paleta de Comandos (Ctrl+F) */
-.cdk-overlay-pane.spotlight-dialog-panel {
+/* Paleta de Comandos (Ctrl+F) y Búsqueda Global (Ctrl+Shift+F) */
+.cdk-overlay-pane.spotlight-dialog-panel, .cdk-overlay-pane.spotlight-dialog {
   box-shadow: none !important;
   border-radius: 0 !important;
   border: none !important;
