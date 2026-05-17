@@ -1,48 +1,80 @@
-# SERA Roadmap — Plan de Vuelo Phoenix 🚀
+# SERA Roadmap — Plan de Vuelo (Evolución y Futuro) 🚀
 
-Este documento detalla las funcionalidades aprobadas e implementadas en la serie v3.x (Ares/Phoenix) y el estado de madurez alcanzado por el sistema.
+Este documento detalla las funcionalidades planificadas para las próximas versiones mayores (v4.x / v5.x), así como el historial de hitos completados y descartados.
 
 ---
 
-## ✅ Hitos Completados & Estabilizados (v3.1.0 - v3.2.x)
+## 🔮 Próximos Hitos: El Horizonte "Olimpo" (v4.x / v5.x)
+
+### 1. 🤖 SERA Copilot: IA 100% Local (Privacy-First)
+- **Estado:** EN PLANIFICACIÓN 📝
+- **Detalle:** Integración de un motor LLM ligero empaquetado y ejecutado directamente en Tauri.
+- **Objetivo:** Interactuar con la base de datos mediante lenguaje natural ("Buscá los registros vencidos", "Armá un resumen del caso"). Todo el procesamiento es en la CPU/GPU local.
+
+### 2. ⚙️ Motor de Automatizaciones (Workflows)
+- **Estado:** EN PLANIFICACIÓN 📝
+- **Detalle:** Sistema de reglas lógicas de causa-efecto integradas a las tablas (`SI pasa X, ENTONCES hacer Y`).
+
+### 3. 🔌 Ecosistema Abierto: API Local y Plugins
+- **Estado:** APROBADO ✅
+- **Detalle:** 
+  - **API Local Restringida:** Microservidor REST en `localhost` protegido con Token para interactuar con SERA vía Python/PowerShell.
+  - **Plugins Dinámicos:** Pequeños scripts JS/WASM instalables para dar superpoderes a las columnas (ej: generar QR, validar CUIT).
+
+### 4. 📡 LAN Sync: Sincronización P2P en Red Local
+- **Estado:** APROBADO ✅
+- **Detalle:** Protocolo de sincronización directa entre computadoras en la misma oficina (red WiFi/LAN). Trabajo colaborativo sin salir a internet.
+
+### 5. 🔐 Bóveda de Campos Biométricos (Cifrado Selectivo)
+- **Estado:** EN PLANIFICACIÓN 📝
+- **Detalle:** Marcar columnas específicas como "Ultrasensibles" (`[********]`). Para revelarlas, SERA pedirá la huella digital o el PIN a través de la integración nativa con Windows Hello.
+
+### 6. 🗺️ Georreferenciación y Mapas Offline
+- **Estado:** EN PLANIFICACIÓN 📝
+- **Detalle:** Visualización de coordenadas/direcciones en un mapa renderizado localmente para análisis táctico e inteligencia, sin rastreo de terceros.
+
+### 7. 📤 Buzón de Ingreso Offline (Data Dropzones)
+- **Estado:** EN PLANIFICACIÓN 📝
+- **Detalle:** Exportación de formularios web HTML sueltos. Permite que terceros llenen información offline, generen un archivo `.srx-data` encriptado, y se incorporen arrastrándolos a SERA.
+
+### 8. ⏳ Máquina del Tiempo (Historial de Revisiones)
+- **Estado:** EN PLANIFICACIÓN 📝
+- **Detalle:** Snapshotting por cada registro. Permite ver qué campos cambiaron, cuándo y revertir modificaciones específicas (Rollback estilo control de versiones).
+
+### 9. 🪪 OCR y Extracción Inteligente de Imágenes
+- **Estado:** EN ANÁLISIS / POSTERGADO 🕒
+- **Detalle:** Extraer texto automáticamente de fotos (DNI, expedientes) arrastradas a SERA usando OCR local.
+
+---
+
+## ✅ Hitos Completados & Estabilizados (Serie v3.x y v4.0.0 Poseidón)
 
 ### 1. 📎 Sistema de Adjuntos Pro
-- **Estado:** COMPLETADO ✅.
-- **Detalle:** Gestión de archivos asociados por registro con almacenamiento local seguro y apertura nativa.
-- **Mejora:** Implementado control granular para habilitar/deshabilitar por tabla.
+- Gestión de archivos asociados por registro con almacenamiento local seguro, apertura nativa y control granular por tabla.
 
 ### 2. 🔗 Relaciones entre Tablas (Lookups)
-- **Estado:** COMPLETADO ✅.
-- **Detalle:** Conexión dinámica entre tablas con selectores asíncronos y traducción de IDs en tiempo real.
+- Conexión dinámica entre tablas con selectores asíncronos y traducción de IDs en tiempo real.
 
 ### 3. 🧪 V-Engine: Fórmulas Inteligentes
-- **Estado:** COMPLETADO ✅.
-- **Detalle:** Motor de cálculo virtual tipo Excel con soporte para funciones lógicas, matemáticas y operadores `OR/AND`.
+- Motor de cálculo virtual tipo Excel con soporte para funciones lógicas, matemáticas y operadores `OR/AND`.
 
 ### 4. 📊 Dashboard de Estadísticas Visuales
-- **Estado:** COMPLETADO ✅.
-- **Detalle:** Panel inteligente con gráficos de Chart.js, selector dinámico de campos y análisis en tiempo real.
-- **Home Dashboard:** Centro de control con métricas globales y accesos rápidos de alta productividad.
+- Panel inteligente con gráficos de Chart.js, selector dinámico de campos y análisis en tiempo real.
 
 ### 5. 🔍 Buscador Global (Deep Search)
-- **Estado:** COMPLETADO ✅.
-- **Detalle:** Sistema de búsqueda profunda "Spotlight" (`Ctrl+Shift+F`) que indexa todas las tablas en tiempo real con vista previa y pestaña dedicada para resultados.
-- **Navegación:** Capacidad de salto directo desde el hallazgo hasta el registro original en su tabla correspondiente.
+- Sistema de búsqueda profunda "Spotlight" (`Ctrl+Shift+F`) que indexa todas las tablas en tiempo real con capacidad de salto al registro.
 
-### 6. 🛠️ Acciones Masivas (Bulk Operations)
-- **Estado:** COMPLETADO ✅.
-- **Borrado Masivo:** Completado mediante la barra flotante inteligente al pie.
-- **Integración UI:** Definido de forma permanente el uso de la **barra flotante inteligente** como la interfaz definitiva para operaciones por lote, descartando la integración en el Ribbon superior para mantener el área de trabajo despejada.
-- **Edición Masiva:** *Descartado/En suspenso.* Se resolvió no implementar esta funcionalidad por falta de aplicabilidad práctica y para evitar sobrecargar la interfaz.
+### 6. 🛠️ Acciones Masivas y Auditoría (ISO 27001)
+- Borrado masivo, auditoría persistente SQLite de eventos críticos y exportación PDF profesional (membretes/firmas).
 
 ---
 
 ## 🚫 Funcionalidades Descartadas del Plan de Vuelo
-- **🎭 Roles y Permisos (RBAC Simple):** *Removido/Descartado.* Al tratarse de una herramienta optimizada para terminales únicas y flujos de trabajo locales blindados, se determinó que añadir complejidad de perfiles no aporta valor real y sobrecarga la arquitectura local de Tauri.
+- **Vistas Gráficas Avanzadas (Kanban/Calendario):** *Descartado.* Por riesgo técnico de inestabilidad en el motor de tablas actual.
+- **🎭 Roles y Permisos (RBAC Simple):** *Descartado.* No aporta valor real a una herramienta local de terminal única.
+- **Edición Masiva:** *Descartado.* Falta de aplicabilidad práctica real sin sobrecargar la UI.
 
 ---
 
 ## 🏆 Estado del Sistema
-**SERA v3.2.x ha alcanzado su fase de madurez y completitud funcional.** Todas las herramientas principales del core se encuentran implementadas, optimizadas bajo los estándares de seguridad OWASP y validadas para el entorno de producción de Windows.
-
-*Última actualización: 2026-05-16 — Cierre del Ciclo Phoenix-320*
+**SERA ha alcanzado una fase de gran madurez y estabilidad funcional.** Todas las herramientas principales del core se encuentran optimizadas bajo los estándares de seguridad OWASP y certificadas para el entorno de Windows Store.
