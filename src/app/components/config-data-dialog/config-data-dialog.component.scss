@@ -472,7 +472,34 @@
 }
 
 .security-inputs {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  width: 100%;
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  ::ng-deep {
+    .mat-mdc-form-field-subscript-wrapper {
+      position: relative !important;
+      margin-top: 8px !important;
+      padding: 0 !important;
+      width: 100%;
+    }
+
+    .mat-mdc-form-field-hint-wrapper {
+      padding: 0 !important;
+    }
+
+    .mat-mdc-form-field-hint {
+      line-height: 1.55 !important;
+      font-size: 0.8rem !important;
+      color: var(--sera-text-color, #94a3b8) !important;
+      opacity: 0.75 !important;
+      display: block !important;
+      width: 100%;
+    }
+  }
 }
 
 .audit-logs-section {
