@@ -2,26 +2,83 @@
   <div class="dashboard-header">
     <div class="header-info">
       <mat-icon>insights</mat-icon>
-      <h3>Análisis de Datos</h3>
+      <h3>Análisis de Datos: {{ tabla | uppercase }}</h3>
     </div>
     
-    <div class="field-selector">
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Analizar por campo...</mat-label>
-        <mat-select [(value)]="selectedField" (selectionChange)="updateAnalysis()">
-          <mat-option *ngFor="let col of availableFields()" [value]="col.Field">
-            {{ col.Field }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+    <div class="selector-controls-wrapper">
+      <!-- MODO DE ANÁLISIS -->
+      <div class="mode-toggles">
+        <button mat-stroked-button 
+                [color]="analysisMode === 'frequency' ? 'accent' : ''" 
+                [class.active-mode]="analysisMode === 'frequency'"
+                (click)="setAnalysisMode('frequency')" 
+                type="button">
+          <mat-icon>format_list_numbered</mat-icon>
+          Recuento de Filas
+        </button>
+        <button mat-stroked-button 
+                *ngIf="numericFields().length > 0"
+                [color]="analysisMode === 'aggregation' ? 'accent' : ''" 
+                [class.active-mode]="analysisMode === 'aggregation'"
+                (click)="setAnalysisMode('aggregation')" 
+                type="button">
+          <mat-icon>functions</mat-icon>
+          Totales y Promedios
+        </button>
+      </div>
+
+      <!-- SELECTORES PARA MODO FRECUENCIA -->
+      <div class="selectors-row" *ngIf="analysisMode === 'frequency'">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Categoría a Agrupar</mat-label>
+          <mat-select [(value)]="selectedField" (selectionChange)="updateAnalysis()">
+            <mat-option *ngFor="let col of categoricalFields()" [value]="col.Field">
+              {{ col.Field }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- SELECTORES PARA MODO AGREGACIÓN -->
+      <div class="selectors-row" *ngIf="analysisMode === 'aggregation'">
+        <!-- EJE X CATEGORIA -->
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Agrupar por (Eje X)</mat-label>
+          <mat-select [(value)]="selectedCategoryField" (selectionChange)="updateAnalysis()">
+            <mat-option *ngFor="let col of categoricalFields()" [value]="col.Field">
+              {{ col.Field }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- EJE Y MÉTRICA -->
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Métrica Numérica (Eje Y)</mat-label>
+          <mat-select [(value)]="selectedMetricField" (selectionChange)="updateAnalysis()">
+            <mat-option *ngFor="let col of numericFields()" [value]="col.Field">
+              {{ col.Field }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- OPERACIÓN -->
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="op-select">
+          <mat-label>Operación</mat-label>
+          <mat-select [(value)]="selectedOperation" (selectionChange)="updateAnalysis()">
+            <mat-option value="sum">Sumar Valores (Total)</mat-option>
+            <mat-option value="avg">Promediar Valores</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
     </div>
   </div>
 
   <div class="charts-container">
-    
     <mat-card class="chart-card">
       <mat-card-header>
-        <mat-card-title>Distribución de Categorías</mat-card-title>
+        <mat-card-title>
+          {{ analysisMode === 'frequency' ? 'Distribución Porcentual' : 'Distribución del Impacto' }}
+        </mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <canvas baseChart
@@ -34,7 +91,9 @@
 
     <mat-card class="chart-card">
       <mat-card-header>
-        <mat-card-title>Frecuencia de Valores</mat-card-title>
+        <mat-card-title>
+          {{ analysisMode === 'frequency' ? 'Frecuencia de Registros' : 'Comparativa de Valores' }}
+        </mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <canvas baseChart
@@ -44,6 +103,5 @@
         </canvas>
       </mat-card-content>
     </mat-card>
-
   </div>
 </div>
