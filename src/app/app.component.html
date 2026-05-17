@@ -58,12 +58,6 @@
             <span>Ajustes</span>
           </button>
 
-          <button class="ribbon-btn" (click)="openThemeSelector()" matTooltip="Cambiar el tema visual de SERA">
-            <mat-icon color="accent">palette</mat-icon>
-            <span>Apariencia</span>
-          </button>
-
-
           <button class="ribbon-btn" (click)="showAbout()" matTooltip="Información sobre SERA y autoría">
             <mat-icon style="color: #4caf50;">info</mat-icon>
             <span>Acerca de</span>
@@ -111,14 +105,17 @@
           </div>
           <span class="ribbon-group-label">Diseño de Vista</span>
         </div>
+      }
 
-        <!-- GRUPO HERRAMIENTAS -->
-        <div class="ribbon-group">
-          <div class="ribbon-actions">
-            <button class="ribbon-btn" (click)="openGlobalSearch()" matTooltip="Búsqueda Profunda en todas las tablas (Ctrl+Shift+F)">
-              <mat-icon color="primary">manage_search</mat-icon>
-              <span>Global</span>
-            </button>
+      <!-- GRUPO BÚSQUEDA (Siempre visible) -->
+      <div class="ribbon-group">
+        <div class="ribbon-actions">
+          <button class="ribbon-btn" (click)="openGlobalSearch()" matTooltip="Búsqueda Profunda en todas las tablas (Ctrl+Shift+F)">
+            <mat-icon color="primary">manage_search</mat-icon>
+            <span>Global</span>
+          </button>
+
+          @if (activeTable) {
             <button class="ribbon-btn" (click)="activeTable.openSearchPalette()" matTooltip="Búsqueda Rápida en esta tabla (Ctrl+F)">
               <mat-icon>search</mat-icon>
               <span>Local</span>
@@ -133,10 +130,12 @@
               <mat-icon>refresh</mat-icon>
               <span>Actualizar</span>
             </button>
-          </div>
-          <span class="ribbon-group-label">Herramientas</span>
+          }
         </div>
+        <span class="ribbon-group-label">Búsqueda</span>
+      </div>
 
+      @if (activeTable) {
         <!-- GRUPO REPORTES -->
         <div class="ribbon-group">
           <div class="ribbon-actions">

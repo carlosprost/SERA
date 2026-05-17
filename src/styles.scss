@@ -82,7 +82,7 @@ html, body {
 /* --- DEFINICIÓN DE TOKENS SERA --- */
 
 /* DEEP DARK */
-body.theme-dark {
+body.theme-dark, .theme-dark {
   @include mat.all-component-themes($sera-dark-theme);
   --sera-primary-color: #38bdf8;
   --sera-primary-rgb: 56, 189, 248;
@@ -98,7 +98,7 @@ body.theme-dark {
 }
 
 /* MIDNIGHT BLUE */
-body.theme-midnight {
+body.theme-midnight, .theme-midnight {
   @include mat.all-component-themes($sera-dark-theme);
   --sera-primary-color: #38bdf8;
   --sera-primary-rgb: 56, 189, 248;
@@ -114,7 +114,7 @@ body.theme-midnight {
 }
 
 /* EMERALD FOREST */
-body.theme-emerald {
+body.theme-emerald, .theme-emerald {
   @include mat.all-component-themes($sera-dark-theme);
   --sera-primary-color: #2ecc71;
   --sera-primary-rgb: 46, 204, 113;
@@ -130,7 +130,7 @@ body.theme-emerald {
 }
 
 /* SOPHISTICATED LIGHT */
-body.theme-light {
+body.theme-light, .theme-light {
   @include mat.all-component-themes($sera-light-theme);
   --sera-primary-color: #2563eb;
   --sera-primary-rgb: 37, 99, 235;
@@ -273,8 +273,8 @@ mat-checkbox, mat-slide-toggle {
   background: rgba(var(--sera-text-rgb), 0.3);
 }
 
-/* Paleta de Comandos (Ctrl+F) y Búsqueda Global (Ctrl+Shift+F) */
-.cdk-overlay-pane.spotlight-dialog-panel, .cdk-overlay-pane.spotlight-dialog {
+/* Paleta de Comandos (Ctrl+F), Búsqueda Global (Ctrl+Shift+F) y Ajustes Premium */
+.cdk-overlay-pane.spotlight-dialog-panel, .cdk-overlay-pane.spotlight-dialog, .cdk-overlay-pane.settings-dialog-panel {
   box-shadow: none !important;
   border-radius: 0 !important;
   border: none !important;

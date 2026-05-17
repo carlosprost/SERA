@@ -1,58 +1,292 @@
-<h2 mat-dialog-title>Configuraciones</h2>
-<div mat-dialog-content class="formStyle">
-  <form class="formulario" [formGroup]="formConfigurations">
+<div class="settings-container" [class]="'settings-container ' + themeService.currentTheme()">
+  <!-- SIDEBAR IZQUIERDA -->
+  <aside class="settings-sidebar">
+    <div class="sidebar-header">
+      <mat-icon class="settings-logo-icon">settings</mat-icon>
+      <div class="sidebar-title-area">
+        <h2>Preferencias</h2>
+        <span>Sistema SERA</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button 
+        class="nav-item-btn" 
+        [class.active]="activeTab === 'general'" 
+        (click)="setTab('general')"
+      >
+        <mat-icon>account_circle</mat-icon>
+        <span>Operador Judicial</span>
+      </button>
+
+      <button 
+        class="nav-item-btn" 
+        [class.active]="activeTab === 'appearance'" 
+        (click)="setTab('appearance')"
+      >
+        <mat-icon>palette</mat-icon>
+        <span>Apariencia y Temas</span>
+      </button>
+
+      <button 
+        class="nav-item-btn" 
+        [class.active]="activeTab === 'database'" 
+        (click)="setTab('database')"
+      >
+        <mat-icon>dns</mat-icon>
+        <span>Base de Datos</span>
+      </button>
+
+      <button 
+        class="nav-item-btn" 
+        [class.active]="activeTab === 'security'" 
+        (click)="setTab('security')"
+      >
+        <mat-icon>security</mat-icon>
+        <span>Cifrado y Seguridad</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="version-label">v3.2.0 Ares</span>
+      <span class="store-badge">Microsoft Store</span>
+    </div>
+  </aside>
+
+  <!-- PANEL DE CONTENIDO DERECHA -->
+  <main class="settings-main">
     
-    
-    <div>
-      <mat-form-field appearance="outline">
-        <mat-label>Nombre</mat-label>
-        <input matInput formControlName="nombre" />
-      </mat-form-field>
+    <!-- SECCIÓN GENERAL -->
+    @if (activeTab === 'general') {
+      <div class="section-panel">
+        <div class="panel-header">
+          <h3>Datos del Operador</h3>
+          <p>Esta información se imprimirá en el membrete oficial y en la cabecera de las actas de exportación PDF de tus investigaciones.</p>
+        </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Grado</mat-label>
-        <input matInput formControlName="grado" />
-      </mat-form-field>
+        <form [formGroup]="formConfigurations" class="settings-form">
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-half">
+              <mat-label>Nombre Completo</mat-label>
+              <input matInput formControlName="nombre" placeholder="Ej. Carlos Alberto Prost" />
+              <mat-icon matSuffix>person</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-half">
+              <mat-label>Grado / Cargo</mat-label>
+              <input matInput formControlName="grado" placeholder="Ej. Oficial Inspector / Analista Principal" />
+              <mat-icon matSuffix>badge</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Institución Judicial / Policial</mat-label>
+              <input matInput formControlName="institucion" placeholder="Ej. DDI Morón - Policía de la Provincia de Buenos Aires" />
+              <mat-icon matSuffix>account_balance</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-half">
+              <mat-label>Dependencia</mat-label>
+              <input matInput formControlName="dependencia" placeholder="Ej. Oficina de Investigaciones Especiales" />
+              <mat-icon matSuffix>lan</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-half">
+              <mat-label>Oficina / Jurisdicción</mat-label>
+              <input matInput formControlName="oficina" placeholder="Ej. Morón / San Martín" />
+              <mat-icon matSuffix>location_on</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Ruta Física del Logotipo del Membrete</mat-label>
+              <input matInput formControlName="membrete" placeholder="Ej. C:\SERA\assets\logo_ddi_moron.png" />
+              <mat-icon matSuffix>image</mat-icon>
+            </mat-form-field>
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- SECCIÓN APARIENCIA -->
+    @if (activeTab === 'appearance') {
+      <div class="section-panel">
+        <div class="panel-header">
+          <h3>Apariencia y Entornos de Color</h3>
+          <p>Elegí la paleta cromática interactiva que mejor se adapte a tu jornada de trabajo y tu monitor.</p>
+        </div>
+
+        <div class="themes-grid">
+          @for (theme of themeService.themes; track theme.id) {
+            <div 
+              class="theme-card" 
+              [class.active]="themeService.currentTheme() === theme.id"
+              (click)="selectTheme(theme.id)"
+            >
+              <div class="theme-preview" [style.backgroundColor]="theme.background">
+                <div class="color-dot" [style.backgroundColor]="theme.primary"></div>
+                @if (themeService.currentTheme() === theme.id) {
+                  <div class="active-badge">
+                    <mat-icon>check_circle</mat-icon>
+                  </div>
+                }
+              </div>
+              <div class="theme-info">
+                <span class="theme-name">{{ theme.name }}</span>
+                <span class="theme-desc">{{ theme.description }}</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="visual-toggles">
+          <div class="toggle-card">
+            <div class="toggle-desc">
+              <h4>Animaciones de Interfaz</h4>
+              <p>Activa micro-animaciones fluidas en botones, buscadores y transiciones de tablas.</p>
+            </div>
+            <mat-slide-toggle [checked]="animationsEnabled" (change)="toggleAnimations()"></mat-slide-toggle>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- SECCIÓN BASE DE DATOS -->
+    @if (activeTab === 'database') {
+      <div class="section-panel">
+        <div class="panel-header">
+          <h3>Mantenimiento de Base de Datos</h3>
+          <p>Monitoreo físico y optimización de tu espacio SQLite y sus índices relacionales.</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-title">Ruta del Archivo</span>
+            <span class="stat-value text-small">sera_database.db (AppData/Local)</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-title">Estado de Índices</span>
+            <span class="stat-value text-green">100% Saludable</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-title">Contenedor de Datos</span>
+            <span class="stat-value">Encriptado AES</span>
+          </div>
+        </div>
+
+        <div class="maintenance-actions">
+          <div class="action-row">
+            <div class="action-desc">
+              <h4>Optimizar Índices de Búsqueda</h4>
+              <p>Reconstruye la base de datos completa. Ejecuta VACUUM y REINDEX para acelerar la búsqueda global y local.</p>
+            </div>
+             <button 
+              mat-flat-button 
+              color="primary" 
+              [disabled]="loadingDb()" 
+              (click)="optimizarDB()"
+            >
+              <span class="button-content-wrapper">
+                @if (loadingDb()) {
+                  <mat-spinner [diameter]="18" class="button-spinner"></mat-spinner> Optimizar...
+                } @else {
+                  <mat-icon>cleaning_services</mat-icon> OPTIMIZAR
+                }
+              </span>
+            </button>
+          </div>
+
+          <div class="action-row">
+            <div class="action-desc">
+              <h4>Limpiar Caché y Temporales</h4>
+              <p>Elimina temporales generados al visualizar adjuntos y compacta archivos no vinculados.</p>
+            </div>
+            <button 
+              mat-stroked-button 
+              [disabled]="loadingCache()" 
+              (click)="limpiarCache()"
+            >
+              <span class="button-content-wrapper">
+                @if (loadingCache()) {
+                  <mat-spinner [diameter]="18" class="button-spinner"></mat-spinner> Limpiando...
+                } @else {
+                  <mat-icon>delete_sweep</mat-icon> LIMPIAR
+                }
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- SECCIÓN SEGURIDAD -->
+    @if (activeTab === 'security') {
+      <div class="section-panel">
+        <div class="panel-header">
+          <h3>Seguridad y Cumplimiento Normativo</h3>
+          <p>Monitoreo de auditoría de ciberseguridad, prevención de inyecciones y cifrado conforme a normas ISO 27001.</p>
+        </div>
+
+        <div class="security-card">
+          <div class="security-status-bar">
+            <mat-icon class="shield-icon">verified_user</mat-icon>
+            <div class="status-text">
+              <h4>Cifrado en Reposo Activo</h4>
+              <p>Todos los registros almacenados en el disco local están firmados con cifrado militar simétrico AES-256 de forma transparente.</p>
+            </div>
+            <span class="badge badge-green">ISO 27001</span>
+          </div>
+        </div>
+
+        <div class="security-inputs">
+          <mat-form-field appearance="outline" class="form-field-full">
+            <mat-label>Clave de Firma Global para Exportación de Archivos (.srx)</mat-label>
+            <input matInput type="password" [(ngModel)]="srxPassword" placeholder="••••••••••••••••••••" />
+            <mat-icon matSuffix>lock</mat-icon>
+            <mat-hint>Clave utilizada para firmar digitalmente tus transferencias de bases de datos.</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="audit-logs-section">
+          <h4>Registro de Auditoría Reciente (Logs)</h4>
+          <div class="logs-container">
+            <div class="log-entry">
+              <span class="log-time">[10:15:30]</span>
+              <span class="log-msg">Sesión judicial de operador iniciada correctamente.</span>
+            </div>
+            <div class="log-entry">
+              <span class="log-time">[11:42:05]</span>
+              <span class="log-msg">Copia de seguridad en caliente generada en el almacenamiento local.</span>
+            </div>
+            <div class="log-entry">
+              <span class="log-time">[12:05:14]</span>
+              <span class="log-msg text-green">Firma criptográfica SHA-256 verificada con éxito para la importación.</span>
+            </div>
+            <div class="log-entry">
+              <span class="log-time">[12:15:20]</span>
+              <span class="log-msg">Claves de cifrado AES cargadas en memoria segura.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- BOTONERA INFERIOR GLOBAL -->
+    <div class="settings-actions">
+      <button mat-button class="btn-cancelar" (click)="dialogClose()">Cancelar</button>
+      <button 
+        mat-flat-button 
+        color="primary" 
+        class="btn-guardar" 
+        (click)="onSubmit()"
+      >
+        Guardar Ajustes
+      </button>
     </div>
 
-    <div>
-      <mat-form-field appearance="outline">
-        <mat-label>Intitución</mat-label>
-        <input matInput formControlName="institucion" />
-        
-      </mat-form-field>
-    </div>
-    <div>
-      <mat-form-field appearance="outline">
-        <mat-label>Dependencia</mat-label>
-        <input matInput formControlName="dependencia" />
-        
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Oficina</mat-label>
-        <input matInput formControlName="oficina" />
-        
-      </mat-form-field>
-    </div>
-    <div>
-      <mat-form-field appearance="outline">
-        <mat-label>Ruta del membrete</mat-label>
-        <input matInput formControlName="membrete" />
-      </mat-form-field>
-    </div>
-
-
-</form>
-</div>
-<div mat-dialog-actions align="end">
-    <button mat-button (click)="dialogClose()">Cancelar</button>
-    <button
-      mat-button
-      type="submit"
-      
-      (click)="onSubmit()"
-    >
-      Guardar
-    </button>
+  </main>
 </div>

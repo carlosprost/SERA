@@ -34,7 +34,6 @@ import * as XLSX from 'xlsx';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { DialogImportExcel } from "./components/dialog-import-excel/dialog-import-excel";
 import { DialogExportComponent } from "./components/dialog-export/dialog-export";
-import { ThemeSelectorDialogComponent } from "./components/theme-selector-dialog/theme-selector-dialog";
 import { ThemeService } from "./services/theme";
 import { HomeDashboardComponent } from "./components/home-dashboard/home-dashboard";
 import { UiService } from "./services/ui.service";
@@ -255,20 +254,15 @@ export class AppComponent implements AfterViewInit, OnInit {
   /** Abre el dialog de configuración global del sistema (datos del usuario, institución, membrete). */
   openDialogAjustes() {
     this.dialog.open(ConfigDataDialogComponent, {
-      width: '600px',
-      maxWidth: '90vw',
+      width: '980px',
+      height: '650px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      panelClass: 'settings-dialog-panel',
       data: {},
     });
   }
 
-  /** Abre el diálogo para seleccionar el tema visual de la aplicación. */
-  openThemeSelector() {
-    this.dialog.open(ThemeSelectorDialogComponent, {
-      width: '500px',
-      maxWidth: '95vw',
-      panelClass: 'theme-selector-panel'
-    });
-  }
 
   /** Abre el dialog para crear una nueva tabla. */
   openDialogNuevaTabla() {
