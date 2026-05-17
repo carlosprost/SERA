@@ -83,6 +83,23 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
       map(m => m[this.tabla.toLowerCase()] || [])
     );
     this.campoSeleccion = `select${this.tabla}`;
+    
+    // Configurar buscador local inteligente y tolerante a diccionarios relacionales
+    this.dataSource.filterPredicate = (data: any, filter: string) => {
+      const cleanFilter = filter.trim().toLowerCase();
+      if (!cleanFilter) return true;
+
+      const colsToSearch = this.allColumns.filter(c => c !== this.campoSeleccion && c !== 'actions' && c !== 'sera_adjuntos');
+      return colsToSearch.some(col => {
+        let val = data[col];
+        if (this.dictionaries[col]) {
+          val = this.translateValue(col, val);
+        }
+        const strVal = String(val || '').toLowerCase();
+        return strVal.includes(cleanFilter);
+      });
+    };
+
     this.subcriptions = [
       this.campos.subscribe({
         next: (campos) => {
@@ -231,15 +248,6 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
     this.snackBar.open("Registro Eliminado", "", { duration: 3000 });
   }
 
-  /** 
-   * Listener global para intercepción de Control + F 
-   * Previene el buscador del navegador y levanta Spotlight SERA.
-   */
-  @HostListener('window:keydown.control.f', ['$event'])
-  abrirPaletaBusqueda(event: Event) {
-    event.preventDefault();
-    this.openSearchPalette();
-  }
 
   openSearchPalette() {
     this.dialog.open(SearchPaletteDialog, {

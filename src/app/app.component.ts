@@ -152,6 +152,13 @@ export class AppComponent implements AfterViewInit, OnInit {
       event.preventDefault();
       this.openGlobalSearch();
     }
+    // Ctrl + F para búsqueda local en la tabla activa
+    else if (event.ctrlKey && !event.shiftKey && (event.key === 'F' || event.key === 'f')) {
+      if (this.activeTable) {
+        event.preventDefault();
+        this.activeTable.openSearchPalette();
+      }
+    }
   }
 
   openGlobalSearch() {
