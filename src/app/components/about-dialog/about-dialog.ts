@@ -19,8 +19,8 @@ import { invoke } from '@tauri-apps/api/core';
       <div class="about-header text-center">
         <img src="assets/icon.png" alt="SERA Logo" class="about-logo">
         <h1 class="about-title">SERA</h1>
-        <p class="about-version">Versión 3.1.0 "Ares"</p>
-        <p class="about-patch-code">Pegasus-310</p>
+        <p class="about-version">Versión 4.0.0 "Poseidón"</p>
+        <p class="about-patch-code">Orion-400</p>
       </div>
       
       <div class="about-content">

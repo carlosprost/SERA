@@ -1,6 +1,6 @@
-# SECURITY_REPORT.md — SERA v3.4.0 "Zeus"
+# SECURITY_REPORT.md — SERA v4.0.0 "Poseidón"
 **WolfTeI | Sistema de Expedientes de Registro Avanzado**
-*Última actualización: 2026-05-17 — Release v3.4.0 (Phoenix-340)*
+*Última actualización: 2026-05-17 — Release v4.0.0 (Orion-400)*
 
 ---
 
@@ -9,10 +9,10 @@
 ### Componentes Críticos
 - **SERA V-Engine (Fórmulas):** Motor de evaluación virtual desarrollado in-house. Utiliza un sandbox mediante la creación de contextos aislados para evitar la ejecución de código arbitrario (XSS/RCE).
 - **Relational Engine:** Capa intermedia que gestiona la traducción de IDs numéricos a etiquetas legibles mediante diccionarios en memoria, evitando cruces de datos no autorizados.
-- **Asynchronous PDF Engine (v3.2.1):** Generador de reportes en PDF aislado que crea contenedores en memoria del DOM efímeros y desinfecta todos los campos para prevenir ejecuciones en el canvas de captura.
-- **Relational Portability Packager (v3.3.0):** Compilador recursivo de dependencias relacionales que empaqueta una tabla y todas sus tablas vinculadas (directa e indirectamente) con sus respectivos adjuntos físicos de manera unificada y encriptada en un único archivo `.srx`.
-- **BI Aggregation Engine (v3.4.0):** Motor de agregación analítica de datos a nivel cliente que valida tipos y previene inyecciones lógicas o desbordamiento de memoria al calcular acumulados en vivo (Suma y Promedio).
-- **Dynamic CSS Color Sanitizer (v3.4.0):** Validador estricto que parsea y desinfecta códigos hexadecimales y colores inline de entrada (`getValidColor`), previniendo ataques de inyección de estilos lógicos (CSS Injection).
+- **Asynchronous PDF Engine (v4.0.0):** Generador de reportes en PDF con membrete configurable (logo + firma tipo sello). Construye el DOM en un contenedor efímero en memoria y desinfecta todos los campos mediante `textContent` nativo para prevenir XSS/HTMLi.
+- **Logo Membrete System (v4.0.0):** Subsistema de copia y recuperación de logotipos de empresa. Copia el archivo al directorio de datos de la aplicación (`app_data_dir/membrete/`) y lo sirve como Data URL base64 al frontend, sin exponer rutas absolutas del sistema.
+- **Audit Log System (v4.0.0):** Motor de auditoría ISO 27001 que registra eventos críticos (escrituras, optimizaciones, purgas) en tabla SQLite dedicada (`_sera_audit_log`). Los eventos incluyen timestamp, tipo de acción y descripción, nunca datos PII ni credenciales.
+- **Relational Portability Packager (v3.3.0):** Compilador recursivo de dependencias relacionales que empaqueta una tabla y todas sus tablas vinculadas con sus respectivos adjuntos físicos en un único archivo `.srx` AES-256-GCM.
 
 | Dependencia | Versión | Rol de Seguridad / Aporte a la Confidencialidad |
 |---|---|---|
@@ -61,6 +61,18 @@ Todos los comandos del backend de Rust se encuentran protegidos mediante el aisl
     3. **Prevención de Colisión de Datos (Importación):** `importar_tabla` realiza inserciones mediante Prepared Statements usando la instrucción `INSERT OR IGNORE`. Si una tabla vinculada ya existe o si un registro con la misma llave primaria ya está registrado, el motor descarta el registro conflictivo de forma silenciosa e integra los nuevos de manera segura, impidiendo la corrupción de la base de datos y violaciones a restricciones de clave única.
     4. **Detección Flexible:** Al descifrar el payload, el importador autodetecta si el paquete es de tipo `ExportPackage` (relacional v3.3.0) o de tipo `ExportedTable` (legacy/simple), procesándolo adecuadamente sin romper retrocompatibilidad.
 
+### F. Endpoints de Membrete y Auditoría (v4.0.0)
+- `guardar_logo_membrete`, `get_logo_membrete_base64`, `detectar_logo_membrete`
+  - **Nivel de Seguridad:** Sandboxing del Sistema de Archivos (Tauri Path Restrictions).
+  - **Control:**
+    1. El logo se copia siempre a `app_data_dir/membrete/` con nombre fijo `logo.<ext>`. No se expone la ruta absoluta del origen al frontend.
+    2. `get_logo_membrete_base64` solo resuelve rutas relativas dentro del directorio controlado, rechazando cualquier intento de path traversal (`../`).
+    3. `detectar_logo_membrete` escanea extensiones predefinidas (`jpg`, `jpeg`, `png`) sin aceptar entrada de usuario.
+
+- `get_audit_logs`, `optimizar_db`, `limpiar_cache`
+  - **Nivel de Seguridad:** Sin entrada de usuario. Comandos de solo lectura o mantenimiento interno.
+  - **Control:** `get_audit_logs` retorna registros de solo lectura. `optimizar_db` ejecuta `VACUUM` y `ANALYZE` sin aceptar parámetros. `limpiar_cache` borra únicamente archivos dentro de `app_data_dir/cache/`.
+
 ---
 
 ## 3. Estrategia de Sanitización y Prevención XSS/HTMLi
@@ -71,24 +83,26 @@ Para evitar que un operador técnico intente "escapar" del motor virtual de fór
 2. Los nombres de los campos y variables se tokenizan y validan contra el catálogo activo.
 3. El motor ejecuta la lógica aislada dentro de un contexto controlado sin alcance global.
 
-### B. Blindaje en Generación de Reportes PDF (v3.2.1)
-Durante la captura gráfica con `html2canvas`, se construyen celdas y párrafos de textos a partir de variables ingresadas por el usuario (título, descripción, firma). 
+### B. Blindaje en Generación de Reportes PDF (v4.0.0)
+Durante la captura gráfica con `html2canvas`, se construyen celdas y párrafos de textos a partir de variables ingresadas por el usuario (título, descripción, firma).
 Para evitar inyección HTML y XSS (OWASP A03):
-1. **Escape Nativo:** Transicionamos el motor de renderizado de `el.innerHTML = contenido` a `el.textContent = contenido`. 
-2. Esto asegura que caracteres especiales como `<` y `>` se escapen automáticamente por el navegador y se rendericen de forma literal en la imagen, anulando la ejecución de scripts.
+1. **Escape Nativo:** Todo el contenido de usuario se asigna mediante `el.textContent = contenido`.
+2. Caracteres especiales como `<` y `>` se escapan automáticamente por el navegador, anulando la ejecución de scripts.
+3. El logo se carga como Data URL base64 directamente desde el backend Rust, sin referencias a URLs externas.
 
 ---
 
-## 4. Matriz de Prevención de Vulnerabilidades (OWASP v3.3.0)
+## 4. Matriz de Prevención de Vulnerabilidades (OWASP v4.0.0)
 
-| OWASP ID | Vulnerabilidad | Mecanismo Implementado en v3.3.0 |
+| OWASP ID | Vulnerabilidad | Mecanismo Implementado en v4.0.0 |
 |---|---|---|
-| **A03** | Inyección | Prepared Statements en Rust, escape de strings mediante `textContent` en reportes PDF, y sandbox léxico en motor de fórmulas. |
-| **A04** | Diseño Inseguro | Separación estricta de responsabilidades (SoC), control granular de adjuntos y cleanups automáticos de cascada. |
+| **A03** | Inyección | Prepared Statements en Rust, escape de strings mediante `textContent` en reportes PDF, sandbox léxico en motor de fórmulas y whitelist de extensiones en copia de logos. |
+| **A04** | Diseño Inseguro | Separación estricta de responsabilidades (SoC), logs de auditoría ISO 27001, control granular de adjuntos y cleanups automáticos de cascada. |
+| **A05** | Mala Configuración | Perfil de operador simplificado sin campos obsoletos expuestos; dispatch NgRx corregido para garantizar persistencia real de configuración. |
 | **A07** | Fallos de Identificación | Derivación de llaves AES-256-GCM mediante SHA-256 para paquetes encriptados `.srx`. |
-| **A08** | Fallos de Integridad | Inserción con mitigación de duplicados (`INSERT OR IGNORE`), auto-detección flexible de paquetes relacionales/legacy, y UUIDs para adjuntos físicos. |
-| **Phoenix** | Motor de Fórmulas | ✅ Sanitizado | Aislamiento completo de variables y evaluación en un contexto local restringido. |
+| **A08** | Fallos de Integridad | Inserción con mitigación de duplicados (`INSERT OR IGNORE`), auto-detección flexible de paquetes relacionales/legacy, UUIDs para adjuntos físicos. |
+| **ISO 27001** | Trazabilidad | Audit Log System: registro persistente en SQLite de eventos críticos sin almacenamiento de PII. |
 
 ---
 
-*Este reporte certifica que SERA v3.3.0 "Ares" mantiene y robustece los controles de seguridad integral, extendiendo la mitigación XSS, la integridad referencial de exportaciones conjuntas, y el blindaje ante colisiones primarias de base de datos.*
+*Este reporte certifica que SERA v4.0.0 "Poseidón" eleva los controles de seguridad a nivel de producto comercial universal, incorporando auditoría ISO 27001, gestión segura de activos de marca (logos) y robustecimiento del ciclo de vida de la configuración del operador.*

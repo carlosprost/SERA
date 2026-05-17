@@ -7,8 +7,8 @@ Cada número de versión principal (X.0.0) lleva el nombre de un Dios que se man
 
 | Versión | Dios | Atributo Sugerido |
 | :--- | :--- | :--- |
-| **v3.x** | **Ares** | Fuerza y Estabilidad (Actual) |
-| **v4.x** | **Poseidón** | Fluidez y Expansión |
+| **v3.x** | **Ares** | Fuerza y Estabilidad (Finalizado) |
+| **v4.x** | **Poseidón** | Fluidez y Expansión (Actual) |
 | **v5.x** | **Atenea** | Inteligencia y Estrategia |
 | **v6.x** | **Hermes** | Velocidad y Transferencia |
 | **v7.x** | **Hefesto** | Construcción y Herramientas |

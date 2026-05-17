@@ -1,9 +1,9 @@
 # SERA — Sistema de Expedientes de Registro Avanzado
 
-> **v3.3.0 "Ares"** · Desarrollado por [WolfTeI](https://wolftei.com.ar/)
-> *Edición del Ciclo Phoenix-330 (Mayo 2026)*
+> **v4.0.0 "Poseidón"** · Desarrollado por [WolfTeI](https://wolftei.com.ar/)
+> *Edición del Ciclo Orion-400 (Mayo 2026)*
 
-Aplicación de escritorio nativa de alto rendimiento para la gestión de registros digitales complejos. Ahora con **Portabilidad Relacional Completa**, **Motor Relacional**, **Columnas Inteligentes** y **Generador de Reportes PDF Interactivos**.
+Aplicación de escritorio nativa de alto rendimiento para la gestión de registros digitales. Con la versión 4.0 SERA se consolida como una **herramienta universal y genérica** adaptable a cualquier industria: desde PyMEs y estudios profesionales hasta organismos institucionales. Incluye **Motor Relacional Completo**, **Búsqueda Global Spotlight**, **Sistema de Membrete y Reportes PDF Profesionales**, **Auditoría ISO 27001** y **Temas Visuales Personalizados**.
 
 ---
 
@@ -65,6 +65,16 @@ Ver el reporte de auditoría completo en [`SECURITY_REPORT.md`](./SECURITY_REPOR
 ---
 
 ## 📋 Historial de Versiones
+
+### v4.0.0 "Poseidón" — 2026-05-17 — (Orion-400)
+- **Pivote de Producto:** SERA se convierte en software genérico y universal, eliminando toda terminología judicial/policial de la interfaz y la documentación.
+- **Funcionalidad (Membrete PDF):** Sistema completo de logotipo para reportes: selector de archivo nativo, copia automática a la carpeta de datos de SERA, auto-detección en disco, vista previa en tiempo real.
+- **Funcionalidad (Reportes PDF):** Nuevo encabezado con logo a ancho completo, firma tipo sello alineada a la derecha y pie de página vinculado al fondo de la hoja. Toggles opcionales para membrete y firma.
+- **Funcionalidad (Auditoría ISO 27001):** Logs de eventos persistidos en SQLite con visor en tiempo real en el panel de configuración.
+- **Funcionalidad (Mantenimiento):** Comandos reales de `VACUUM` y `ANALYZE` para compactación de la base de datos, y purga de archivos temporales.
+- **Corrección Crítica:** Dispatch doble en NgRx que impedía guardar correctamente la configuración del operador.
+- **Corrección Crítica:** Inicialización prematura del store con `take(1)` capturando estado vacío antes de la hidratación.
+- **Firma Automática:** El campo de firma en reportes se pre-carga con el nombre del operador configurado en el perfil.
 
 ### v3.3.0 "Ares" — 2026-05-16 — (Phoenix-330)
 - **Funcionalidad (Portabilidad Relacional):** Implementación de exportación conjunta recursiva de tablas vinculadas.
