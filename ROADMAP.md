@@ -4,7 +4,7 @@ Este documento detalla las funcionalidades planificadas para las próximas versi
 
 ---
 
-## 🔮 Próximos Hitos: El Horizonte "Olimpo" (v4.x / v5.x)
+## 🔮 Próximos Hitos: Ciclo Poseidón (v4.x) y Atenea (v5.x)
 
 ### 1. 🤖 SERA Copilot: IA 100% Local (Privacy-First)
 - **Estado:** EN PLANIFICACIÓN 📝
