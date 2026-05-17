@@ -84,14 +84,14 @@ html, body {
 /* DEEP DARK */
 body.theme-dark, .theme-dark {
   @include mat.all-component-themes($sera-dark-theme);
-  --sera-primary-color: #38bdf8;
-  --sera-primary-rgb: 56, 189, 248;
-  --sera-bg-color: #0f172a;
-  --sera-bg-rgb: 15, 23, 42;
-  --sera-surface-color: rgba(30, 41, 59, 0.85);
-  --sera-text-color: #ffffff;
-  --sera-text-rgb: 255, 255, 255;
-  --sera-card-bg: #1e293b;
+  --sera-primary-color: #00bcd4;
+  --sera-primary-rgb: 0, 188, 212;
+  --sera-bg-color: #05080c;
+  --sera-bg-rgb: 5, 8, 12;
+  --sera-surface-color: rgba(10, 16, 24, 0.85);
+  --sera-text-color: #e2e8f0;
+  --sera-text-rgb: 226, 232, 240;
+  --sera-card-bg: #0d131c;
   --sera-on-bg: #ffffff;
   --sera-on-surface: #ffffff;
   --sera-on-primary: #000000;
