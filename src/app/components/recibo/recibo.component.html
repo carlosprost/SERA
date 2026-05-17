@@ -28,6 +28,13 @@
                       </mat-form-field>
                   </div>
   
+                  <!-- SECCIÓN: MEMBRETE EN ENCABEZADO -->
+                  <div class="signature-section">
+                      <mat-slide-toggle formControlName="incluir_membrete" color="primary">
+                          Incluir membrete en el encabezado (logo y nombre)
+                      </mat-slide-toggle>
+                  </div>
+
                   <!-- SECCIÓN: FIRMA -->
                   <div class="signature-section">
                       <mat-slide-toggle formControlName="incluir_firma" color="primary">
@@ -38,7 +45,7 @@
                           <div class="signature-input">
                               <mat-form-field appearance="outline">
                                   <mat-label>Nombre / Cargo del Firmante</mat-label>
-                                  <input matInput formControlName="firma_texto" placeholder="Ej: Of. Pr. Carlos Prost">
+                                  <input matInput formControlName="firma_texto" placeholder="Ej: Juan González">
                                   <mat-icon matSuffix>draw</mat-icon>
                               </mat-form-field>
                           </div>

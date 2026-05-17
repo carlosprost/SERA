@@ -59,57 +59,75 @@
     @if (activeTab === 'general') {
       <div class="section-panel">
         <div class="panel-header">
-          <h3>Perfil del Operador / Organización</h3>
-          <p>Esta información se utilizará para personalizar los reportes, membretes de exportación y firmas de tus bases de datos.</p>
+          <h3>Perfil del Operador</h3>
+          <p>Tu nombre aparecerá en los reportes PDF exportados. El logotipo se incluirá en el encabezado de cada reporte.</p>
         </div>
 
         <form [formGroup]="formConfigurations" class="settings-form">
+
+          <!-- NOMBRE -->
           <div class="form-row">
-            <mat-form-field appearance="outline" class="form-field-half">
-              <mat-label>Nombre Completo</mat-label>
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Tu nombre / alias</mat-label>
               <input matInput formControlName="nombre" placeholder="Ej. Juan González" />
               <mat-icon matSuffix>person</mat-icon>
             </mat-form-field>
-
-            <mat-form-field appearance="outline" class="form-field-half">
-              <mat-label>Cargo / Rol</mat-label>
-              <input matInput formControlName="grado" placeholder="Ej. Administrador de Inventario / Analista de Datos" />
-              <mat-icon matSuffix>badge</mat-icon>
-            </mat-form-field>
           </div>
 
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="form-field-full">
-              <mat-label>Organización / Empresa</mat-label>
-              <input matInput formControlName="institucion" placeholder="Ej. Distribuidora Central S.A." />
-              <mat-icon matSuffix>account_balance</mat-icon>
-            </mat-form-field>
+          <!-- SELECTOR DE LOGO -->
+          <div class="logo-picker-section">
+            <div class="logo-picker-label">
+              <mat-icon>image</mat-icon>
+              <span>Logotipo para Reportes (Membrete)</span>
+            </div>
+
+            <div class="logo-picker-body">
+              <!-- Preview del logo actual -->
+              <div class="logo-preview-wrapper">
+                @if (logoPreview()) {
+                  <img [src]="logoPreview()" alt="Logotipo actual" class="logo-preview-img" />
+                } @else {
+                  <div class="logo-preview-placeholder">
+                    <mat-icon>broken_image</mat-icon>
+                    <span>Sin logotipo</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Botones de acción -->
+              <div class="logo-picker-actions">
+                <button 
+                  mat-stroked-button 
+                  type="button"
+                  class="logo-btn"
+                  (click)="seleccionarLogo()"
+                  [disabled]="cargandoLogo()"
+                >
+                  <mat-icon>folder_open</mat-icon>
+                  <span>{{ cargandoLogo() ? 'Guardando...' : 'Seleccionar imagen' }}</span>
+                </button>
+
+                @if (logoPreview()) {
+                  <button 
+                    mat-stroked-button 
+                    type="button"
+                    class="logo-btn logo-btn--remove"
+                    (click)="quitarLogo()"
+                  >
+                    <mat-icon>delete_outline</mat-icon>
+                    <span>Quitar</span>
+                  </button>
+                }
+
+                <p class="logo-hint">Formatos: PNG, JPG. Se copia y guarda automáticamente en la carpeta de SERA.</p>
+              </div>
+            </div>
           </div>
 
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="form-field-half">
-              <mat-label>Departamento / Área</mat-label>
-              <input matInput formControlName="dependencia" placeholder="Ej. Logística e Inventario" />
-              <mat-icon matSuffix>lan</mat-icon>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="form-field-half">
-              <mat-label>Sucursal / Ubicación</mat-label>
-              <input matInput formControlName="oficina" placeholder="Ej. Sucursal Central - Buenos Aires" />
-              <mat-icon matSuffix>location_on</mat-icon>
-            </mat-form-field>
-          </div>
-
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="form-field-full">
-              <mat-label>Logotipo Corporativo (Membrete)</mat-label>
-              <input matInput formControlName="membrete" placeholder="Ej. C:\SERA\assets\logo_empresa.png" />
-              <mat-icon matSuffix>image</mat-icon>
-            </mat-form-field>
-          </div>
         </form>
       </div>
     }
+
 
     <!-- SECCIÓN APARIENCIA -->
     @if (activeTab === 'appearance') {

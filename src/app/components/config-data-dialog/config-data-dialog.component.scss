@@ -502,6 +502,114 @@
   }
 }
 
+// ─── LOGO PICKER ──────────────────────────────────────────────────────────────
+
+.logo-picker-section {
+  border: 1px solid rgba(var(--sera-text-rgb, 255,255,255), 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  background: rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+
+  .logo-picker-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--sera-text-color, #94a3b8);
+    opacity: 0.85;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: var(--sera-primary-color, #00bcd4);
+    }
+  }
+
+  .logo-picker-body {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .logo-preview-wrapper {
+    width: 96px;
+    height: 96px;
+    border-radius: 10px;
+    border: 2px dashed rgba(var(--sera-text-rgb, 255,255,255), 0.15);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .logo-preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: white;
+      padding: 4px;
+    }
+
+    .logo-preview-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: var(--sera-text-color, #64748b);
+      opacity: 0.5;
+      font-size: 0.7rem;
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+      }
+    }
+  }
+
+  .logo-picker-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+
+    .logo-btn {
+      border-color: rgba(var(--sera-text-rgb, 255,255,255), 0.2) !important;
+      color: var(--sera-text-color, #94a3b8) !important;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+      &:hover {
+        border-color: var(--sera-primary-color, #00bcd4) !important;
+        color: var(--sera-primary-color, #00bcd4) !important;
+      }
+
+      &--remove:hover {
+        border-color: #f87171 !important;
+        color: #f87171 !important;
+      }
+    }
+
+    .logo-hint {
+      margin: 0;
+      font-size: 0.75rem;
+      color: var(--sera-text-color, #64748b);
+      opacity: 0.6;
+      line-height: 1.5;
+    }
+  }
+}
+
 .audit-logs-section {
   display: flex;
   flex-direction: column;

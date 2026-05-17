@@ -66,7 +66,7 @@ export class PdfService {
   ): void {
     contenedor.innerHTML = '';
     
-    // Configuración del contenedor principal (Simula página A4 con sus márgenes)
+    // Contenedor principal: flex column para que el footer pueda quedar pegado al fondo
     contenedor.style.width = '210mm';
     contenedor.style.minHeight = '297mm';
     contenedor.style.backgroundColor = 'white';
@@ -75,13 +75,37 @@ export class PdfService {
     contenedor.style.fontFamily = 'Arial, sans-serif';
     contenedor.style.fontSize = '12pt';
     contenedor.style.lineHeight = '1.5';
+    contenedor.style.display = 'flex';
+    contenedor.style.flexDirection = 'column';
     // padding: arriba derecha abajo izquierda
-    contenedor.style.padding = '4cm 1.5cm 2.5cm 4cm';
+    contenedor.style.padding = '4cm 1.5cm 1cm 4cm';
+
+    // ─── MEMBRETE / HEADER ────────────────────────────────────────────────────
+    // Renderiza el bloque de membrete solo si hay logo o nombre del operador
+    // ─── MEMBRETE / HEADER ────────────────────────────────────────────────────
+    // Solo muestra el logo. El nombre del operador va únicamente en la firma,
+    // y el texto de SERA va en el pie de página.
+    if (config.logo_base64) {
+      const membreteEl = document.createElement('div');
+      membreteEl.style.width = '100%';
+      membreteEl.style.marginBottom = '20px';
+
+      const logoImg = document.createElement('img');
+      logoImg.src = config.logo_base64;
+      logoImg.style.width = '100%';
+      logoImg.style.height = 'auto';
+      logoImg.style.maxHeight = '100px';
+      logoImg.style.objectFit = 'contain';
+      logoImg.style.objectPosition = 'left';
+      membreteEl.appendChild(logoImg);
+
+      contenedor.appendChild(membreteEl);
+    }
 
     // Título
     const tituloEl = this.crearElemento('h2', 'titulo', config.titulo || 'Reporte de SERA');
     tituloEl.style.textAlign = 'center';
-    tituloEl.style.fontSize = '16pt'; // Un poco más grande que el cuerpo
+    tituloEl.style.fontSize = '16pt';
     tituloEl.style.fontWeight = 'bold';
     tituloEl.style.marginBottom = '30px';
     contenedor.appendChild(tituloEl);
@@ -112,28 +136,55 @@ export class PdfService {
       contenedor.appendChild(descPostEl);
     }
 
-    // Bloque de Firma
+    // Bloque de Firma — estilo sello, alineado a la derecha
     if (config.incluir_firma) {
       const firmaContenedor = this.crearElemento('div');
-      firmaContenedor.style.marginTop = '60px';
+      firmaContenedor.style.marginTop = '50px';
       firmaContenedor.style.width = '100%';
       firmaContenedor.style.display = 'flex';
-      firmaContenedor.style.flexDirection = 'column';
-      firmaContenedor.style.alignItems = 'center';
+      firmaContenedor.style.justifyContent = 'flex-end';
+
+      // Bloque interior de 200px: la línea y el nombre se centran juntos
+      const firmaBloque = this.crearElemento('div');
+      firmaBloque.style.width = '200px';
+      firmaBloque.style.display = 'flex';
+      firmaBloque.style.flexDirection = 'column';
+      firmaBloque.style.alignItems = 'center';
 
       const lineaFirma = this.crearElemento('div');
-      lineaFirma.style.width = '250px';
-      lineaFirma.style.borderTop = '1px solid black';
-      lineaFirma.style.marginBottom = '10px';
-      firmaContenedor.appendChild(lineaFirma);
+      lineaFirma.style.width = '100%';
+      lineaFirma.style.borderTop = '1px solid #555';
+      lineaFirma.style.marginBottom = '6px';
+      firmaBloque.appendChild(lineaFirma);
 
       const textoFirma = this.crearElemento('span', '', config.firma_texto || 'Firma');
-      textoFirma.style.fontSize = '12pt';
-      textoFirma.style.fontWeight = 'bold';
-      firmaContenedor.appendChild(textoFirma);
+      textoFirma.style.fontSize = '8.5pt';
+      textoFirma.style.fontWeight = 'normal';
+      textoFirma.style.letterSpacing = '0.04em';
+      textoFirma.style.color = '#333';
+      textoFirma.style.textAlign = 'center';
+      firmaBloque.appendChild(textoFirma);
 
+      firmaContenedor.appendChild(firmaBloque);
       contenedor.appendChild(firmaContenedor);
     }
+
+    // ─── PIE DE PÁGINA ────────────────────────────────────────────────────────
+    // Spacer flexible que empuja el footer hasta el fondo de la página
+    const spacer = document.createElement('div');
+    spacer.style.flex = '1';
+    contenedor.appendChild(spacer);
+
+    // Footer pegado al fondo, fuente pequeña, alineado a la derecha
+    const footerEl = document.createElement('div');
+    footerEl.style.paddingTop = '6px';
+    footerEl.style.borderTop = '1px solid #e0e0e0';
+    footerEl.style.textAlign = 'right';
+    footerEl.style.fontSize = '6pt';
+    footerEl.style.color = '#bbb';
+    footerEl.style.letterSpacing = '0.02em';
+    footerEl.textContent = 'Generado con SERA — Sistema de Expedientes de Registro Avanzado';
+    contenedor.appendChild(footerEl);
   }
 
   /**

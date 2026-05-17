@@ -100,6 +100,9 @@ fn main() {
             commands::get_audit_logs,
             commands::optimizar_db,
             commands::limpiar_cache,
+            commands::guardar_logo_membrete,
+            commands::get_logo_membrete_base64,
+            commands::detectar_logo_membrete,
         ])
         .run(tauri::generate_context!())
         .expect("[SERA] Error al inicializar la aplicación");

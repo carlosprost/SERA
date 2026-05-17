@@ -5,7 +5,6 @@ import { PdfService } from "../../services/pdf.service";
 import { MatButtonModule } from "@angular/material/button";
 import {
   MAT_DIALOG_DATA,
-  MatDialog,
   MatDialogActions,
   MatDialogClose,
   MatDialogContent,
@@ -14,7 +13,6 @@ import {
 } from "@angular/material/dialog";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
-
 import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MatTabsModule } from "@angular/material/tabs";
 import { MatCheckboxModule } from "@angular/material/checkbox";
@@ -22,6 +20,10 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatListModule } from "@angular/material/list";
 import { CdkDragDrop, DragDropModule, moveItemInArray } from "@angular/cdk/drag-drop";
 import { CommonModule } from "@angular/common";
+import { Store } from "@ngrx/store";
+import { selectConfigData } from "../../store/store.selectors";
+import { take, filter } from "rxjs";
+import { invoke } from "@tauri-apps/api/core";
 
 @Component({
   selector: "app-recibo",
@@ -51,6 +53,7 @@ export class ReciboComponent {
   fb = inject(FormBuilder);
   pdfService = inject(PdfService);
   snackBar = inject(MatSnackBar);
+  store = inject(Store);
 
   formularioRecibo!: FormGroup;
   
@@ -64,8 +67,18 @@ export class ReciboComponent {
     public dialogRef: MatDialogRef<ReciboComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { message: string, campos: string[], datos: any[] }
   ) {
-    this.createForm();
-    this.initCampos();
+    // Pre-cargar el nombre del operador en el campo de firma para agilizar la generación.
+    // Usamos filter para evitar capturar el estado inicial vacío antes de que el store se hidrate.
+    this.store.select(selectConfigData)
+      .pipe(
+        filter(config => config !== null && config !== undefined),
+        take(1)
+      )
+      .subscribe(config => {
+        const nombreOperador = config?.user?.nombre || '';
+        this.createForm(nombreOperador);
+        this.initCampos();
+      });
   }
 
   initCampos() {
@@ -74,13 +87,15 @@ export class ReciboComponent {
     }
   }
 
-  createForm(){
+  /** @param nombreFirma - Se pre-carga con el nombre del operador configurado en el perfil. */
+  createForm(nombreFirma: string = ''){
     this.formularioRecibo = this.fb.group({
       titulo: [''],
       descripcion: [''],
       descripcion_post: [''],
+      incluir_membrete: [true],
       incluir_firma: [false],
-      firma_texto: ['']
+      firma_texto: [nombreFirma]
     })
   }
 
@@ -90,7 +105,6 @@ export class ReciboComponent {
   }
 
   async save() {
-    // Retornamos el formulario + la lista de columnas seleccionadas en el orden actual.
     const result = {
       ...this.formularioRecibo.value,
       columnas: this.camposConfig
@@ -101,11 +115,48 @@ export class ReciboComponent {
     this.generando.set(true);
 
     try {
+      // Leer nombre y ruta del logo del perfil del operador desde el store.
+      // Filtramos el estado inicial vacío para asegurar leer el config real persistido.
+      const config = await new Promise<any>(resolve => {
+        this.store.select(selectConfigData)
+          .pipe(
+            filter(c => c !== null && c !== undefined),
+            take(1)
+          )
+          .subscribe(resolve);
+      });
+
+      let logo_base64: string | undefined;
+      let nombre_operador: string | undefined;
+
+      // Solo cargar logo y nombre si el usuario optó por incluir el membrete
+      if (result.incluir_membrete) {
+        const membretePath = config?.user?.membrete;
+        nombre_operador = config?.user?.nombre || undefined;
+
+        if (membretePath) {
+          try {
+            logo_base64 = await invoke<string>('get_logo_membrete_base64', { rutaRelativa: membretePath });
+          } catch {
+            // Si falla la carga del logo, el reporte se genera igual sin imagen
+          }
+        } else {
+          // Intentar auto-detectar logo existente en disco aunque BD esté vacía
+          try {
+            const rutaDetectada = await invoke<string>('detectar_logo_membrete');
+            logo_base64 = await invoke<string>('get_logo_membrete_base64', { rutaRelativa: rutaDetectada });
+          } catch {
+            // No hay logo, continuar sin él
+          }
+        }
+      }
+
       await this.pdfService.generarPdf(
         null,
-        result,
+        { ...result, logo_base64, nombre_operador },
         this.data.datos
       );
+
       this.snackBar.open("Documento PDF generado correctamente", "", { duration: 3000 });
       this.dialogRef.close(result);
     } catch (error) {

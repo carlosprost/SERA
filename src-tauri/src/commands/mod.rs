@@ -24,6 +24,74 @@ pub fn update_config(db_path: State<DbPath>, config: ConfigData) -> Result<Strin
     database::update_config(&db_path.0, &config).map(|_| "exito".to_string()).map_err(|e| e.to_string())
 }
 
+/// Copia el logo seleccionado por el usuario al directorio de datos de SERA,
+/// asegurando que el membrete esté siempre disponible de forma local y segura.
+#[tauri::command]
+pub fn guardar_logo_membrete(app_handle: AppHandle, ruta_origen: String) -> Result<String, String> {
+    let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+    let logo_dir = app_dir.join("membrete");
+    fs::create_dir_all(&logo_dir).map_err(|e| e.to_string())?;
+
+    let ext = std::path::Path::new(&ruta_origen)
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("png")
+        .to_lowercase();
+
+    let nombre_archivo = format!("logo.{}", ext);
+    let dest_path = logo_dir.join(&nombre_archivo);
+    fs::copy(&ruta_origen, &dest_path).map_err(|e| e.to_string())?;
+
+    Ok(format!("membrete/{}", nombre_archivo))
+}
+
+/// Lee el logo del membrete desde el directorio de datos y lo devuelve como data URL (base64).
+/// Si no existe, retorna un error controlado para que el frontend maneje el estado vacío.
+#[tauri::command]
+pub fn get_logo_membrete_base64(app_handle: AppHandle, ruta_relativa: String) -> Result<String, String> {
+    let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+    let full_path = app_dir.join(&ruta_relativa);
+
+    if !full_path.exists() {
+        return Err("Sin logotipo configurado".to_string());
+    }
+
+    let bytes = fs::read(&full_path).map_err(|e| e.to_string())?;
+    let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, bytes);
+
+    let ruta_lower = ruta_relativa.to_lowercase();
+    let mime = if ruta_lower.ends_with(".png") {
+        "image/png"
+    } else if ruta_lower.ends_with(".jpg") || ruta_lower.ends_with(".jpeg") {
+        "image/jpeg"
+    } else {
+        "image/png"
+    };
+
+    Ok(format!("data:{};base64,{}", mime, b64))
+}
+
+/// Detecta si existe un logotipo guardado en la carpeta de membrete,
+/// útil para recuperar el logo aunque el campo en BD esté vacío.
+#[tauri::command]
+pub fn detectar_logo_membrete(app_handle: AppHandle) -> Result<String, String> {
+    let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+    let logo_dir = app_dir.join("membrete");
+
+    if !logo_dir.exists() {
+        return Err("Sin membrete".to_string());
+    }
+
+    for ext in &["jpg", "jpeg", "png"] {
+        let candidate = logo_dir.join(format!("logo.{}", ext));
+        if candidate.exists() {
+            return Ok(format!("membrete/logo.{}", ext));
+        }
+    }
+
+    Err("Sin membrete".to_string())
+}
+
 // ─── TABLAS ───────────────────────────────────────────────────────────────────
 
 #[tauri::command]
