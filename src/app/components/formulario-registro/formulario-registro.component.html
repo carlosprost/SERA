@@ -23,7 +23,10 @@
         } @else if (field.type === 'select') {
           <mat-form-field appearance="outline">
             <mat-label>{{field.label.split('_').join(' ')}}</mat-label>
-            <mat-select [formControlName]="field.field">
+            <mat-select [formControlName]="field.field" (selectionChange)="onLinkedFieldChange($event, field.field)">
+              <mat-option value="NEW_RECORD" style="color: var(--primary-color); font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.1);">
+                <mat-icon style="color: var(--primary-color); margin-right: 8px;">add_circle</mat-icon> + Nuevo registro
+              </mat-option>
               @for (option of optionsMap[field.field.toLowerCase()]; track option.value) {
                 <mat-option [value]="option.value">{{ option.label }}</mat-option>
               }

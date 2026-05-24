@@ -370,11 +370,17 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   openFilterDialog() {
+    const camposFiltrados = this.allColumns.filter(c => 
+      c !== this.campoSeleccion && 
+      c !== 'actions' && 
+      !c.startsWith('sera_')
+    );
+
     const dialogRef = this.dialog.open(FilterSeraDialog, {
       width: '80%',
       minWidth: '500px',
       data: {
-        campos: this.allColumns,
+        campos: camposFiltrados,
         currentFilters: this.activeFilters
       }
     });
@@ -555,7 +561,11 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   openConfigDialog() {
-    const camposActuales = this.allColumns.filter(c => c !== this.campoSeleccion && c !== 'actions');
+    const camposActuales = this.allColumns.filter(c => 
+      c !== this.campoSeleccion && 
+      c !== 'actions' && 
+      !c.startsWith('sera_')
+    );
 
     const dialogRef = this.dialog.open(TableConfigDialog, {
       width: '95vw',

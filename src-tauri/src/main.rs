@@ -20,16 +20,29 @@ fn main() {
             let data_dir = app.path().app_data_dir().expect("[SERA] No se pudo obtener el directorio de datos");
             let db_path = data_dir.join("sera.db");
 
-            // MIGRACIÓN: De 'SERA' (v1/Legacy) a 'WolfTeI.SERADesktop' (Store/v2)
-            let old_data_dir = data_dir.parent().unwrap().join("SERA");
+            // MIGRACIÓN: De 'ar.com.wolftei.sera' o 'SERA' a 'WolfTeI.SERADesktop' (Store/v2)
+            let old_data_dir_1 = data_dir.parent().unwrap().join("ar.com.wolftei.sera");
+            let old_data_dir_2 = data_dir.parent().unwrap().join("SERA");
+            
+            let old_data_dir = if old_data_dir_1.exists() {
+                old_data_dir_1
+            } else {
+                old_data_dir_2
+            };
+
             let db_exists_and_not_empty = db_path.exists() && std::fs::metadata(&db_path).map(|m| m.len()).unwrap_or(0) > 100;
 
             if old_data_dir.exists() && !db_exists_and_not_empty {
                 println!("[SERA] Identificada migración pendiente desde la carpeta original...");
                 let _ = std::fs::create_dir_all(&data_dir);
                 let old_db = old_data_dir.join("sera.db");
+                let mut migracion_exitosa = true;
+
                 if old_db.exists() {
-                    let _ = std::fs::copy(&old_db, &db_path);
+                    if std::fs::copy(&old_db, &db_path).is_err() {
+                        migracion_exitosa = false;
+                        println!("[SERA] Error al copiar sera.db");
+                    }
                 }
                 
                 let old_attachments = old_data_dir.join("attachments");
@@ -41,12 +54,21 @@ fn main() {
                             let path = entry.path();
                             if path.is_file() {
                                 let dest = new_attachments.join(path.file_name().unwrap());
-                                let _ = std::fs::copy(path, dest);
+                                if std::fs::copy(&path, &dest).is_err() {
+                                    migracion_exitosa = false;
+                                    println!("[SERA] Error al copiar adjunto: {:?}", path);
+                                }
                             }
                         }
                     }
                 }
-                println!("[SERA] Migración para Windows Store completada con éxito.");
+
+                if migracion_exitosa {
+                    println!("[SERA] Migración completada con éxito. Limpiando archivos viejos...");
+                    let _ = std::fs::remove_dir_all(&old_data_dir);
+                } else {
+                    println!("[SERA] Advertencia: Hubo problemas durante la migración, no se borraron los archivos originales.");
+                }
             }
 
             // Crear el directorio si no existe

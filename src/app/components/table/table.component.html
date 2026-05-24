@@ -106,4 +106,26 @@
       </div>
     </div>
   }
-  
+
+  <!-- BARRA DE ESTADO AL PIE -->
+  <div class="status-bar">
+    <div class="status-left">
+      <mat-icon>table_chart</mat-icon>
+      <span class="status-table-name">{{ tabla | uppercase }}</span>
+    </div>
+    <div class="status-right">
+      <span class="status-item">
+        <mat-icon>format_list_numbered</mat-icon> Total Registros: <strong>{{ dataSearch.length }}</strong>
+      </span>
+      @if (dataSource.filter || activeFilters.length > 0) {
+        <span class="status-item text-accent">
+          <mat-icon>filter_alt</mat-icon> Visibles (Filtrados): <strong>{{ dataSource.filteredData.length }}</strong>
+        </span>
+      }
+      @if (selection.selected.length > 0) {
+        <span class="status-item text-primary">
+          <mat-icon>check_box</mat-icon> Seleccionados: <strong>{{ selection.selected.length }}</strong>
+        </span>
+      }
+    </div>
+  </div>

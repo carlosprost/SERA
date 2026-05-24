@@ -3,7 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { MaterialModule } from '../../shared/material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NewRecord } from '../../interfaces/registros.interfaces';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
 import { Observable, map } from 'rxjs';
 import { Campos } from '../../interfaces/campos.interfaces';
@@ -45,6 +45,7 @@ export class FormularioRegistroComponent implements OnInit {
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
     private snackBar: MatSnackBar,
+    private dialog: MatDialog,
     @Optional() public dialogRef: MatDialogRef<FormularioRegistroComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
@@ -58,6 +59,9 @@ export class FormularioRegistroComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Aseguramos que los campos de esta tabla estén cargados en el store (útil para tablas vinculadas)
+    this.store.dispatch(StoreActions.loadCampos({ tabla: this.TableName }));
+
     this.cargarConfiguracionYVínculos().then(() => {
       this.campos.subscribe({
         next: (campos) => {
@@ -117,6 +121,46 @@ export class FormularioRegistroComponent implements OnInit {
       this.cdr.detectChanges();
     } catch (e) {
       console.error("Error cargando configuración de vínculos:", e);
+    }
+  }
+
+  async recargarOpciones(link: any) {
+    try {
+      const res: any[] = await invoke('get_contenido', { tabla: link.remoteTable });
+      this.optionsMap[link.localField.toLowerCase()] = res.map((row: any) => ({
+        value: row[link.remoteField],
+        label: row[link.displayField]
+      }));
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.error(`Error al recargar opciones para vínculo ${link.localField}:`, e);
+    }
+  }
+
+  async onLinkedFieldChange(event: any, localFieldName: string) {
+    if (event.value === 'NEW_RECORD') {
+      const link = this.linkedFields.find(lf => lf.localField.toLowerCase() === localFieldName.toLowerCase());
+      if (link) {
+        const dialogRef = this.dialog.open(FormularioRegistroComponent, {
+          data: {
+            tabla: link.remoteTable,
+            upload: false,
+            message: `Crear Nuevo: ${link.remoteTable.toUpperCase()}`
+          },
+          width: '600px',
+          disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(async (result) => {
+          if (result && result.reload && result.newId) {
+            await this.recargarOpciones(link);
+            this.newRegister.get(localFieldName)?.setValue(result.newId);
+          } else {
+            this.newRegister.get(localFieldName)?.setValue(null);
+          }
+          this.cdr.detectChanges();
+        });
+      }
     }
   }
 
@@ -219,6 +263,8 @@ export class FormularioRegistroComponent implements OnInit {
         this.store.dispatch(StoreActions.loadNewRecordSuccess({ id }));
         this.store.dispatch(StoreActions.loadContenido({ tabla: this.TableName }));
         this.snackBar.open("Registro creado con éxito", "Listo", { duration: 3000 });
+        this.dialogRef.close({ reload: true, newId: id });
+        return;
       }
       this.dialogRef.close({ reload: true });
     } catch (e) {
