@@ -12,6 +12,13 @@
             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
           </mat-form-field>
+        } @else if (field.type === 'time') {
+          <mat-form-field appearance="outline">
+            <mat-label>{{field.label.split('_').join(' ')}}</mat-label>
+            <input matInput type="time" [formControlName]="field.field">
+            <mat-icon matIconSuffix>access_time</mat-icon>
+            <mat-hint>HH:MM</mat-hint>
+          </mat-form-field>
         } @else if (field.type === 'boolean') {
           <mat-form-field appearance="outline">
             <mat-label>{{field.label.split('_').join(' ')}}</mat-label>

@@ -277,10 +277,11 @@ pub fn reestructurar_tabla(db_path: &Path, info: &RestructureTable) -> Result<()
     let mut insert_cols = vec![id_nuevo];
 
     for m in &info.mapeo {
-        validar_nombre_identificador(&m.old_name)?;
-        validar_nombre_identificador(&m.new_name)?;
+        let new_trim = m.new_name.trim();
+        validar_columna(&m.old_name)?;
+        validar_columna(new_trim)?;
         select_cols.push(format!("\"{}\"", m.old_name));
-        insert_cols.push(format!("\"{}\"", m.new_name));
+        insert_cols.push(format!("\"{}\"", new_trim));
     }
 
     let sql_copy = format!(
@@ -371,7 +372,7 @@ pub fn nuevo_registro(db_path: &Path, record: &NewRecord) -> Result<i64> {
     );
 
     let mut stmt = conn.prepare(&sql)?;
-    let valores: Vec<rusqlite::types::Value> = record.contenido.iter().map(|v| rusqlite::types::Value::Text(v.clone())).collect();
+    let valores: Vec<rusqlite::types::Value> = record.contenido.iter().map(|v| rusqlite::types::Value::Text(v.trim().to_string())).collect();
     stmt.execute(rusqlite::params_from_iter(valores.iter()))?;
 
     Ok(conn.last_insert_rowid())
@@ -391,7 +392,7 @@ pub fn actualizar_registro(db_path: &Path, record: &NewRecord) -> Result<()> {
     );
 
     let mut stmt = conn.prepare(&sql)?;
-    let mut valores: Vec<rusqlite::types::Value> = record.contenido.iter().map(|v| rusqlite::types::Value::Text(v.clone())).collect();
+    let mut valores: Vec<rusqlite::types::Value> = record.contenido.iter().map(|v| rusqlite::types::Value::Text(v.trim().to_string())).collect();
     valores.push(rusqlite::types::Value::Integer(id));
     stmt.execute(rusqlite::params_from_iter(valores.iter()))?;
 
@@ -445,7 +446,7 @@ pub fn importar_bulk(db_path: &Path, bulk: &BulkRecord) -> Result<()> {
     );
 
     for row in &bulk.contenido {
-        let valores: Vec<rusqlite::types::Value> = row.iter().map(|v| rusqlite::types::Value::Text(v.clone())).collect();
+        let valores: Vec<rusqlite::types::Value> = row.iter().map(|v| rusqlite::types::Value::Text(v.trim().to_string())).collect();
         tx.execute(&sql, rusqlite::params_from_iter(valores.iter()))?;
     }
 
@@ -641,7 +642,7 @@ pub fn importar_tabla(db_path: &Path, nombre_tabla: String, package: crate::mode
                 placeholders.push("?".to_string());
                 
                 let v = obj.get(&campo.field).cloned().unwrap_or(serde_json::Value::Null);
-                vals_strings.push(if v.is_string() { v.as_str().unwrap().to_string() } else if v.is_null() { "".to_string() } else { v.to_string() });
+                vals_strings.push(if v.is_string() { v.as_str().unwrap().trim().to_string() } else if v.is_null() { "".to_string() } else { v.to_string() });
             }
             
             if col_names.is_empty() { continue; }
@@ -687,6 +688,16 @@ fn validar_nombre_identificador(nombre: &str) -> Result<()> {
     }
     if !nombre.chars().all(|c| c.is_alphanumeric() || c == '_') {
         return Err(rusqlite::Error::InvalidParameterName(format!("Nombre inválido: {nombre}")));
+    }
+    Ok(())
+}
+
+fn validar_columna(nombre: &str) -> Result<()> {
+    if nombre.is_empty() {
+        return Err(rusqlite::Error::InvalidParameterName("Columna vacía".into()));
+    }
+    if nombre.contains('"') {
+        return Err(rusqlite::Error::InvalidParameterName("El nombre de la columna no puede contener comillas dobles".into()));
     }
     Ok(())
 }

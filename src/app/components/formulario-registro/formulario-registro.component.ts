@@ -191,7 +191,9 @@ export class FormularioRegistroComponent implements OnInit {
     }
 
     const t = type.toLowerCase();
-    if (t.includes('date') || t.includes('time') || t.includes('timestamp')) return 'date';
+    if (t.includes('timestamp')) return 'date';
+    if (t.includes('date')) return 'date';
+    if (t.includes('time')) return 'time';
     if (t.includes('int') || t.includes('real') || t.includes('num') || t.includes('double')) return 'number';
     if (t.includes('bool')) return 'boolean';
     return 'text';

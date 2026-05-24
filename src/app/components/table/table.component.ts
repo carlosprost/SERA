@@ -144,6 +144,48 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit() {
     this.dataSource.sort = this.sort;
+    
+    // Configurar sortingDataAccessor personalizado para ordenar fechas y números de forma perfecta
+    this.dataSource.sortingDataAccessor = (item: any, property: string) => {
+      const value = item[property];
+      if (value === undefined || value === null) return '';
+      
+      const propLower = property.toLowerCase();
+      const isFechaCol = propLower.includes('fecha') || propLower.includes('date') || propLower.includes('timestamp');
+      
+      if (isFechaCol) {
+        // Caso 1: Formato DD/MM/YYYY o DD/MM/YYYY HH:MM:SS
+        if (typeof value === 'string' && /^\d{2}\/\d{2}\/\d{4}/.test(value)) {
+          const parts = value.split(' ')[0].split('/');
+          return Number(`${parts[2]}${parts[1]}${parts[0]}`);
+        }
+        
+        // Caso 2: Formato ISO YYYY-MM-DD o YYYY-MM-DD HH:MM:SS
+        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+          const parts = value.split(' ')[0].split('-');
+          return Number(`${parts[0]}${parts[1]}${parts[2]}`);
+        }
+        
+        // Caso 3: Objeto Date real
+        if (value instanceof Date) {
+          return value.getTime();
+        }
+        
+        // Intento genérico de parsear fecha
+        const parsedDate = new Date(value);
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate.getTime();
+        }
+      }
+      
+      // Ordenamiento de números guardados como texto (evita orden alfabético incorrecto como [10, 2])
+      if (typeof value === 'string' && !isNaN(Number(value)) && value.trim() !== '') {
+        return Number(value);
+      }
+      
+      // Ordenamiento insensible a mayúsculas para strings comunes
+      return typeof value === 'string' ? value.toLowerCase() : value;
+    };
   }
 
   toggleColumnVisibility(column: string) {
@@ -557,7 +599,27 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
       const translation = this.dictionaries[column][String(value)];
       return translation !== undefined ? translation : `ID: ${value}`;
     }
+    
+    // Auto-detección de fechas ISO (YYYY-MM-DD) para formateo visual.
+    // Esto permite que en BD sigan siendo YYYY-MM-DD (para un ordenamiento perfecto),
+    // pero el usuario siempre las vea como DD/MM/YYYY.
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const parts = value.split('-');
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
     return value;
+  }
+
+  formatDateSafe(value: any): string {
+    if (!value) return '';
+    // Si viene en formato ISO YYYY-MM-DD
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const parts = value.split('-');
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    // Si ya viene como DD/MM/YYYY o cualquier otro string lo devolvemos tal cual para no romper
+    return String(value);
   }
 
   openConfigDialog() {

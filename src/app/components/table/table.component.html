@@ -48,7 +48,7 @@
           } @else if (column !== 'actions'){
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ column.split('_').join(' ') | uppercase }}</th>
             @if(column.split('_').includes('fecha')){
-              <td mat-cell *matCellDef="let element" [ngStyle]="getCellStyle(element, column)">{{ element[column] | date:'dd/MM/yyyy' }}</td>
+              <td mat-cell *matCellDef="let element" [ngStyle]="getCellStyle(element, column)">{{ formatDateSafe(element[column]) }}</td>
             }@else {
               <td mat-cell *matCellDef="let element" [ngStyle]="getCellStyle(element, column)">{{ translateValue(column, element[column]) }}</td>
             }

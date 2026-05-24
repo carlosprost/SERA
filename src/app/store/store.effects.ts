@@ -165,7 +165,8 @@ export class StoreEffects {
             return from([
               StoreActions.loadRestructureTableSuccess({ message }),
               StoreActions.loadListadoTablas(),
-              StoreActions.loadCampos({ tabla: props.info.nombre_nuevo })
+              StoreActions.loadCampos({ tabla: props.info.nombre_nuevo }),
+              StoreActions.loadContenido({ tabla: props.info.nombre_nuevo })
             ]);
           }),
           catchError(error => {

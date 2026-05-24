@@ -117,6 +117,122 @@ export class AppComponent implements AfterViewInit, OnInit {
   }
 
   async ngOnInit() {
+    // Disparar migración asíncrona de fechas heredadas
+    this.migrarFechasDb();
+  }
+
+  /**
+   * Rutina de migración silenciosa para normalizar fechas en formato DD/MM/YYYY
+   * almacenadas físicamente en la base de datos SQLite hacia el estándar ISO YYYY-MM-DD.
+   * Se ejecuta asíncronamente en segundo plano una sola vez.
+   */
+  async migrarFechasDb() {
+    const KEY_MIGRACION = 'sera_migration_dates_normalized_v4';
+    if (localStorage.getItem(KEY_MIGRACION) === 'true') {
+      return;
+    }
+
+    console.log('[SERA Migración] Iniciando normalización de fechas históricas...');
+    let totalNormalizados = 0;
+
+    try {
+      // 1. Obtener todas las tablas registradas en el catálogo
+      const tablasList: any[] = await invoke('get_tablas');
+      
+      for (const t of tablasList) {
+        const nombreTabla = t.nombre_tabla;
+        
+        // 2. Obtener estructura de campos
+        const campos: any[] = await invoke('get_campos', { tabla: nombreTabla });
+        
+        // Filtrar y detectar las columnas de fecha
+        const camposFecha = campos.filter(c => {
+          const fieldLower = (c.Field || '').toLowerCase();
+          const tipoLower = (c.Type || c.tipo || '').toLowerCase();
+          const isId = fieldLower === 'id' || fieldLower.startsWith('id_');
+          const isSystem = fieldLower.startsWith('sera_');
+          
+          if (isId || isSystem) return false;
+          
+          return fieldLower.includes('fecha') || 
+                 fieldLower.includes('date') || 
+                 tipoLower.includes('date') || 
+                 tipoLower.includes('timestamp');
+        });
+
+        if (camposFecha.length === 0) continue;
+
+        // 3. Obtener el contenido de la tabla
+        const contenido: any[] = await invoke('get_contenido', { tabla: nombreTabla });
+        if (!contenido || contenido.length === 0) continue;
+
+        // La clave primaria física de la tabla siempre tiene el formato id_{nombre_tabla}
+        const idKey = `id_${nombreTabla.toLowerCase()}`;
+        
+        for (const row of contenido) {
+          let requiereActualizacion = false;
+          const camposUpdate: string[] = [];
+          const contenidoUpdate: string[] = [];
+          
+          for (const c of campos) {
+            const fieldLower = (c.Field || '').toLowerCase();
+            const isId = fieldLower === 'id' || fieldLower.startsWith('id_');
+            const isSystem = fieldLower.startsWith('sera_');
+            
+            if (isId || isSystem) continue;
+
+            let val = row[c.Field];
+            
+            // Si es una columna de fecha y contiene una cadena con formato DD/MM/YYYY
+            const esFecha = camposFecha.some(cf => cf.Field === c.Field);
+            if (esFecha && typeof val === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(val.trim())) {
+              const parts = val.trim().split('/');
+              // Reordenar a YYYY-MM-DD
+              val = `${parts[2]}-${parts[1]}-${parts[0]}`;
+              requiereActualizacion = true;
+            }
+
+            camposUpdate.push(c.Field);
+            // El backend requiere strings no nulos para evitar colisiones
+            contenidoUpdate.push(val !== undefined && val !== null ? String(val) : '');
+          }
+
+          // Si el registro contenía fechas heredadas DD/MM/YYYY, procedemos a actualizarlo en SQLite
+          if (requiereActualizacion) {
+            const registroId = row[idKey] || row['id'];
+            if (registroId !== undefined && registroId !== null) {
+              const registro = {
+                id: Number(registroId),
+                tabla: nombreTabla,
+                campos: camposUpdate,
+                contenido: contenidoUpdate
+              };
+              
+              await invoke('actualizar_registro', { registro });
+              totalNormalizados++;
+            }
+          }
+        }
+      }
+
+      // Marcar migración como completada con éxito en el almacenamiento local
+      localStorage.setItem(KEY_MIGRACION, 'true');
+      console.log(`[SERA Migración] Normalización finalizada. Registros actualizados: ${totalNormalizados}`);
+      
+      if (totalNormalizados > 0) {
+        this.ngZone.run(() => {
+          this.snackBar.open(`¡Base de datos optimizada! Se normalizaron ${totalNormalizados} fechas heredadas a formato ISO.`, 'Listo', { duration: 5000 });
+          // Forzar refresco del store y vistas para consistencia en pantalla de inmediato
+          this.store.dispatch(StoreActions.loadListadoTablas());
+          if (this.tabs.length > 0) {
+            const active = this.tabs[this.selected.value ?? 0];
+            this.store.dispatch(StoreActions.loadContenido({ tabla: active }));
+          }
+        });
+      }
+    } catch (e) {
+      console.error('[SERA Migración] Error crítico al normalizar fechas en la base de datos:', e);
+    }
   }
 
 
@@ -199,7 +315,7 @@ export class AppComponent implements AfterViewInit, OnInit {
    * Si la tabla ya está abierta, simplemente la selecciona.
    */
   addTab(tabName: string) {
-    const index = this.tabs.indexOf(tabName);
+    const index = this.tabs.findIndex(t => t.toLowerCase() === tabName.toLowerCase());
     if (index === -1) {
       this.tabs = [...this.tabs, tabName];
       this.selected.setValue(this.tabs.length - 1);
@@ -621,13 +737,30 @@ export class AppComponent implements AfterViewInit, OnInit {
       // 2. Leer archivo como bytes
       const fileData = await readFile(path);
       
-      // 3. Parsear con XLSX
-      const workbook = XLSX.read(fileData, { type: 'array' });
+      // 3. Parsear con XLSX con soporte explícito para fechas
+      const workbook = XLSX.read(fileData, { type: 'array', cellDates: true });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       
       // Convertir a JSON
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      let jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+
+      // Formatear objetos Date a strings YYYY-MM-DD (Evitando offset de Timezone)
+      jsonData = jsonData.map(row => {
+        const newRow: any = {};
+        for (const key in row) {
+          if (row[key] instanceof Date) {
+            const d = row[key] as Date;
+            const pad = (n: number) => n.toString().padStart(2, '0');
+            // Almacenamos SIEMPRE en formato YYYY-MM-DD (ISO) para que SQLite ordene bien.
+            // La UI se encargará de mostrarlo como DD/MM/YYYY
+            newRow[key] = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+          } else {
+            newRow[key] = row[key];
+          }
+        }
+        return newRow;
+      });
 
       if (!jsonData || jsonData.length === 0) {
         this.snackBar.open("El archivo está vacío o no tiene un formato válido", "Cerrar", { duration: 3000 });

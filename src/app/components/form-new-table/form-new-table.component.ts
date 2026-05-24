@@ -31,6 +31,8 @@ export class FormNewTableComponent {
     { value: 'TEXT', viewValue: 'Texto Largo / Párrafo' },
     { value: 'INTEGER', viewValue: 'Número Entero' },
     { value: 'REAL', viewValue: 'Número Decimal' },
+    { value: 'DATE', viewValue: 'Fecha' },
+    { value: 'TIME', viewValue: 'Hora' },
     { value: 'TIMESTAMP', viewValue: 'Fecha y Hora' },
     { value: 'BOOLEAN', viewValue: 'Booleano (Sí/No)' },
     { value: 'LINK', viewValue: 'Vínculo (Relacional)' }
@@ -205,14 +207,14 @@ export class FormNewTableComponent {
       
       let fDefault = "";
       if (field.defaultValue && field.defaultValue.trim() !== '') {
-          if (fType.includes('TEXT') || fType.includes('VARCHAR') || fType.includes('TIMESTAMP')) {
+          if (fType.includes('TEXT') || fType.includes('VARCHAR') || fType.includes('TIMESTAMP') || fType.includes('DATE') || fType.includes('TIME')) {
              fDefault = `DEFAULT '${field.defaultValue.trim()}'`;
           } else {
              fDefault = `DEFAULT ${field.defaultValue.trim()}`;
           }
       }
 
-      const sqlParts = [fName, fType, fNull, fDefault].filter(p => p.trim() !== "").join(" ");
+      const sqlParts = [`"${fName}"`, fType, fNull, fDefault].filter(p => p.trim() !== "").join(" ");
       cuerpoSQL += sqlParts + (index === fieldsList.length - 1 ? "" : ", ");
 
       if (this.data?.isEdit && field.oldName) {
