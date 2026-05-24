@@ -317,10 +317,10 @@
 
         <div class="security-inputs">
           <mat-form-field appearance="outline" class="form-field-full">
-            <mat-label>Clave de Firma Global para Exportación de Archivos (.srx)</mat-label>
-            <input matInput type="password" [(ngModel)]="srxPassword" placeholder="••••••••••••••••••••" />
+            <mat-label>Clave Maestra del Sistema (Phoenix Engine)</mat-label>
+            <input matInput type="password" value="********************************" disabled />
             <mat-icon matSuffix>lock</mat-icon>
-            <mat-hint>Clave utilizada para firmar digitalmente tus transferencias de bases de datos.</mat-hint>
+            <mat-hint>Llave de cifrado de alta entropía (AES-256) gestionada automáticamente por el motor.</mat-hint>
           </mat-form-field>
         </div>
 

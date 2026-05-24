@@ -43,7 +43,6 @@ export class ConfigDataDialogComponent {
   // PESTAÑAS Y ESTADOS
   activeTab: string = 'general';
   animationsEnabled: boolean = true;
-  srxPassword: string = '••••••••••••••••••••';
   
   loadingDb = signal<boolean>(false);
   loadingCache = signal<boolean>(false);

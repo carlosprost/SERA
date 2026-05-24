@@ -9,7 +9,8 @@ use sha2::{Digest, Sha256};
 pub const MAGIC_HEADER: &[u8; 12] = b"SERA_V1_PACK";
 
 /// Llave maestra interna para el cifrado de exportaciones (fallback).
-const MASTER_KEY: &[u8; 32] = b"SERA_INTERNAL_SECURITY_KEY_2024_"; 
+/// Llave de alta entropía (32 bytes exactos).
+const MASTER_KEY: &[u8; 32] = b"WOLFTEI_PHOENIX_ENGINE_X9#V2!K8_"; 
 
 pub struct CryptoProvider;
 
