@@ -579,6 +579,40 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
 
+  @HostListener('click', ['$event'])
+  onTableClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+
+    // 1. Delegación para el plugin de Código de Barras
+    const barcodeBtn = target.closest('.badge-barcode-btn');
+    if (barcodeBtn) {
+      const showFn = (window as any).SeraAPI_barcode_show;
+      if (showFn) {
+        const val = barcodeBtn.getAttribute('data-value') || 
+                    barcodeBtn.textContent?.replace('🏷️ Barcode: ', '').trim();
+        if (val) {
+          showFn(val);
+        }
+      }
+      event.stopPropagation();
+      return;
+    }
+
+    // 2. Delegación para el plugin Redactor de Datos PII
+    const piiBtn = target.closest('.badge-pii-masked');
+    if (piiBtn) {
+      const toggleFn = (window as any).SeraAPI_redactor_toggle;
+      if (toggleFn) {
+        const val = piiBtn.getAttribute('data-value');
+        if (val) {
+          toggleFn(piiBtn, val);
+        }
+      }
+      event.stopPropagation();
+      return;
+    }
+  }
+
   async buildDictionaries() {
     this.dictionaries = {};
     for (const link of this.linkedFields) {
