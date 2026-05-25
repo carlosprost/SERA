@@ -29,10 +29,10 @@ El modelo de negocio de SERA mantiene la filosofía **sin suscripciones** y priv
 - **Detalle:** Sistema de reglas lógicas de causa-efecto integradas a las tablas (`SI pasa X, ENTONCES hacer Y`).
 
 ### 3. 🔌 Ecosistema Abierto: API Local y Plugins
-- **Estado:** APROBADO ✅
+- **Estado:** PARCIALMENTE COMPLETADO 🚀
 - **Detalle:** 
-  - **API Local Restringida:** Microservidor REST en `localhost` protegido con Token para interactuar con SERA vía Python/PowerShell.
-  - **Plugins Dinámicos:** Pequeños scripts JS/WASM instalables para dar superpoderes a las columnas (ej: generar QR, validar CUIT).
+  - **API Local Restringida:** *En Desarrollo 📝* — Microservidor REST en `localhost` protegido con Token para interactuar con SERA vía Python/PowerShell.
+  - **Plugins Dinámicos:** *Estabilizado y Lanzado (v4.0.0) ✅* — Carga en caliente offline mediante Blob URLs, sandbox `window.SeraAPI` (Ribbon Buttons, Cell Renderers, DB Interceptors) y Marketplace integrado.
 
 ### 4. 📡 LAN Sync: Sincronización P2P en Red Local
 - **Estado:** APROBADO ✅
@@ -84,6 +84,9 @@ El modelo de negocio de SERA mantiene la filosofía **sin suscripciones** y priv
 
 ### 6. 🛠️ Acciones Masivas y Auditoría (ISO 27001)
 - Borrado masivo, auditoría persistente SQLite de eventos críticos y exportación PDF profesional (membretes/firmas).
+
+### 7. 🔌 Ecosistema de Plugins en Caliente (v4.0.0)
+- Hot-loading offline en caliente mediante Blob URLs, sandbox visual y de datos robusto (`window.SeraAPI`) y Marketplace descentralizado integrado.
 
 ---
 
