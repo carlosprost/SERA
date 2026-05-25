@@ -703,3 +703,102 @@ pub fn get_local_ip_cmd() -> Result<String, String> {
     }
 }
 
+// ─── COMANDOS DE PLUGINS (EXTENSIBILIDAD) ────────────────────────────────────
+
+#[tauri::command]
+pub fn get_plugins(db_path: State<DbPath>) -> Result<Vec<Value>, String> {
+    database::get_plugins(&db_path.0).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn toggle_plugin(db_path: State<DbPath>, id: String, activo: bool) -> Result<(), String> {
+    database::toggle_plugin(&db_path.0, &id, activo).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn instalar_plugin_local(
+    app_handle: AppHandle,
+    db_path: State<DbPath>,
+    id: String,
+    nombre: String,
+    version: String,
+    descripcion: String,
+    autor: String,
+    js_content: String,
+    css_content: String,
+) -> Result<(), String> {
+    use std::fs;
+    
+    // 1. Obtener la carpeta de datos de la app
+    let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+    let plugins_base_dir = app_dir.join("plugins");
+    let plugin_dir = plugins_base_dir.join(&id);
+    
+    // 2. Crear las carpetas de plugins si no existen
+    fs::create_dir_all(&plugin_dir).map_err(|e| e.to_string())?;
+    
+    // 3. Escribir los archivos de forma física local
+    let entrypoint = "index.js".to_string();
+    let js_path = plugin_dir.join(&entrypoint);
+    fs::write(&js_path, js_content).map_err(|e| e.to_string())?;
+    
+    let mut stylesheet = String::new();
+    if !css_content.is_empty() {
+        stylesheet = "style.css".to_string();
+        let css_path = plugin_dir.join(&stylesheet);
+        fs::write(&css_path, css_content).map_err(|e| e.to_string())?;
+    }
+    
+    // 4. Registrar en la base de datos SQLite
+    database::registrar_plugin(
+        &db_path.0,
+        &id,
+        &nombre,
+        &version,
+        &descripcion,
+        &autor,
+        &entrypoint,
+        &stylesheet,
+    ).map_err(|e| e.to_string())?;
+    
+    Ok(())
+}
+
+#[tauri::command]
+pub fn eliminar_plugin(
+    app_handle: AppHandle,
+    db_path: State<DbPath>,
+    id: String,
+) -> Result<(), String> {
+    use std::fs;
+    
+    // 1. Obtener directorio del plugin
+    let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+    let plugin_dir = app_dir.join("plugins").join(&id);
+    
+    // 2. Borrar físicamente el directorio de plugins y todos sus archivos asociados
+    if plugin_dir.exists() && plugin_dir.is_dir() {
+        fs::remove_dir_all(&plugin_dir).map_err(|e| e.to_string())?;
+    }
+    
+    // 3. Borrar el registro del catálogo de la base de datos SQLite
+    database::eliminar_plugin_db(&db_path.0, &id).map_err(|e| e.to_string())?;
+    
+    Ok(())
+}
+
+#[tauri::command]
+pub fn leer_recurso_plugin(
+    app_handle: AppHandle,
+    id: String,
+    archivo: String,
+) -> Result<String, String> {
+    use std::fs;
+    let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+    let file_path = app_dir.join("plugins").join(&id).join(&archivo);
+    if !file_path.exists() {
+        return Err(format!("Archivo '{}' no encontrado en el plugin '{}'", archivo, id));
+    }
+    fs::read_to_string(file_path).map_err(|e| e.to_string())
+}
+

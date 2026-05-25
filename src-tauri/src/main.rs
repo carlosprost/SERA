@@ -149,6 +149,11 @@ fn main() {
             commands::revocar_tabla_cmd,
             commands::get_tablas_expuestas_cmd,
             commands::get_local_ip_cmd,
+            commands::get_plugins,
+            commands::toggle_plugin,
+            commands::instalar_plugin_local,
+            commands::eliminar_plugin,
+            commands::leer_recurso_plugin,
         ])
         .run(tauri::generate_context!())
         .expect("[SERA] Error al inicializar la aplicación");

@@ -21,7 +21,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src * data: blob: asset: https://asset.localhost; connect-src 'self' ipc: http://ipc.localhost"
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline' blob:; font-src 'self' data:; img-src * data: blob: asset: https://asset.localhost; connect-src 'self' ipc: http://ipc.localhost https://raw.githubusercontent.com"
     }
   },
   "plugins": {},

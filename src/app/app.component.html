@@ -185,6 +185,26 @@
 
       }
 
+      <!-- GRUPO EXTENSIONES (Botones de Plugins) -->
+      @if (pluginService.ribbonButtons().length > 0) {
+        <div class="ribbon-group">
+          <div class="ribbon-actions">
+            @for (btn of pluginService.ribbonButtons(); track btn.id) {
+              <button 
+                class="ribbon-btn plugin-ribbon-btn" 
+                [id]="'plugin-btn-' + btn.id"
+                [matTooltip]="btn.tooltip || btn.label"
+                (click)="btn.action()"
+              >
+                <mat-icon>{{ btn.icon }}</mat-icon>
+                <span>{{ btn.label }}</span>
+              </button>
+            }
+          </div>
+          <span class="ribbon-group-label">Extensiones</span>
+        </div>
+      }
+
     </div>
   </div>
 

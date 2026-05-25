@@ -43,6 +43,8 @@ import { SearchResultsComponent } from "./components/search-results/search-resul
 import { DialogSecurityAlertComponent } from "./components/dialog-security-alert/dialog-security-alert.component";
 import { ConnectRemoteDialogComponent } from "./components/connect-remote-dialog/connect-remote-dialog.component";
 import { listen } from '@tauri-apps/api/event';
+import { SeraPluginService } from './services/sera-plugin.service';
+import { RibbonButtonConfig } from './interfaces/plugin.interfaces';
 
 
 /**
@@ -106,7 +108,8 @@ export class AppComponent implements AfterViewInit, OnInit {
     public themeService: ThemeService, // Inyectamos para activar el effect
     private uiService: UiService,
     public cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    public pluginService: SeraPluginService // Activa el sandbox window.SeraAPI al instanciarse
   ) {
     this.store.dispatch(StoreActions.loadStores());
     this.store.dispatch(StoreActions.loadListadoTablas());
@@ -122,6 +125,9 @@ export class AppComponent implements AfterViewInit, OnInit {
   async ngOnInit() {
     // Disparar migración asíncrona de fechas heredadas
     this.migrarFechasDb();
+
+    // Cargar plugins activos desde la DB SQLite en caliente (Blob URL sandbox)
+    this.pluginService.cargarPluginsActivos();
 
     // Escuchar alertas de intrusión en caliente (Tauri WAF)
     listen('security-alert', (event: any) => {

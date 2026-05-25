@@ -58,10 +58,20 @@ pub fn inicializar_db(db_path: &Path) -> Result<()> {
             mensaje TEXT NOT NULL,
             categoria TEXT DEFAULT 'INFO'
         );
+
+        CREATE TABLE IF NOT EXISTS _sera_plugins (
+            id TEXT PRIMARY KEY,
+            nombre TEXT NOT NULL,
+            version TEXT NOT NULL,
+            descripcion TEXT,
+            autor TEXT,
+            entrypoint TEXT NOT NULL,
+            stylesheet TEXT,
+            activo INTEGER DEFAULT 0,
+            config TEXT DEFAULT '{}'
+        );
         ",
     )?;
-
-    // MIGRATIONS: Agregamos las columnas necesarias si la base de datos ya existía
     let _ = conn.execute("ALTER TABLE tablas ADD COLUMN config TEXT DEFAULT '{}'", []);
     let _ = conn.execute("ALTER TABLE sera_config ADD COLUMN api_enabled INTEGER NOT NULL DEFAULT 0", []);
     let _ = conn.execute("ALTER TABLE sera_config ADD COLUMN api_port INTEGER NOT NULL DEFAULT 54321", []);
@@ -859,5 +869,91 @@ pub fn validar_acceso_tabla(db_path: &Path, tabla_nombre: &str, credencial: &str
         }
         _ => Ok(false),
     }
+}
+
+// ─── GESTIÓN DE PLUGINS (EXTENSIBILIDAD) ──────────────────────────────────────
+
+pub fn get_plugins(db_path: &Path) -> Result<Vec<Value>> {
+    let conn = abrir_conn(db_path)?;
+    let mut stmt = conn.prepare(
+        "SELECT id, nombre, version, descripcion, autor, entrypoint, stylesheet, activo, config 
+         FROM _sera_plugins ORDER BY nombre"
+    )?;
+    
+    let rows = stmt.query_map([], |row| {
+        let id: String = row.get(0)?;
+        let nombre: String = row.get(1)?;
+        let version: String = row.get(2)?;
+        let descripcion: Option<String> = row.get(3)?;
+        let autor: Option<String> = row.get(4)?;
+        let entrypoint: String = row.get(5)?;
+        let stylesheet: Option<String> = row.get(6)?;
+        let activo: i32 = row.get(7)?;
+        let config: String = row.get(8)?;
+        
+        Ok(json!({
+            "id": id,
+            "nombre": nombre,
+            "version": version,
+            "descripcion": descripcion,
+            "autor": autor,
+            "entrypoint": entrypoint,
+            "stylesheet": stylesheet,
+            "activo": activo == 1,
+            "config": config
+        }))
+    })?;
+    
+    let mut result = Vec::new();
+    for r in rows {
+        result.push(r?);
+    }
+    Ok(result)
+}
+
+pub fn registrar_plugin(
+    db_path: &Path,
+    id: &str,
+    nombre: &str,
+    version: &str,
+    descripcion: &str,
+    autor: &str,
+    entrypoint: &str,
+    stylesheet: &str,
+) -> Result<()> {
+    let conn = abrir_conn(db_path)?;
+    conn.execute(
+        "INSERT INTO _sera_plugins (id, nombre, version, descripcion, autor, entrypoint, stylesheet, activo, config)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 0, '{}')
+         ON CONFLICT(id) DO UPDATE SET
+            nombre = excluded.nombre,
+            version = excluded.version,
+            descripcion = excluded.descripcion,
+            autor = excluded.autor,
+            entrypoint = excluded.entrypoint,
+            stylesheet = excluded.stylesheet",
+        params![id, nombre, version, descripcion, autor, entrypoint, stylesheet],
+    )?;
+    let _ = registrar_log(db_path, &format!("Plugin '{}' registrado/actualizado en el catálogo local.", nombre), "SUCCESS");
+    Ok(())
+}
+
+pub fn toggle_plugin(db_path: &Path, id: &str, activo: bool) -> Result<()> {
+    let conn = abrir_conn(db_path)?;
+    let val_activo = if activo { 1 } else { 0 };
+    conn.execute(
+        "UPDATE _sera_plugins SET activo = ?1 WHERE id = ?2",
+        params![val_activo, id],
+    )?;
+    let estado = if activo { "habilitado" } else { "deshabilitado" };
+    let _ = registrar_log(db_path, &format!("Plugin '{}' marcado como {}.", id, estado), "INFO");
+    Ok(())
+}
+
+pub fn eliminar_plugin_db(db_path: &Path, id: &str) -> Result<()> {
+    let conn = abrir_conn(db_path)?;
+    conn.execute("DELETE FROM _sera_plugins WHERE id = ?1", params![id])?;
+    let _ = registrar_log(db_path, &format!("Plugin '{}' removido del catálogo de la base de datos.", id), "WARNING");
+    Ok(())
 }
 

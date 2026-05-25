@@ -54,6 +54,15 @@
         <mat-icon>settings_input_antenna</mat-icon>
         <span>Servidor Local / API</span>
       </button>
+
+      <button 
+        class="nav-item-btn" 
+        [class.active]="activeTab === 'plugins'" 
+        (click)="setTab('plugins')"
+      >
+        <mat-icon>extension</mat-icon>
+        <span>Plugins</span>
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -365,6 +374,191 @@
           <p>Gestioná el socket de red local, exponé tablas de forma granular y controlá los permisos de acceso y el cifrado E2E.</p>
         </div>
         <app-api-config></app-api-config>
+      </div>
+    }
+
+    <!-- SECCIÓN PLUGINS Y MARKETPLACE -->
+    @if (activeTab === 'plugins') {
+      <div class="section-panel">
+        <div class="panel-header">
+          <h3>Plugins y Extensiones</h3>
+          <p>Administrá las extensiones instaladas localmente o descubrí nuevas en el Marketplace comunitario de SERA.</p>
+        </div>
+
+        <!-- Sub-navegación -->
+        <div class="plugin-sub-nav">
+          <button 
+            class="plugin-sub-btn" 
+            [class.active]="pluginSubTab() === 'instalados'"
+            (click)="setPluginSubTab('instalados')"
+          >
+            <mat-icon>inventory_2</mat-icon>
+            Instalados
+            <span class="plugin-badge" *ngIf="pluginsInstalados().length > 0">{{ pluginsInstalados().length }}</span>
+          </button>
+          <button 
+            class="plugin-sub-btn" 
+            [class.active]="pluginSubTab() === 'marketplace'"
+            (click)="setPluginSubTab('marketplace')"
+          >
+            <mat-icon>storefront</mat-icon>
+            Marketplace
+          </button>
+        </div>
+
+        <!-- SUB-PANEL: INSTALADOS -->
+        @if (pluginSubTab() === 'instalados') {
+          <div class="plugins-panel">
+
+            @if (cargandoPlugins()) {
+              <div class="plugins-loading">
+                <mat-spinner [diameter]="36"></mat-spinner>
+                <span>Cargando plugins...</span>
+              </div>
+            } @else if (pluginsInstaladosFiltrados.length === 0) {
+              <div class="plugins-empty">
+                <mat-icon>extension_off</mat-icon>
+                <h4>No hay plugins instalados</h4>
+                <p>Andá al Marketplace para encontrar extensiones creadas por la comunidad SERA.</p>
+                <button mat-flat-button color="primary" (click)="setPluginSubTab('marketplace')">
+                  <mat-icon>storefront</mat-icon>
+                  Explorar Marketplace
+                </button>
+              </div>
+            } @else {
+              <div class="plugins-list">
+                @for (plugin of pluginsInstaladosFiltrados; track plugin.id) {
+                  <div class="plugin-card" [class.plugin-card--active]="plugin.activo">
+                    <div class="plugin-card__icon">
+                      <mat-icon>{{ plugin.activo ? 'extension' : 'extension_off' }}</mat-icon>
+                    </div>
+                    <div class="plugin-card__info">
+                      <div class="plugin-card__name">{{ plugin.nombre }}</div>
+                      <div class="plugin-card__meta">
+                        <span class="plugin-version">v{{ plugin.version }}</span>
+                        @if (plugin.autor) {
+                          <span class="plugin-autor">por {{ plugin.autor }}</span>
+                        }
+                      </div>
+                      @if (plugin.descripcion) {
+                        <div class="plugin-card__desc">{{ plugin.descripcion }}</div>
+                      }
+                    </div>
+                    <div class="plugin-card__actions">
+                      <mat-slide-toggle
+                        [checked]="plugin.activo"
+                        (change)="togglePlugin(plugin)"
+                        [matTooltip]="plugin.activo ? 'Desactivar plugin' : 'Activar plugin'"
+                      ></mat-slide-toggle>
+                      <button 
+                        mat-icon-button 
+                        color="warn" 
+                        [matTooltip]="'Desinstalar plugin'"
+                        (click)="eliminarPlugin(plugin)"
+                      >
+                        <mat-icon>delete_outline</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- SUB-PANEL: MARKETPLACE -->
+        @if (pluginSubTab() === 'marketplace') {
+          <div class="plugins-panel">
+            <div class="marketplace-header">
+              <div class="marketplace-search">
+                <mat-icon>search</mat-icon>
+                <input 
+                  type="text" 
+                  placeholder="Buscar en el Marketplace..."
+                  [value]="busquedaMarketplace()"
+                  (input)="busquedaMarketplace.set($any($event.target).value)"
+                  class="marketplace-input"
+                />
+              </div>
+              <button mat-stroked-button (click)="cargarMarketplace()" [disabled]="cargandoMarketplace()">
+                <mat-icon>refresh</mat-icon>
+                Actualizar
+              </button>
+            </div>
+
+            @if (cargandoMarketplace()) {
+              <div class="plugins-loading">
+                <mat-spinner [diameter]="36"></mat-spinner>
+                <span>Conectando al Marketplace...</span>
+              </div>
+            } @else if (marketplaceFiltrado.length === 0 && marketplacePlugins().length === 0) {
+              <div class="plugins-empty">
+                <mat-icon>cloud_off</mat-icon>
+                <h4>Marketplace no disponible</h4>
+                <p>No se pudo conectar al catálogo de GitHub. Verificá tu conexión a internet.</p>
+                <button mat-flat-button color="primary" (click)="cargarMarketplace()">
+                  <mat-icon>refresh</mat-icon>
+                  Reintentar
+                </button>
+              </div>
+            } @else if (marketplaceFiltrado.length === 0) {
+              <div class="plugins-empty">
+                <mat-icon>search_off</mat-icon>
+                <h4>Sin resultados</h4>
+                <p>No se encontraron plugins que coincidan con tu búsqueda.</p>
+              </div>
+            } @else {
+              <div class="marketplace-grid">
+                @for (mp of marketplaceFiltrado; track mp.id) {
+                  <div class="marketplace-card" [class.marketplace-card--installed]="estaInstalado(mp.id)">
+                    <div class="marketplace-card__head">
+                      <div class="marketplace-card__icon">
+                        <mat-icon>{{ mp.icon || 'extension' }}</mat-icon>
+                      </div>
+                      <div class="marketplace-card__title-area">
+                        <div class="marketplace-card__name">{{ mp.name || mp.nombre }}</div>
+                        <div class="marketplace-card__meta">
+                          <span>v{{ mp.version }}</span>
+                          <span>por {{ mp.author || mp.autor }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="marketplace-card__desc">{{ mp.description || mp.descripcion }}</div>
+                    <div class="marketplace-card__footer">
+                      @if (estaInstalado(mp.id)) {
+                        <span class="badge-installed">
+                          <mat-icon>check_circle</mat-icon>
+                          Instalado
+                        </span>
+                      } @else {
+                        <button 
+                          mat-flat-button 
+                          color="primary"
+                          [id]="'install-btn-' + mp.id"
+                          [disabled]="instalandoPluginId() === mp.id"
+                          (click)="instalarDesdeMarketplace(mp)"
+                        >
+                          @if (instalandoPluginId() === mp.id) {
+                            <span class="btn-loading-content">
+                              <mat-spinner [diameter]="16" style="display:inline-block"></mat-spinner>
+                              Instalando...
+                            </span>
+                          } @else {
+                            <span class="btn-install-content">
+                              <mat-icon>download</mat-icon>
+                              Instalar
+                            </span>
+                          }
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
       </div>
     }
 
