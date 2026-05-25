@@ -28,6 +28,7 @@ import { MatSort } from "@angular/material/sort";
 import { FilterSeraDialog, FilterRule } from "../filter-sera-dialog/filter-sera-dialog";
 import { SearchPaletteDialog } from "../search-palette-dialog/search-palette-dialog";
 import { FormulaEngine } from "../../utils/formula-engine";
+import { SeraPluginService } from "../../services/sera-plugin.service";
 
 @Component({
   selector: "app-table",
@@ -73,7 +74,8 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
     private store: Store,
     public dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public pluginService: SeraPluginService
   ) {}
 
   ngOnInit(): void {
@@ -645,5 +647,14 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
       }
       this.cdr.detectChanges();
     });
+  }
+
+  hasCellRenderer(column: string): boolean {
+    return this.pluginService.cellRenderers.has(column.toLowerCase());
+  }
+
+  renderCell(column: string, value: any, row: any): string {
+    const renderer = this.pluginService.cellRenderers.get(column.toLowerCase());
+    return renderer ? renderer(value, row) : String(value === undefined || value === null ? '' : value);
   }
 }
