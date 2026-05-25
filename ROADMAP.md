@@ -33,6 +33,7 @@ El modelo de negocio de SERA mantiene la filosofía **sin suscripciones** y priv
 - **Detalle:** 
   - **API Local Restringida:** *En Desarrollo 📝* — Microservidor REST en `localhost` protegido con Token para interactuar con SERA vía Python/PowerShell.
   - **Plugins Dinámicos:** *Lanzados y Publicados (v4.1.0) ✅* — Carga en caliente offline y sandbox `window.SeraAPI`. Se publicaron y catalogaron los primeros **7 plugins oficiales en producción** (CBU, CUIT, Redactor PII, Vencimientos, Barcodes, Patentes Metálicas 3D y Creador de Documentos Offline).
+  - **Actualizaciones y Control de Versiones en Marketplace:** *En Planificación 📝 (previsto para v4.2.0)* — Sistema inteligente de detección de versiones para comparar la versión local con la remota y permitir la actualización de plugins en caliente con un solo click.
 
 ### 4. 📡 LAN Sync: Sincronización P2P en Red Local
 - **Estado:** APROBADO ✅
