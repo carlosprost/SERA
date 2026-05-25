@@ -1,0 +1,293 @@
+/* ============================================================
+   ESTILOS PARA CONTROL DE VENCIMIENTOS ⏰ (SERA v4)
+   ============================================================ */
+
+/* ─── BADGES EN CELDA ─── */
+.badge-vencimiento-vencido {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  color: #fb7185;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 0.8rem;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.05);
+}
+
+.badge-vencimiento-alerta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 0.8rem;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.05);
+}
+
+.badge-vencimiento-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 0.8rem;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.05);
+}
+
+/* ─── MODAL GLASSMORPHISM CONFIGURADOR ─── */
+.vencimiento-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(10, 16, 23, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: vencimientoFadeIn 0.25s ease-out;
+}
+
+.vencimiento-modal {
+  background: #0f1722;
+  border: 1px solid rgba(0, 188, 212, 0.35);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 25px rgba(0, 188, 212, 0.15);
+  border-radius: 16px;
+  width: 480px;
+  max-width: 90vw;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  color: #e2e8f0;
+}
+
+.vencimiento-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+
+  .modal-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+    color: #00bcd4;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+}
+
+.vencimiento-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #94a3b8;
+    line-height: 1.45;
+  }
+}
+
+.vencimiento-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  select, input {
+    background: #070b10;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #f8fafc;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: #00bcd4;
+      box-shadow: 0 0 10px rgba(0, 188, 212, 0.25);
+    }
+  }
+}
+
+.vencimiento-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 16px;
+  margin-top: 8px;
+
+  button {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+  }
+
+  .btn-cancel {
+    background: transparent;
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #f8fafc;
+    }
+  }
+
+  .btn-save {
+    background: #00bcd4;
+    color: #0f1722;
+    box-shadow: 0 4px 12px rgba(0, 188, 212, 0.25);
+
+    &:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0, 188, 212, 0.35);
+    }
+  }
+}
+
+/* ─── BANNER DE AUTODETECCIÓN INTELIGENTE ─── */
+.vencimiento-banner {
+  background: rgba(15, 23, 34, 0.85);
+  border: 1px solid rgba(0, 188, 212, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(0, 188, 212, 0.1);
+  border-radius: 12px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  font-family: 'Outfit', sans-serif;
+  margin: 15px;
+  animation: vencimientoSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+  position: relative;
+}
+
+.vencimiento-banner-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #f1f5f9;
+
+  mat-icon, .banner-icon {
+    color: #00bcd4;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .banner-text {
+    h4 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    p {
+      margin: 2px 0 0 0;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+  }
+}
+
+.vencimiento-banner-actions {
+  display: flex;
+  gap: 10px;
+
+  button {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-decline {
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #f8fafc;
+    }
+  }
+
+  .btn-approve {
+    background: #00bcd4;
+    color: #0f1722;
+    box-shadow: 0 4px 10px rgba(0, 188, 212, 0.2);
+
+    &:hover {
+      opacity: 0.9;
+      box-shadow: 0 6px 14px rgba(0, 188, 212, 0.3);
+    }
+  }
+}
+
+/* ─── ANIMACIONES ─── */
+@keyframes vencimientoFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vencimientoSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

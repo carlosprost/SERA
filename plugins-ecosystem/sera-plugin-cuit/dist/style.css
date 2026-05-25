@@ -1,0 +1,33 @@
+/* ============================================================
+   ESTILOS PARA VALIDADOR DE CUIT/CUIL 🇦🇷 (SERA v4)
+   ============================================================ */
+
+.badge-cuit-valido {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  font-size: 0.8rem;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.05);
+}
+
+.badge-cuit-invalido {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  color: #fb7185;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  font-size: 0.8rem;
+  box-shadow: 0 0 6px rgba(244, 63, 94, 0.05);
+}

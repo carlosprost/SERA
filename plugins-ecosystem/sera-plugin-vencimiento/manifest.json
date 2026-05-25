@@ -1,0 +1,10 @@
+{
+  "id": "sera-plugin-vencimiento",
+  "name": "Control de Vencimientos ⏰",
+  "version": "1.0.0",
+  "description": "Monitorea y calcula dinámicamente el estado de plazos de tus registros. Detecta campos probables de forma inteligente o permite configurarlos manualmente.",
+  "author": "WolfTeI",
+  "icon": "alarm",
+  "entry": "dist/index.js",
+  "style": "dist/style.css"
+}
