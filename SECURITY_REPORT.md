@@ -88,21 +88,32 @@ Durante la captura gráfica con `html2canvas`, se construyen celdas y párrafos 
 Para evitar inyección HTML y XSS (OWASP A03):
 1. **Escape Nativo:** Todo el contenido de usuario se asigna mediante `el.textContent = contenido`.
 2. Caracteres especiales como `<` y `>` se escapan automáticamente por el navegador, anulando la ejecución de scripts.
-3. El logo se carga como Data URL base64 directamente desde el backend Rust, sin referencias a URLs externas.
+3. El Logo se carga como Data URL base64 directamente desde el backend Rust, sin referencias a URLs externas.
+
+### C. Blindaje e Integridad en el Ecosistema de Plugins (CBU, Redactor, Patentes, Barcodes, Documentos)
+Para garantizar que el marketplace y las extensiones locales activas no comprometan la seguridad de la información (ISO 27002 / OWASP ASVS Nivel 2):
+1. **Sanitización de Datos de Visualización (XSS/HTMLi):**
+   - El plugin `sera-plugin-redactor` sanitiza de forma estricta los caracteres de comillas simples (`'`) y dobles (`"`) mediante reemplazos seguros (`replace`) antes de incrustarlos en el disparador en caliente `onclick` del DOM. Esto previene que un dato malicioso evada el aislamiento e inyecte JavaScript en el contexto general.
+2. **Integridad Referencial en SQLite (`onBeforeInsert`):**
+   - Los plugins `sera-plugin-cbu` y `sera-plugin-patente` interceptan la inserción de registros a nivel de datos. Esto valida la consistencia estructural (algoritmo Módulo 10 compuesto para CBU; RegExp para patentes clásicas y Mercosur) y formatea/normaliza los valores antes de que toquen el backend de Rust, protegiendo las tablas relacionales de datos inválidos o inyecciones de código.
+3. **Procesamiento 100% Offline y Aislado (Privacidad de Datos):**
+   - Los plugins `sera-plugin-barcode` y `sera-plugin-documento` operan enteramente en la memoria del cliente. El creador de documentos genera la descarga mediante Blob URLs efímeras locales (`URL.createObjectURL`), impidiendo que los expedientes o datos confidenciales sean enviados a servidores externos para su procesamiento o renderizado.
 
 ---
 
 ## 4. Matriz de Prevención de Vulnerabilidades (OWASP v4.0.0)
 
-| OWASP ID | Vulnerabilidad | Mecanismo Implementado en v4.0.0 |
+| OWASP ID | Vulnerabilidad | Mecanismo Implementado en v4.0.0 / Ecosistema de Plugins |
 |---|---|---|
-| **A03** | Inyección | Prepared Statements en Rust, escape de strings mediante `textContent` en reportes PDF, sandbox léxico en motor de fórmulas y whitelist de extensiones en copia de logos. |
+| **A03** | Inyección | Prepared Statements en Rust, escape de strings mediante `textContent` en reportes PDF, sandbox léxico en motor de fórmulas, whitelist de extensiones en copia de logos y sanitización de comillas para triggers DOM en plugins (`redactor`). |
+| **A01** | Control de Acceso / PII | Enmascaramiento dinámico e interactivo de datos sensibles en pantalla mediante el plugin `redactor` para DNI, Teléfonos y Correos. |
 | **A04** | Diseño Inseguro | Separación estricta de responsabilidades (SoC), logs de auditoría ISO 27001, control granular de adjuntos y cleanups automáticos de cascada. |
 | **A05** | Mala Configuración | Perfil de operador simplificado sin campos obsoletos expuestos; dispatch NgRx corregido para garantizar persistencia real de configuración. |
 | **A07** | Fallos de Identificación | Derivación de llaves AES-256-GCM mediante SHA-256 para paquetes encriptados `.srx`. |
-| **A08** | Fallos de Integridad | Inserción con mitigación de duplicados (`INSERT OR IGNORE`), auto-detección flexible de paquetes relacionales/legacy, UUIDs para adjuntos físicos. |
+| **A08** | Fallos de Integridad | Inserción con mitigación de duplicados (`INSERT OR IGNORE`), auto-detección flexible de paquetes relacionales/legacy, UUIDs para adjuntos físicos, e interceptación de integridad en base de datos (`onBeforeInsert`) en plugins de CBU y Patentes. |
 | **ISO 27001** | Trazabilidad | Audit Log System: registro persistente en SQLite de eventos críticos sin almacenamiento de PII. |
+| **ISO 27002** | Privacidad de Datos | Procesamiento 100% offline y generación en memoria de códigos de barra (`barcode`) y combinación de correspondencia (`documento`) para evitar fugas de red. |
 
 ---
 
-*Este reporte certifica que SERA v4.0.0 "Poseidón" eleva los controles de seguridad a nivel de producto comercial universal, incorporando auditoría ISO 27001, gestión segura de activos de marca (logos) y robustecimiento del ciclo de vida de la configuración del operador.*
+*Este reporte certifica que SERA v4.0.0 "Poseidón" eleva los controles de seguridad a nivel de producto comercial universal, incorporando auditoría ISO 27001, gestión segura de activos de marca (logos), robustecimiento del ciclo de vida de la configuración del operador y un blindaje estricto en la inyección de plugins dinámicos del marketplace.*
