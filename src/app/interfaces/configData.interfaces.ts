@@ -9,4 +9,6 @@ export interface UserConfig {
   dependencia: string;
   oficina: string;
   membrete: string;
+  apiEnabled?: number;
+  apiPort?: number;
 }

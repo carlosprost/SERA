@@ -1,0 +1,250 @@
+<div class="api-manager">
+  
+  <!-- PANEL DE CONTROL DEL SERVIDOR HOST -->
+  <div class="api-manager__server-card">
+    <div class="api-manager__server-header">
+      <div class="api-manager__server-title-group">
+        <mat-icon class="api-manager__server-icon" [class.api-manager__server-icon--active]="apiEnabled()">
+          settings_input_antenna
+        </mat-icon>
+        <div>
+          <h2 class="api-manager__server-title">Servidor de Red Local (LAN)</h2>
+          <p class="api-manager__server-subtitle">
+            Habilitá el servidor para compartir tus tablas de forma segura con otros clientes de SERA o programas externos.
+          </p>
+        </div>
+      </div>
+      <div class="api-manager__server-toggle-wrapper">
+        <mat-slide-toggle 
+          [checked]="apiEnabled()" 
+          (change)="apiEnabled.set($event.checked); toggleServidor()"
+          [disabled]="cargandoServidor()"
+          color="primary">
+          {{ apiEnabled() ? 'ENCENDIDO' : 'APAGADO' }}
+        </mat-slide-toggle>
+      </div>
+    </div>
+
+    <mat-divider class="api-manager__divider"></mat-divider>
+
+    <!-- DATOS DE CONEXIÓN LOCAL -->
+    <div class="api-manager__connection-details" [class.api-manager__connection-details--disabled]="!apiEnabled()">
+      <div class="api-manager__connection-grid">
+        
+        <!-- VISOR DE IP LOCAL -->
+        <div class="api-manager__conn-field">
+          <span class="api-manager__conn-label">Dirección IP Host (LAN)</span>
+          <div class="api-manager__conn-value-wrapper">
+            <span class="api-manager__conn-value">{{ localIp() }}</span>
+            <button 
+              mat-icon-button 
+              matTooltip="Copiar IP" 
+              [disabled]="!apiEnabled()"
+              (click)="copiarTexto(localIp(), 'IP')">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- CONFIGURADOR DE PUERTO -->
+        <div class="api-manager__conn-field">
+          <span class="api-manager__conn-label">Puerto del Servidor</span>
+          <div class="api-manager__port-wrapper">
+            <input 
+              type="number" 
+              class="api-manager__port-input" 
+              [ngModel]="apiPort()" 
+              (ngModelChange)="apiPort.set($event)"
+              [disabled]="cargandoServidor()"
+              placeholder="54321">
+            <button 
+              mat-flat-button 
+              color="primary" 
+              class="api-manager__port-btn"
+              [disabled]="cargandoServidor()"
+              (click)="aplicarPuerto()">
+              Aplicar
+            </button>
+          </div>
+        </div>
+
+        <!-- ENLACE DE API BASE -->
+        <div class="api-manager__conn-field api-manager__conn-field--span-2">
+          <span class="api-manager__conn-label">URL Base del API Local</span>
+          <div class="api-manager__conn-value-wrapper api-manager__conn-value-wrapper--code">
+            <span class="api-manager__conn-value api-manager__conn-value--mono">{{ getUrlBaseApi() }}</span>
+            <button 
+              mat-icon-button 
+              matTooltip="Copiar URL Base" 
+              [disabled]="!apiEnabled()"
+              (click)="copiarTexto(getUrlBaseApi(), 'URL Base')">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+
+      </div>
+      <!-- ACCIONES DEL SERVIDOR: BOTÓN EXPONER TABLA -->
+      <div class="api-manager__server-actions" *ngIf="apiEnabled()">
+        <mat-divider class="api-manager__divider"></mat-divider>
+        <button 
+          mat-flat-button 
+          color="primary" 
+          class="api-manager__expose-btn"
+          (click)="abrirDialogoExposicion()">
+          <mat-icon>add_link</mat-icon>
+          <span>Exponer Tabla a la Red Local</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- EXPOSICIÓN DE TABLAS INDIVIDUALES -->
+  <div class="api-manager__tables-section">
+    <h3 class="api-manager__section-title">
+      <mat-icon>table_chart</mat-icon> Tablas Expuestas en LAN
+    </h3>
+    <p class="api-manager__section-subtitle">
+      Listado de tablas expuestas activamente a la red. Podés cambiar sus credenciales y permisos en caliente.
+    </p>
+
+    <!-- CARGANDO LISTADO -->
+    <div class="api-manager__loading" *ngIf="cargandoTablas()">
+      <mat-spinner diameter="40"></mat-spinner>
+      <span>Consultando base de datos...</span>
+    </div>
+
+    <!-- LISTADO DE TARJETAS DE TABLAS EXPUESTAS -->
+    <div class="api-manager__tables-grid" *ngIf="!cargandoTablas() && tablasExpuestasArray.length > 0">
+      <div 
+        class="api-manager__table-card api-manager__table-card--active" 
+        *ngFor="let exp of tablasExpuestasArray">
+        
+        <div class="api-manager__table-card-header">
+          <div class="api-manager__table-card-title-group">
+            <mat-icon class="api-manager__table-card-avatar">folder_open</mat-icon>
+            <div>
+              <h4 class="api-manager__table-card-name">{{ exp.tabla | uppercase }}</h4>
+              <span class="api-manager__table-card-status">TABLA EXPUESTA</span>
+            </div>
+          </div>
+          <button 
+            mat-icon-button 
+            color="warn" 
+            matTooltip="Quitar de la red local"
+            (click)="toggleExposicionTabla(exp.tabla)"
+            class="api-manager__revoke-btn">
+            <mat-icon>cloud_off</mat-icon>
+          </button>
+        </div>
+
+        <!-- DETALLES DE EXPOSICIÓN -->
+        <div class="api-manager__table-card-details animate-fade-in">
+          
+          <mat-divider class="api-manager__divider-thin"></mat-divider>
+
+          <!-- SUB-GRID DE CREDENCIALES (LADO A LADO) -->
+          <div class="api-manager__credentials-group">
+            
+            <!-- 1. CÓDIGO DE CONEXIÓN SERA -->
+            <div class="api-manager__credential-box">
+              <div class="api-manager__cred-header">
+                <span class="api-manager__cred-label">Código de Conexión (Para Clientes SERA)</span>
+                <button 
+                  mat-icon-button 
+                  matTooltip="Copiar Código"
+                  (click)="copiarTexto(exp.codigo, 'Código de Conexión')">
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+              </div>
+              <div class="api-manager__cred-value api-manager__cred-value--sera">
+                {{ exp.codigo }}
+              </div>
+            </div>
+
+            <!-- 2. TOKEN ROBUSTO PARA TERCEROS -->
+            <div class="api-manager__credential-box">
+              <div class="api-manager__cred-header">
+                <span class="api-manager__cred-label">Token de API (Para Postman / Python / etc.)</span>
+                <div class="api-manager__cred-actions">
+                  <button 
+                    mat-icon-button 
+                    matTooltip="Ver / Ocultar"
+                    (click)="toggleTokenVisibilidad(exp.tabla)">
+                    <mat-icon>{{ isTokenVisible(exp.tabla) ? 'visibility_off' : 'visibility' }}</mat-icon>
+                  </button>
+                  <button 
+                    mat-icon-button 
+                    matTooltip="Copiar Token"
+                    (click)="copiarTexto(exp.token, 'Token API')">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                </div>
+              </div>
+              <div class="api-manager__cred-value api-manager__cred-value--token">
+                <input 
+                  [type]="isTokenVisible(exp.tabla) ? 'text' : 'password'" 
+                  class="api-manager__token-input" 
+                  [value]="exp.token" 
+                  readonly>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- SUB-GRID DE AJUSTES (LADO A LADO) -->
+          <div class="api-manager__settings-group">
+
+            <!-- 3. CONFIGURACIÓN DE PERMISOS -->
+            <div class="api-manager__card-setting">
+              <span class="api-manager__setting-label">Permisos de Acceso</span>
+              <mat-form-field appearance="outline" class="api-manager__setting-select">
+                <mat-select 
+                  [value]="exp.permiso" 
+                  (selectionChange)="cambiarPermisos(exp.tabla, $event.value)">
+                  <mat-option value="READ">
+                    <mat-icon>visibility</mat-icon> Solo Lectura (READ)
+                  </mat-option>
+                  <mat-option value="READ_WRITE">
+                    <mat-icon>edit</mat-icon> Lectura y Escritura (WRITE)
+                  </mat-option>
+                  <mat-option value="FULL">
+                    <mat-icon>admin_panel_settings</mat-icon> Control Total (FULL CRUD)
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <!-- 4. SEGURIDAD CIFRADO E2E -->
+            <div class="api-manager__card-setting api-manager__card-setting--e2e">
+              <div class="api-manager__e2e-info">
+                <span class="api-manager__setting-label">Encriptación E2E (AES-GCM)</span>
+                <p class="api-manager__setting-desc">
+                  Cifra los datos en red local para clientes SERA.
+                </p>
+              </div>
+              <mat-slide-toggle
+                [checked]="exp.cifradoE2e"
+                (change)="toggleCifradoE2e(exp.tabla, $event.checked)"
+                color="primary">
+              </mat-slide-toggle>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ESTADO VACÍO -->
+    <div class="api-manager__empty-state animate-fade-in" *ngIf="!cargandoTablas() && tablasExpuestasArray.length === 0">
+      <mat-icon class="api-manager__empty-icon">cloud_queue</mat-icon>
+      <h4 class="api-manager__empty-title">Ninguna tabla expuesta en LAN</h4>
+      <p class="api-manager__empty-desc">
+        Habilitá el servidor y hacé clic en "Exponer Tabla a la Red Local" para seleccionar y publicar tus tablas de forma segura.
+      </p>
+    </div>
+
+  </div>
+</div>

@@ -17,23 +17,37 @@
               <mat-icon color="primary">add_box</mat-icon>
               <span>Nueva Tabla Core</span>
             </button>
+            <button mat-menu-item (click)="openDialogConectarRemota()">
+              <mat-icon color="accent">settings_input_antenna</mat-icon>
+              <span>Enlazar Tabla Remota (LAN)</span>
+            </button>
             <mat-divider></mat-divider>
             <div class="menu-tablas-label">Tus Tablas</div>
             @for (tabla of tablas | async; track tabla) {
               <button mat-menu-item [matMenuTriggerFor]="tablaSubMenu">
-                <mat-icon>table_chart</mat-icon>
+                @if (tabla.nombre_tabla.toLowerCase().startsWith('remoto_')) {
+                  <mat-icon style="color: #61c3db;">cloud</mat-icon>
+                } @else {
+                  <mat-icon>table_chart</mat-icon>
+                }
                 <span>{{ tabla.nombre_tabla.split('_').join(' ') | titlecase }}</span>
               </button>
               <mat-menu #tablaSubMenu="matMenu">
                 <button mat-menu-item (click)="addTab(tabla.nombre_tabla)">
                   <mat-icon color="accent">open_in_new</mat-icon> Abrir Tabla
                 </button>
-                <button mat-menu-item (click)="abrirDialogoEdicionTabla(tabla.nombre_tabla)">
-                  <mat-icon color="primary">settings_suggest</mat-icon> Configurar Estructura
-                </button>
-                <button mat-menu-item (click)="eliminarTabla(tabla.nombre_tabla)">
-                  <mat-icon color="warn">delete_forever</mat-icon> Eliminar de DB
-                </button>
+                @if (!tabla.nombre_tabla.toLowerCase().startsWith('remoto_')) {
+                  <button mat-menu-item (click)="abrirDialogoEdicionTabla(tabla.nombre_tabla)">
+                    <mat-icon color="primary">settings_suggest</mat-icon> Configurar Estructura
+                  </button>
+                  <button mat-menu-item (click)="eliminarTabla(tabla.nombre_tabla)">
+                    <mat-icon color="warn">delete_forever</mat-icon> Eliminar de DB
+                  </button>
+                } @else {
+                  <button mat-menu-item (click)="eliminarTabla(tabla.nombre_tabla)">
+                    <mat-icon color="warn">link_off</mat-icon> Desenlazar Tabla Remota
+                  </button>
+                }
               </mat-menu>
             }
           </mat-menu>

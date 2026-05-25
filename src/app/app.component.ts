@@ -40,6 +40,9 @@ import { UiService } from "./services/ui.service";
 import { TableDashboardComponent } from "./components/table-dashboard/table-dashboard";
 import { GlobalSearchComponent } from "./components/global-search/global-search";
 import { SearchResultsComponent } from "./components/search-results/search-results";
+import { DialogSecurityAlertComponent } from "./components/dialog-security-alert/dialog-security-alert.component";
+import { ConnectRemoteDialogComponent } from "./components/connect-remote-dialog/connect-remote-dialog.component";
+import { listen } from '@tauri-apps/api/event';
 
 
 /**
@@ -119,6 +122,18 @@ export class AppComponent implements AfterViewInit, OnInit {
   async ngOnInit() {
     // Disparar migración asíncrona de fechas heredadas
     this.migrarFechasDb();
+
+    // Escuchar alertas de intrusión en caliente (Tauri WAF)
+    listen('security-alert', (event: any) => {
+      this.ngZone.run(() => {
+        this.dialog.open(DialogSecurityAlertComponent, {
+          width: '600px',
+          disableClose: true,
+          panelClass: 'security-panic-panel',
+          data: event.payload
+        });
+      });
+    });
   }
 
   /**
@@ -414,6 +429,8 @@ export class AppComponent implements AfterViewInit, OnInit {
   }
 
   eliminarTabla(nombre_tabla: string) {
+    const isRemote = nombre_tabla.toLowerCase().startsWith('remoto_');
+    
     // 1. Consultar la configuración de la tabla para buscar vínculos activos
     invoke<string>('get_tabla_config', { nombreTabla: nombre_tabla }).then(configStr => {
       this.ngZone.run(() => {
@@ -429,14 +446,20 @@ export class AppComponent implements AfterViewInit, OnInit {
           console.error("Error al parsear config de tabla:", e);
         }
 
+        // Configuración dinámica del diálogo según sea local o remota
+        const dialogTitle = isRemote ? "¿Desenlazar tabla remota?" : "¿Eliminar tabla?";
+        const dialogMessage = isRemote 
+          ? `¿Seguro que deseas desenlazar la tabla remota "${nombre_tabla.split('_').join(' ').toUpperCase()}"? No se perderán los registros en el Host original, solo se quitará el enlace virtual de tu espacio de trabajo local.`
+          : `¿Seguro que deseas eliminar la tabla "${nombre_tabla}"? Perderás todos sus registros y adjuntos físicos asociados permanentemente.`;
+
         // 2. Abre el diálogo pasando la lista de tablas vinculadas
         const dialogRef = this.dialog.open(DialogDeleteComponent, {
           width: "400px",
           data: {
-            title: "¿Eliminar tabla?",
-            message: `¿Seguro que deseas eliminar la tabla "${nombre_tabla}"? Perderás todos sus registros y adjuntos físicos asociados permanentemente.`,
+            title: dialogTitle,
+            message: dialogMessage,
             tabla: nombre_tabla,
-            linkedTables: linkedTables
+            linkedTables: isRemote ? [] : linkedTables // Vínculos locales vacíos para remotas
           },
         });
 
@@ -451,16 +474,24 @@ export class AppComponent implements AfterViewInit, OnInit {
                 if (index !== -1) {
                   this.removeTab(index);
                 }
+                // Si es una tabla remota, limpiamos también la clave de localStorage de inmediato
+                if (t.toLowerCase().startsWith('remoto_')) {
+                  localStorage.removeItem('remote_conn_' + t.toLowerCase());
+                }
               });
 
               // Forzar la recarga del catálogo en el Store
               this.store.dispatch(StoreActions.loadListadoTablas());
 
               let msg = '';
-              if (eliminadas.length === 1) {
-                msg = `Tabla "${nombre_tabla}" eliminada correctamente`;
+              if (isRemote) {
+                msg = `Tabla remota "${nombre_tabla.split('_').join(' ').toUpperCase()}" desenlazada correctamente`;
               } else {
-                msg = `Se eliminaron la tabla "${nombre_tabla}" y ${eliminadas.length - 1} tablas vinculadas`;
+                if (eliminadas.length === 1) {
+                  msg = `Tabla "${nombre_tabla}" eliminada correctamente`;
+                } else {
+                  msg = `Se eliminaron la tabla "${nombre_tabla}" y ${eliminadas.length - 1} tablas vinculadas`;
+                }
               }
               this.snackBar.open(msg, "Cerrar", { duration: 4000 });
             });
@@ -471,23 +502,36 @@ export class AppComponent implements AfterViewInit, OnInit {
       console.error("Error al obtener config para eliminar tabla:", err);
       // Fallback a diálogo simple si hay error de Rust
       this.ngZone.run(() => {
+        const dialogTitle = isRemote ? "¿Desenlazar tabla remota?" : "¿Eliminar tabla?";
+        const dialogMessage = isRemote 
+          ? `¿Seguro que deseas desenlazar la tabla remota "${nombre_tabla.split('_').join(' ').toUpperCase()}"?`
+          : `¿Seguro que deseas eliminar la tabla "${nombre_tabla}"? Perderás todos los registros.`;
+
         const dialogRef = this.dialog.open(DialogDeleteComponent, {
           width: "350px",
           data: {
-            title: "¿Eliminar tabla?",
-            message: `¿Seguro que deseas eliminar la tabla "${nombre_tabla}"? Perderás todos los registros.`,
+            title: dialogTitle,
+            message: dialogMessage,
             tabla: nombre_tabla,
+            linkedTables: []
           },
         });
+
         dialogRef.afterClosed().subscribe((result) => {
           if (result && result.reload) {
             this.ngZone.run(() => {
-              const index = this.tabs.indexOf(nombre_tabla);
+              const index = this.tabs.findIndex(tab => tab.toLowerCase() === nombre_tabla.toLowerCase());
               if (index !== -1) {
                 this.removeTab(index);
               }
+              if (nombre_tabla.toLowerCase().startsWith('remoto_')) {
+                localStorage.removeItem('remote_conn_' + nombre_tabla.toLowerCase());
+              }
               this.store.dispatch(StoreActions.loadListadoTablas());
-              this.snackBar.open(`Tabla "${nombre_tabla}" eliminada`, "Cerrar", { duration: 3000 });
+              const msg = isRemote 
+                ? `Tabla remota "${nombre_tabla.split('_').join(' ').toUpperCase()}" desenlazada` 
+                : `Tabla "${nombre_tabla}" eliminada`;
+              this.snackBar.open(msg, "Cerrar", { duration: 4000 });
             });
           }
         });
@@ -601,6 +645,21 @@ export class AppComponent implements AfterViewInit, OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.addTab(result.nombre_tabla);
+        this.store.dispatch(StoreActions.loadListadoTablas());
+      }
+    });
+  }
+
+  /** Abre el diálogo para conectar una tabla remota de la red local (LAN) */
+  openDialogConectarRemota() {
+    const dialogRef = this.dialog.open(ConnectRemoteDialogComponent, {
+      width: '450px',
+      panelClass: 'remote-conn-dialog-panel'
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result && result.success) {
+        this.addTab(result.tableName);
         this.store.dispatch(StoreActions.loadListadoTablas());
       }
     });

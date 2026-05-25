@@ -573,7 +573,133 @@ pub fn optimizar_db(db_path: State<DbPath>) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn limpiar_cache(db_path: State<DbPath>) -> Result<String, String> {
-    let _ = database::registrar_log(&db_path.0, "Archivos temporales purgados y caché del visor de adjuntos liberado.", "INFO");
+pub fn limpiar_cache(app_handle: tauri::AppHandle, db_path: State<'_, DbPath>) -> Result<String, String> {
+    use rusqlite::Connection;
+    use std::fs;
+    use std::collections::HashSet;
+
+    let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+    let attachments_dir = app_dir.join("attachments");
+    
+    let mut total_purgados = 0;
+
+    if attachments_dir.exists() && attachments_dir.is_dir() {
+        let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+        let mut stmt = conn.prepare("SELECT archivo_ruta_relativa FROM _sera_adjuntos").map_err(|e| e.to_string())?;
+        
+        let active_attachments: HashSet<String> = stmt
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(|e| e.to_string())?
+            .filter_map(|r| r.ok())
+            .collect();
+
+        if let Ok(entries) = fs::read_dir(&attachments_dir) {
+            for entry in entries.filter_map(|e| e.ok()) {
+                let path = entry.path();
+                if path.is_file() {
+                    let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+                    let db_route = format!("attachments/{}", file_name);
+                    
+                    if !active_attachments.contains(&db_route) {
+                        if fs::remove_file(&path).is_ok() {
+                            total_purgados += 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Compactar SQLite para recuperar espacio físico libre de verdad
+    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let _ = conn.execute("VACUUM", []);
+
+    let msg = format!(
+        "Mantenimiento de almacenamiento completo. Se purgaron {} archivos adjuntos huérfanos y se compactó la base de datos.",
+        total_purgados
+    );
+    let _ = database::registrar_log(&db_path.0, &msg, "SUCCESS");
+    
     Ok("exito".to_string())
 }
+
+// ─── EXPOSICIÓN DE TABLAS Y RED LOCAL ────────────────────────────────────────
+
+/// Estado compartido para poder detener el servidor web local bajo demanda
+pub struct ApiShutdownChannel(pub std::sync::Mutex<Option<tokio::sync::oneshot::Sender<()>>>);
+
+#[tauri::command]
+pub async fn toggle_api_servidor(
+    app_handle: AppHandle,
+    db_path: State<'_, DbPath>,
+    shutdown_state: State<'_, ApiShutdownChannel>,
+    habilitar: bool,
+    puerto: u16,
+) -> Result<(), String> {
+    let mut lock = shutdown_state.0.lock().map_err(|e| e.to_string())?;
+    
+    // Si ya hay un servidor corriendo, lo apagamos primero enviando la señal
+    if let Some(tx) = lock.take() {
+        let _ = tx.send(());
+        let _ = database::registrar_log(&db_path.0, "Servidor de red local apagado voluntariamente.", "WARNING");
+    }
+
+    if habilitar {
+        let db_path_clone = db_path.0.clone();
+        let shutdown_tx = crate::api::iniciar_servidor_api(app_handle, db_path_clone, puerto)?;
+        *lock = Some(shutdown_tx);
+        let _ = database::registrar_log(
+            &db_path.0,
+            &format!("Servidor de red local encendido exitosamente en el puerto {}.", puerto),
+            "SUCCESS"
+        );
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn exponer_tabla_cmd(
+    db_path: State<DbPath>,
+    tabla: String,
+    permiso: String,
+    e2e: bool,
+) -> Result<Value, String> {
+    let e2e_val = if e2e { 1 } else { 0 };
+    database::exponer_tabla(&db_path.0, &tabla, &permiso, e2e_val)
+        .map(|(codigo, token)| {
+            serde_json::json!({
+                "codigo": codigo,
+                "token": token
+            })
+        })
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn actualizar_permiso_tabla_cmd(
+    db_path: State<DbPath>,
+    tabla: String,
+    permiso: String,
+) -> Result<(), String> {
+    database::actualizar_permiso_tabla(&db_path.0, &tabla, &permiso).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn revocar_tabla_cmd(db_path: State<DbPath>, tabla: String) -> Result<(), String> {
+    database::revocar_exposicion(&db_path.0, &tabla).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn get_tablas_expuestas_cmd(db_path: State<DbPath>) -> Result<Vec<Value>, String> {
+    database::get_tablas_expuestas(&db_path.0).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn get_local_ip_cmd() -> Result<String, String> {
+    match local_ip_address::local_ip() {
+        Ok(ip) => Ok(ip.to_string()),
+        Err(err) => Err(format!("No se pudo resolver la IP de red local activa: {}", err)),
+    }
+}
+

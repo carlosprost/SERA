@@ -29,11 +29,19 @@ pub fn inicializar_db(db_path: &Path) -> Result<()> {
             user_institucion TEXT NOT NULL DEFAULT '',
             user_dependencia TEXT NOT NULL DEFAULT '',
             user_oficina TEXT NOT NULL DEFAULT '',
-            user_membrete TEXT NOT NULL DEFAULT ''
+            user_membrete TEXT NOT NULL DEFAULT '',
+            api_enabled INTEGER NOT NULL DEFAULT 0,
+            api_port INTEGER NOT NULL DEFAULT 54321
         );
 
-        INSERT OR IGNORE INTO sera_config (id, nombre_app, user_nombre, user_grado, user_institucion, user_dependencia, user_oficina, user_membrete)
-        VALUES (1, 'SERA', '', '', '', '', '', '');
+        CREATE TABLE IF NOT EXISTS sera_api_exposicion (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tabla_nombre TEXT NOT NULL UNIQUE,
+            codigo_conexion TEXT NOT NULL UNIQUE,
+            token_robusto TEXT NOT NULL UNIQUE,
+            permiso TEXT NOT NULL DEFAULT 'READ',
+            cifrado_e2e INTEGER NOT NULL DEFAULT 1
+        );
 
         CREATE TABLE IF NOT EXISTS _sera_adjuntos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,8 +61,17 @@ pub fn inicializar_db(db_path: &Path) -> Result<()> {
         ",
     )?;
 
-    // MIGRATION: Agregamos la columna config si la BD ya existía antes de esta versión
+    // MIGRATIONS: Agregamos las columnas necesarias si la base de datos ya existía
     let _ = conn.execute("ALTER TABLE tablas ADD COLUMN config TEXT DEFAULT '{}'", []);
+    let _ = conn.execute("ALTER TABLE sera_config ADD COLUMN api_enabled INTEGER NOT NULL DEFAULT 0", []);
+    let _ = conn.execute("ALTER TABLE sera_config ADD COLUMN api_port INTEGER NOT NULL DEFAULT 54321", []);
+
+    // Insertar fila por defecto una vez garantizadas todas las columnas
+    let _ = conn.execute(
+        "INSERT OR IGNORE INTO sera_config (id, nombre_app, user_nombre, user_grado, user_institucion, user_dependencia, user_oficina, user_membrete, api_enabled, api_port)
+         VALUES (1, 'SERA', '', '', '', '', '', '', 0, 54321);",
+        [],
+    );
 
     // Registrar inicio de sesión en caliente de la base de datos
     let _ = registrar_log(db_path, "Sesión de operador iniciada. Base de datos e índices cargados.", "INFO");
@@ -114,7 +131,7 @@ fn abrir_conn(db_path: &Path) -> Result<Connection> {
 pub fn get_config(db_path: &Path) -> Result<ConfigData> {
     let conn = abrir_conn(db_path)?;
     let config = conn.query_row(
-        "SELECT nombre_app, user_nombre, user_grado, user_institucion, user_dependencia, user_oficina, user_membrete FROM sera_config WHERE id = 1",
+        "SELECT nombre_app, user_nombre, user_grado, user_institucion, user_dependencia, user_oficina, user_membrete, api_enabled, api_port FROM sera_config WHERE id = 1",
         [],
         |row| {
             Ok(ConfigData {
@@ -126,6 +143,8 @@ pub fn get_config(db_path: &Path) -> Result<ConfigData> {
                     dependencia: row.get(4)?,
                     oficina: row.get(5)?,
                     membrete: row.get(6)?,
+                    api_enabled: row.get(7).unwrap_or(0),
+                    api_port: row.get(8).unwrap_or(54321),
                 },
             })
         },
@@ -143,7 +162,9 @@ pub fn update_config(db_path: &Path, config: &ConfigData) -> Result<()> {
             user_institucion = ?4,
             user_dependencia = ?5,
             user_oficina = ?6,
-            user_membrete = ?7
+            user_membrete = ?7,
+            api_enabled = ?8,
+            api_port = ?9
         WHERE id = 1",
         params![
             config.nombre_app,
@@ -153,6 +174,8 @@ pub fn update_config(db_path: &Path, config: &ConfigData) -> Result<()> {
             config.user.dependencia,
             config.user.oficina,
             config.user.membrete,
+            config.user.api_enabled,
+            config.user.api_port,
         ],
     )?;
     let _ = registrar_log(db_path, &format!("Configuración general del operador '{}' actualizada.", config.user.nombre), "INFO");
@@ -711,3 +734,130 @@ fn sqlite_value_to_json(valor: rusqlite::types::Value) -> Value {
         rusqlite::types::Value::Blob(b) => json!(format!("blob:{} bytes", b.len())),
     }
 }
+
+// ─── EXPOSICIÓN DE TABLAS (API DE RED LOCAL) ───────────────────────────────
+
+pub fn exponer_tabla(db_path: &Path, tabla_nombre: &str, permiso: &str, cifrado_e2e: i32) -> Result<(String, String)> {
+    validar_nombre_identificador(tabla_nombre)?;
+    let conn = abrir_conn(db_path)?;
+
+    // Generar código de conexión XXXXX-XXXX
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    let alfabeto: &[u8] = b"ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let mut codigo = String::new();
+    for i in 0..9 {
+        if i == 4 {
+            codigo.push('-');
+        } else {
+            let idx = rng.gen_range(0..alfabeto.len());
+            codigo.push(alfabeto[idx] as char);
+        }
+    }
+
+    // Generar token robusto
+    let token = format!("sera_tok_{}", uuid::Uuid::new_v4().to_string().replace("-", ""));
+
+    conn.execute(
+        "INSERT OR REPLACE INTO sera_api_exposicion (tabla_nombre, codigo_conexion, token_robusto, permiso, cifrado_e2e)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![tabla_nombre, codigo, token, permiso, cifrado_e2e],
+    )?;
+
+    let _ = registrar_log(
+        db_path,
+        &format!("Tabla '{}' expuesta en red local con permisos de '{}'.", tabla_nombre, permiso),
+        "SUCCESS"
+    );
+
+    Ok((codigo, token))
+}
+
+pub fn actualizar_permiso_tabla(db_path: &Path, tabla_nombre: &str, permiso: &str) -> Result<()> {
+    validar_nombre_identificador(tabla_nombre)?;
+    let conn = abrir_conn(db_path)?;
+    conn.execute(
+        "UPDATE sera_api_exposicion SET permiso = ?1 WHERE tabla_nombre = ?2",
+        params![permiso, tabla_nombre],
+    )?;
+    let _ = registrar_log(
+        db_path,
+        &format!("Permisos de la tabla expuesta '{}' actualizados a '{}'.", tabla_nombre, permiso),
+        "INFO"
+    );
+    Ok(())
+}
+
+pub fn revocar_exposicion(db_path: &Path, tabla_nombre: &str) -> Result<()> {
+    validar_nombre_identificador(tabla_nombre)?;
+    let conn = abrir_conn(db_path)?;
+    conn.execute("DELETE FROM sera_api_exposicion WHERE tabla_nombre = ?1", params![tabla_nombre])?;
+    let _ = registrar_log(
+        db_path,
+        &format!("Revocada exposición en red local de la tabla '{}'.", tabla_nombre),
+        "WARNING"
+    );
+    Ok(())
+}
+
+pub fn get_tablas_expuestas(db_path: &Path) -> Result<Vec<Value>> {
+    let conn = abrir_conn(db_path)?;
+    let mut stmt = conn.prepare(
+        "SELECT tabla_nombre, codigo_conexion, token_robusto, permiso, cifrado_e2e FROM sera_api_exposicion ORDER BY tabla_nombre"
+    )?;
+
+    let rows = stmt.query_map([], |row| {
+        let tabla_nombre: String = row.get(0)?;
+        let codigo_conexion: String = row.get(1)?;
+        let token_robusto: String = row.get(2)?;
+        let permiso: String = row.get(3)?;
+        let cifrado_e2e: i32 = row.get(4)?;
+        Ok(json!({
+            "tabla": tabla_nombre,
+            "codigo": codigo_conexion,
+            "token": token_robusto,
+            "permiso": permiso,
+            "cifradoE2e": cifrado_e2e == 1
+        }))
+    })?;
+
+    let mut result = Vec::new();
+    for r in rows {
+        result.push(r?);
+    }
+    Ok(result)
+}
+
+pub fn validar_acceso_tabla(db_path: &Path, tabla_nombre: &str, credencial: &str, metodo_http: &str) -> Result<bool> {
+    validar_nombre_identificador(tabla_nombre)?;
+    let conn = abrir_conn(db_path)?;
+
+    // Buscamos la fila en sera_api_exposicion que coincida con la tabla (case-insensitive) y con la credencial (Código o Token)
+    let permiso_opt: Option<String> = conn.query_row(
+        "SELECT permiso FROM sera_api_exposicion 
+         WHERE tabla_nombre = ?1 COLLATE NOCASE AND (codigo_conexion = ?2 OR token_robusto = ?2)",
+        params![tabla_nombre, credencial],
+        |row| row.get(0),
+    ).ok();
+
+    let permiso = match permiso_opt {
+        Some(p) => p,
+        None => return Ok(false), // Credencial inválida o no expuesta
+    };
+
+    // Validamos el método HTTP frente al scope/permiso
+    let method = metodo_http.to_uppercase();
+    match permiso.as_str() {
+        "FULL" => Ok(true), // Permite GET, POST, PUT, DELETE
+        "READ_WRITE" => {
+            // Permite GET, POST, PUT. Bloquea DELETE
+            Ok(method != "DELETE")
+        }
+        "READ" => {
+            // Solo permite GET
+            Ok(method == "GET")
+        }
+        _ => Ok(false),
+    }
+}
+

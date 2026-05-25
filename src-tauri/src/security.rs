@@ -118,3 +118,47 @@ impl CryptoProvider {
         Err("[SERA] Error de descifrado. Ninguna de las llaves maestras conocidas funcionó. El archivo podría estar protegido por una contraseña personalizada o estar corrupto.".to_string())
     }
 }
+
+/// Firewall de entrada de nivel de aplicación (WAF) para mitigar amenazas XSS y script injection.
+/// Analiza campos de texto plano buscando tags, handlers de eventos y llamadas a JavaScript comunes.
+pub fn detectar_patrones_sospechosos(texto: &str) -> Option<String> {
+    let t = texto.to_lowercase();
+    
+    // 1. Tags HTML ejecutables
+    let tags = [
+        "<script", "</script", "<iframe", "</iframe", "<object", 
+        "<embed", "<applet", "<html", "<body", "<link", "<meta"
+    ];
+    for tag in tags {
+        if t.contains(tag) {
+            return Some(format!("Tag HTML inyectado: '{}'", tag));
+        }
+    }
+    
+    // 2. Manejadores de eventos de Javascript inline comunes
+    let events = [
+        "onload=", "onerror=", "onclick=", "onmouseover=", "onfocus=", "onblur=",
+        "onchange=", "onsubmit=", "onkeydown=", "onkeypress=", "onkeyup=", 
+        "onloadstart=", "onunload="
+    ];
+    for event in events {
+        if t.contains(event) {
+            return Some(format!("Handler de evento inline detectado: '{}'", event));
+        }
+    }
+    
+    // 3. Payload o directivas de JS
+    let patterns = [
+        "javascript:", "alert(", "eval(", "prompt(", "confirm(", 
+        "document.cookie", "document.write", "window.location", 
+        "window.onload", "xmlhttprequest", "fetch(", "onload="
+    ];
+    for pattern in patterns {
+        if t.contains(pattern) {
+            return Some(format!("Firma ejecutable de JS detectada: '{}'", pattern));
+        }
+    }
+
+    None
+}
+

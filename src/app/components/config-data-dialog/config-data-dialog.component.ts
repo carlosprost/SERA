@@ -13,6 +13,7 @@ import { ThemeService } from '../../services/theme';
 import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import { AppInfoService } from '../../services/app-info.service';
+import { ApiConfigComponent } from '../api-config/api-config.component';
 
 @Component({
   selector: 'app-config-data-dialog',
@@ -21,7 +22,8 @@ import { AppInfoService } from '../../services/app-info.service';
     CommonModule, 
     FormsModule, 
     ReactiveFormsModule, 
-    MaterialModule
+    MaterialModule,
+    ApiConfigComponent
   ],
   templateUrl: './config-data-dialog.component.html',
   styleUrl: './config-data-dialog.component.scss'

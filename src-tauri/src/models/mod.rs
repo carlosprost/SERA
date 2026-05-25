@@ -113,6 +113,10 @@ pub struct UserConfig {
     pub dependencia: String,
     pub oficina: String,
     pub membrete: String,
+    #[serde(rename = "apiEnabled")]
+    pub api_enabled: i32,
+    #[serde(rename = "apiPort")]
+    pub api_port: i32,
 }
 
 /// Modelo para exportar adjuntos junto con la tabla.

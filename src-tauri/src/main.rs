@@ -1,12 +1,13 @@
 // Previene ventana de consola adicional en Windows en builds de producción.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod api;
 mod commands;
 mod database;
 mod models;
 mod security;
 
-use commands::DbPath;
+use commands::{DbPath, ApiShutdownChannel};
 use tauri::Manager;
 
 fn main() {
@@ -88,8 +89,25 @@ fn main() {
             database::inicializar_db(db_path.as_path())
                 .expect("[SERA] No se pudo inicializar la base de datos SQLite");
 
-            // Registrar la ruta de la DB como estado compartido (thread-safe)
+            // Inicializar el estado de apagado asíncrono de la API
+            let shutdown_state = ApiShutdownChannel(std::sync::Mutex::new(None));
+
+            // Iniciar servidor local si corresponde
+            if let Ok(config) = database::get_config(&db_path) {
+                if config.user.api_enabled == 1 {
+                    let app_handle_clone = app.handle().clone();
+                    let db_path_clone = db_path.clone();
+                    let port = config.user.api_port as u16;
+
+                    if let Ok(shutdown_tx) = api::iniciar_servidor_api(app_handle_clone, db_path_clone, port) {
+                        *shutdown_state.0.lock().unwrap() = Some(shutdown_tx);
+                    }
+                }
+            }
+
+            // Registrar estados compartidos en Tauri (thread-safe)
             app.manage(DbPath(db_path));
+            app.manage(shutdown_state);
 
             Ok(())
         })
@@ -125,6 +143,12 @@ fn main() {
             commands::guardar_logo_membrete,
             commands::get_logo_membrete_base64,
             commands::detectar_logo_membrete,
+            commands::toggle_api_servidor,
+            commands::exponer_tabla_cmd,
+            commands::actualizar_permiso_tabla_cmd,
+            commands::revocar_tabla_cmd,
+            commands::get_tablas_expuestas_cmd,
+            commands::get_local_ip_cmd,
         ])
         .run(tauri::generate_context!())
         .expect("[SERA] Error al inicializar la aplicación");

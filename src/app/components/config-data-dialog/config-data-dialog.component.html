@@ -45,6 +45,15 @@
         <mat-icon>security</mat-icon>
         <span>Cifrado y Seguridad</span>
       </button>
+
+      <button 
+        class="nav-item-btn" 
+        [class.active]="activeTab === 'api'" 
+        (click)="setTab('api')"
+      >
+        <mat-icon>settings_input_antenna</mat-icon>
+        <span>Servidor Local / API</span>
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -239,7 +248,7 @@
         <div class="stats-grid">
           <div class="stat-box">
             <span class="stat-title">Ruta del Archivo</span>
-            <span class="stat-value text-small">sera_database.db (AppData/Local)</span>
+            <span class="stat-value text-small">sera.db (AppData/Roaming)</span>
           </div>
           <div class="stat-box">
             <span class="stat-title">Estado de Índices</span>
@@ -345,6 +354,17 @@
             }
           </div>
         </div>
+      </div>
+    }
+
+    <!-- SECCIÓN SERVIDOR LOCAL / API -->
+    @if (activeTab === 'api') {
+      <div class="section-panel">
+        <div class="panel-header">
+          <h3>Servidor de Red y Exposición</h3>
+          <p>Gestioná el socket de red local, exponé tablas de forma granular y controlá los permisos de acceso y el cifrado E2E.</p>
+        </div>
+        <app-api-config></app-api-config>
       </div>
     }
 
