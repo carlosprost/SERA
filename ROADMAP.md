@@ -32,7 +32,7 @@ El modelo de negocio de SERA mantiene la filosofía **sin suscripciones** y priv
 - **Estado:** PARCIALMENTE COMPLETADO 🚀
 - **Detalle:** 
   - **API Local Restringida:** *En Desarrollo 📝* — Microservidor REST en `localhost` protegido con Token para interactuar con SERA vía Python/PowerShell.
-  - **Plugins Dinámicos:** *Estabilizado y Lanzado (v4.0.0) ✅* — Carga en caliente offline mediante Blob URLs, sandbox `window.SeraAPI` (Ribbon Buttons, Cell Renderers, DB Interceptors) y Marketplace integrado.
+  - **Plugins Dinámicos:** *Lanzados y Publicados (v4.1.0) ✅* — Carga en caliente offline y sandbox `window.SeraAPI`. Se publicaron y catalogaron los primeros **7 plugins oficiales en producción** (CBU, CUIT, Redactor PII, Vencimientos, Barcodes, Patentes Metálicas 3D y Creador de Documentos Offline).
 
 ### 4. 📡 LAN Sync: Sincronización P2P en Red Local
 - **Estado:** APROBADO ✅
@@ -48,8 +48,8 @@ El modelo de negocio de SERA mantiene la filosofía **sin suscripciones** y priv
 - **Detalle:** Marcar columnas específicas como "Ultrasensibles" (`[********]`). Para revelarlas, SERA pedirá la huella digital o el PIN a través de la integración nativa con Windows Hello.
 
 ### 7. 🗺️ Georreferenciación y Mapas Offline
-- **Estado:** EN PLANIFICACIÓN 📝
-- **Detalle:** Visualización de coordenadas/direcciones en un mapa renderizado localmente para análisis táctico e inteligencia, sin rastreo de terceros.
+- **Estado:** COMPLETADO VÍA PLUGIN ✅
+- **Detalle:** Integrado con éxito a través del plugin oficial "Localizador Geográfico" (`sera-plugin-mapa`). Permite visualización interactiva en OpenStreetMap y mapeo unificado offline de coordenadas sin trackers de terceros.
 
 ### 8. 📤 Buzón de Ingreso Offline (Data Dropzones)
 - **Estado:** EN PLANIFICACIÓN 📝
