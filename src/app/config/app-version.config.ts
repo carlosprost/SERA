@@ -5,10 +5,10 @@
  */
 
 /** Número de versión — debe coincidir con package.json, Cargo.toml y tauri.conf.json */
-export const APP_VERSION = '4.0.0';
+export const APP_VERSION = '4.2.0';
 
 /** Nombre en código según VERSIONS_CODENAMES.md */
 export const APP_CODENAME = 'Poseidón';
 
 /** Código de parche (Constelación + número de versión) */
-export const APP_PATCH_CODE = 'Orion-400';
+export const APP_PATCH_CODE = 'Phoenix-420';

@@ -1,6 +1,6 @@
 {
   "productName": "SERA",
-  "version": "4.0.0",
+  "version": "4.2.0",
   "identifier": "WolfTeI.SERADesktop",
   "build": {
     "beforeDevCommand": "npm run start",
