@@ -1,4 +1,10 @@
 <div class="settings-container" [class]="'settings-container ' + themeService.currentTheme()">
+
+  <!-- BOTÓN DE CIERRE -->
+  <button class="settings-close-btn" mat-icon-button (click)="dialogClose()">
+    <mat-icon>close</mat-icon>
+  </button>
+
   <!-- SIDEBAR IZQUIERDA -->
   <aside class="settings-sidebar">
     <div class="sidebar-header">
@@ -445,11 +451,32 @@
                       }
                     </div>
                     <div class="plugin-card__actions">
+
+                      <!-- Badge de actualización disponible -->
+                      @if (pluginsConUpdate().includes(plugin.id)) {
+                        <button
+                          class="plugin-update-btn"
+                          mat-stroked-button
+                          (click)="actualizarPluginManual(plugin.id)"
+                          [disabled]="actualizandoPluginId() === plugin.id"
+                        >
+                          @if (actualizandoPluginId() === plugin.id) {
+                            <mat-spinner diameter="14"></mat-spinner>
+                          } @else {
+                            <mat-icon>update</mat-icon>
+                          }
+                          <span>Actualizar</span>
+                        </button>
+                      }
+
+                      <!-- Toggle activar/desactivar -->
                       <mat-slide-toggle
                         [checked]="plugin.activo"
                         (change)="togglePlugin(plugin)"
                         [matTooltip]="plugin.activo ? 'Desactivar plugin' : 'Activar plugin'"
                       ></mat-slide-toggle>
+
+                      <!-- Botón eliminar -->
                       <button 
                         mat-icon-button 
                         color="warn" 
@@ -458,6 +485,29 @@
                       >
                         <mat-icon>delete_outline</mat-icon>
                       </button>
+
+                      <!-- Botón Configurar Plugin (si registra ajustes en caliente) -->
+                      @if (pluginService.pluginSettingsActions.has(plugin.id)) {
+                        <button 
+                          mat-icon-button 
+                          color="accent" 
+                          [matTooltip]="'Configurar ' + plugin.nombre"
+                          (click)="configurarPlugin(plugin.id)"
+                        >
+                          <mat-icon>settings</mat-icon>
+                        </button>
+                      }
+
+                      <!-- Checkbox de Auto Update -->
+                      <div class="plugin-auto-update">
+                        <mat-checkbox
+                          [checked]="plugin.auto_update ?? true"
+                          (change)="toggleAutoUpdate(plugin)"
+                          color="primary"
+                        ></mat-checkbox>
+                        <span class="plugin-auto-update__label">Auto Update</span>
+                      </div>
+
                     </div>
                   </div>
                 }

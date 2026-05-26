@@ -43,30 +43,8 @@
     return `${raw.substring(0, 2)}-${raw.substring(2, 10)}-${raw.substring(10)}`;
   };
 
-  // 1. REGISTRAR CELL RENDERERS DINÁMICAMENTE PARA COLUMNAS LLAMADAS "cuit"
-  api.ui.registerCellRenderer('cuit', (value) => {
-    if (!value) return '<span style="opacity:0.3">—</span>';
-    
-    const esValido = validarCUIT(value);
-    const formateado = formatearCUIT(value);
-
-    if (esValido) {
-      return `
-        <span class="badge-cuit-valido" title="CUIT Válido">
-          <span style="font-size:12px">✓</span> ${formateado}
-        </span>
-      `;
-    } else {
-      return `
-        <span class="badge-cuit-invalido" title="CUIT Inválido (Verificador incorrecto)">
-          <span style="font-size:12px">⚠️</span> ${formateado}
-        </span>
-      `;
-    }
-  });
-
-  // 2. REGISTRAR INTERCEPTORES EN CALIENTE PARA TODAS LAS TABLAS QUE TENGAN COLUMNA "cuit"
-  const inicializarInterceptores = async () => {
+  // 1. REGISTRAR CELL RENDERERS E INTERCEPTORES DE FORMA DINÁMICA Y TOLERANTE
+  const inicializarRenderersYInterceptores = async () => {
     try {
       const tablas = await api.data.getTablas();
       const listaTablas = Array.isArray(tablas) ? tablas : [];
@@ -74,32 +52,62 @@
       for (const t of listaTablas) {
         const nombreTabla = t.nombre_tabla || t;
         const campos = await api.data.getCampos(nombreTabla);
-        const tieneCuit = campos.some(c => (c.Field || c.nombre || '').toLowerCase() === 'cuit');
+        
+        // Buscamos cualquier campo cuyo nombre contenga "cuit" o "cuil" (e.g., cuit, cuil, cuit/cuil, cuit-cuil, etc.)
+        const camposCuit = campos.filter(c => {
+          const name = (c.Field || c.nombre || '').toLowerCase();
+          return name.includes('cuit') || name.includes('cuil');
+        });
 
-        if (tieneCuit) {
+        for (const campo of camposCuit) {
+          const nombreCampo = campo.Field || campo.nombre;
+          
+          // Registrar el cell renderer para esta columna específica en minúsculas
+          api.ui.registerCellRenderer(nombreCampo.toLowerCase(), (value) => {
+            if (!value) return '<span style="opacity:0.3">—</span>';
+            
+            const esValido = validarCUIT(value);
+            const formateado = formatearCUIT(value);
+
+            if (esValido) {
+              return `
+                <span class="badge-cuit-valido" title="CUIT/CUIL Válido">
+                  <span style="font-size:12px">✓</span> ${formateado}
+                </span>
+              `;
+            } else {
+              return `
+                <span class="badge-cuit-invalido" title="CUIT/CUIL Inválido (Verificador incorrecto)">
+                  <span style="font-size:12px">⚠️</span> ${formateado}
+                </span>
+              `;
+            }
+          });
+
+          // Registrar interceptor de inserción/edición
           api.data.onBeforeInsert(nombreTabla, async (record) => {
-            const campoClave = Object.keys(record).find(k => k.toLowerCase() === 'cuit') || 'cuit';
+            const campoClave = Object.keys(record).find(k => k.toLowerCase() === nombreCampo.toLowerCase()) || nombreCampo;
             const valorCuit = record[campoClave];
 
             if (valorCuit) {
               const esValido = validarCUIT(valorCuit);
               if (!esValido) {
-                throw new Error(`[Validador CUIT] El CUIT/CUIL "${valorCuit}" ingresado posee un dígito verificador inválido.`);
+                throw new Error(`[Validador CUIT] El CUIT/CUIL "${valorCuit}" ingresado en "${nombreCampo}" posee un dígito verificador inválido.`);
               }
               // Normalizar a puros números antes de persistir físicamente en SQLite
               record[campoClave] = String(valorCuit).replace(/\D/g, '');
             }
             return record;
           });
-          console.log(`[Validador CUIT] Interceptor activado para tabla: "${nombreTabla}"`);
+          console.log(`[Validador CUIT] Interceptor y Renderer activados para tabla "${nombreTabla}", columna "${nombreCampo}"`);
         }
       }
     } catch (e) {
-      console.warn('[Validador CUIT] Error al inicializar interceptores:', e);
+      console.warn('[Validador CUIT] Error al inicializar renderers e interceptores:', e);
     }
   };
 
-  inicializarInterceptores();
+  inicializarRenderersYInterceptores();
 
   // 3. BOTÓN EN EL RIBBON (AUDITORÍA RÁPIDA)
   api.ui.registerRibbonButton({
@@ -122,10 +130,13 @@
 
       try {
         const campos = await api.data.getCampos(rawName);
-        const campoCuit = campos.find(c => (c.Field || c.nombre || '').toLowerCase() === 'cuit');
+        const campoCuit = campos.find(c => {
+          const name = (c.Field || c.nombre || '').toLowerCase();
+          return name.includes('cuit') || name.includes('cuil');
+        });
 
         if (!campoCuit) {
-          api.env.showNotification(`La tabla "${activeTab.textContent.trim()}" no posee ninguna columna llamada "cuit".`, 'warning');
+          api.env.showNotification(`La tabla "${activeTab.textContent.trim()}" no posee ninguna columna de tipo CUIT/CUIL.`, 'warning');
           return;
         }
 
@@ -142,9 +153,9 @@
         });
 
         if (incorrectos > 0) {
-          api.env.showNotification(`Auditoría finalizada: Se detectaron ${incorrectos} CUITs inválidos de ${total} registros analizados.`, 'error');
+          api.env.showNotification(`Auditoría finalizada: Se detectaron ${incorrectos} CUIT/CUIL inválidos de ${total} registros analizados.`, 'error');
         } else {
-          api.env.showNotification(`Auditoría finalizada: Todos los CUITs (${total}) son correctos y válidos.`, 'success');
+          api.env.showNotification(`Auditoría finalizada: Todos los CUIT/CUIL (${total}) son correctos y válidos.`, 'success');
         }
       } catch (err) {
         api.env.showNotification('Ocurrió un error al intentar auditar la tabla.', 'error');

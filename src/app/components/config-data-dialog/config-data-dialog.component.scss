@@ -17,11 +17,55 @@
   box-sizing: border-box;
   color: var(--sera-text-color, #e2e8f0);
   transition: background-color 0.25s ease, border-color 0.25s ease;
+  position: relative; /* Necesario para el posicionamiento del botón X */
 }
+
+/* BOTÓN DE CIERRE FLOTANTE */
+.settings-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 100;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  border-radius: 8px !important;
+  color: var(--sera-text-color, #94a3b8);
+  opacity: 0.5;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  /* Centrado del ícono */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &:hover {
+    opacity: 1;
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.1) !important;
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
 
 // SIDEBAR
 .settings-sidebar {
   width: 260px;
+  flex-shrink: 0; /* No se encoge: el main absorbe el espacio disponible */
   background: var(--sera-surface-color, #0a1017);
   border-right: 1px solid rgba(var(--sera-text-rgb, 255, 255, 255), 0.08);
   padding: 24px;
@@ -29,6 +73,7 @@
   flex-direction: column;
   justify-content: space-between;
   box-sizing: border-box;
+  transition: width 0.3s ease, padding 0.3s ease;
 
   .sidebar-header {
     display: flex;
@@ -89,11 +134,15 @@
         font-size: 20px;
         width: 20px;
         height: 20px;
+        flex-shrink: 0;
       }
 
       span {
         font-weight: 500;
         font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       &:hover {
@@ -136,6 +185,52 @@
       width: fit-content;
       font-weight: 500;
     }
+  }
+}
+
+/* Responsive: en ventanas angostas el sidebar se comprime a modo icono */
+@media (max-width: 700px) {
+  .settings-container {
+    flex-direction: column;
+  }
+
+  .settings-sidebar {
+    width: 100%;
+    padding: 12px 16px;
+    border-right: none;
+    border-bottom: 1px solid rgba(var(--sera-text-rgb, 255, 255, 255), 0.08);
+
+    .sidebar-header {
+      margin-bottom: 12px;
+    }
+
+    .sidebar-nav {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 4px;
+
+      .nav-item-btn {
+        flex: 1 1 auto;
+        padding: 8px 12px;
+        justify-content: center;
+        min-width: 0;
+
+        span {
+          /* Oculta el texto en pantallas muy angostas, deja el ícono */
+          @media (max-width: 500px) {
+            display: none;
+          }
+        }
+      }
+    }
+
+    .sidebar-footer {
+      display: none; /* Se oculta en modo compacto */
+    }
+  }
+
+  .settings-main {
+    padding: 20px 16px;
   }
 }
 
@@ -218,6 +313,12 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 4px;
+
+  /* En ventanas angostas, 1 sola columna */
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+    max-height: none;
+  }
 
   .theme-card {
     background: var(--sera-surface-color, #0a1017);
@@ -330,6 +431,14 @@
   gap: 16px;
   margin-bottom: 24px;
 
+  /* Responsive: 2 columnas en ventanas medianas, 1 en angostas */
+  @media (max-width: 700px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+
   .stat-box {
     background: var(--sera-surface-color, #0a1017);
     border: 1px solid rgba(var(--sera-text-rgb, 255, 255, 255), 0.08);
@@ -380,6 +489,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap; /* El botón baja de línea si la descripción es larga */
     gap: 20px;
 
     .action-desc {
@@ -771,6 +881,11 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
+
+    /* En ventanas muy angostas, 1 columna */
+    @media (max-width: 520px) {
+      grid-template-columns: 1fr;
+    }
   }
 
   .picker-card {
@@ -1170,4 +1285,76 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+// ESTILOS DE AUTO UPDATE Y ACTUALIZACIÓN MANUAL DE PLUGINS
+.plugin-update-btn {
+  border-color: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.4) !important;
+  color: var(--sera-primary-color, #00bcd4) !important;
+  background: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.05) !important;
+  font-size: 0.8rem !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+  mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+  }
+
+  mat-spinner {
+    margin-right: 4px;
+  }
+
+  &:hover:not([disabled]) {
+    background: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.15) !important;
+    border-color: var(--sera-primary-color, #00bcd4) !important;
+    transform: translateY(-1px);
+  }
+
+  &:active:not([disabled]) {
+    transform: translateY(0);
+  }
+
+  &[disabled] {
+    opacity: 0.6;
+    color: var(--sera-text-color, #94a3b8) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+  }
+}
+
+.plugin-auto-update {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 2px 10px 2px 4px;
+  height: 32px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.2);
+  }
+
+  mat-checkbox {
+    transform: scale(0.85);
+  }
+
+  &__label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--sera-text-color, #94a3b8);
+    user-select: none;
+    white-space: nowrap;
+  }
 }

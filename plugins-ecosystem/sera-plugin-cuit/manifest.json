@@ -1,7 +1,7 @@
 {
   "id": "sera-plugin-cuit",
   "name": "Validador de CUIT/CUIL 🇦🇷",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Valida la integridad de tus CUITs y los formatea automáticamente. Bloquea datos inconsistentes al guardar.",
   "author": "WolfTeI",
   "icon": "verified_user",

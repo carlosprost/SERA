@@ -1,6 +1,6 @@
-# SECURITY_REPORT.md — SERA v4.0.0 "Poseidón"
+# SECURITY_REPORT.md — SERA v4.1.0 "Poseidón"
 **WolfTeI | Sistema de Expedientes de Registro Avanzado**
-*Última actualización: 2026-05-17 — Release v4.0.0 (Orion-400)*
+*Última actualización: 2026-05-25 — Release v4.1.0 (Orion-410)*
 
 ---
 
@@ -73,6 +73,14 @@ Todos los comandos del backend de Rust se encuentran protegidos mediante el aisl
   - **Nivel de Seguridad:** Sin entrada de usuario. Comandos de solo lectura o mantenimiento interno.
   - **Control:** `get_audit_logs` retorna registros de solo lectura. `optimizar_db` ejecuta `VACUUM` y `ANALYZE` sin aceptar parámetros. `limpiar_cache` borra únicamente archivos dentro de `app_data_dir/cache/`.
 
+### G. Endpoints del Ecosistema de Plugins (v4.1.0)
+- `get_plugins`, `toggle_plugin`, `instalar_plugin_local`, `eliminar_plugin`, `set_plugin_auto_update`
+  - **Nivel de Seguridad:** Aislado con prepared statements y validación semántica de versiones.
+  - **Control:**
+    1. **Parámetros Tipados en SQLite:** `set_plugin_auto_update` persiste el estado de Auto Update utilizando consultas preparadas con tipos de datos estrictos en SQLite, anulando cualquier intento de inyección SQL (OWASP A03).
+    2. **Instalación y Auto-Update Seguros:** La descarga y sobreescritura automática de plugins compara las versiones semánticas expuestas en el manifest local contra el marketplace seguro oficial.
+    3. **Integridad del Directorio:** El proceso de instalación local valida la estructura ZIP del plugin e impide que se extraigan archivos fuera del directorio específico del plugin (`app_data_dir/plugins`), evitando ataques de Path Traversal.
+
 ---
 
 ## 3. Estrategia de Sanitización y Prevención XSS/HTMLi
@@ -98,22 +106,24 @@ Para garantizar que el marketplace y las extensiones locales activas no comprome
    - Los plugins `sera-plugin-cbu` y `sera-plugin-patente` interceptan la inserción de registros a nivel de datos. Esto valida la consistencia estructural (algoritmo Módulo 10 compuesto para CBU; RegExp para patentes clásicas y Mercosur) y formatea/normaliza los valores antes de que toquen el backend de Rust, protegiendo las tablas relacionales de datos inválidos o inyecciones de código.
 3. **Procesamiento 100% Offline y Aislado (Privacidad de Datos):**
    - Los plugins `sera-plugin-barcode` y `sera-plugin-documento` operan enteramente en la memoria del cliente. El creador de documentos genera la descarga mediante Blob URLs efímeras locales (`URL.createObjectURL`), impidiendo que los expedientes o datos confidenciales sean enviados a servidores externos para su procesamiento o renderizado.
+4. **Hot Reload e Inyección Síncrona Controlada (Mitigación de Fugas y Código Huérfano):**
+   - La inyección de bundles de JavaScript se realiza de forma síncrona mediante inline scripts (`script.textContent`), asegurando que las llamadas de inicialización de la API pública `SeraAPI` se realicen dentro del hilo síncrono controlado del servicio. Esto permite al sandbox asociar unívocamente el ID del plugin cargándose a sus `cellRenderers` e interceptores `onBeforeInsert`. Al desactivar o actualizar un plugin, `SeraPluginService` purga de forma quirúrgica todos sus recursos y callbacks inyectados en caliente, impidiendo que lógica obsoleta o interceptores duplicados queden huérfanos en memoria (OWASP A04: Insecure Design).
 
 ---
 
-## 4. Matriz de Prevención de Vulnerabilidades (OWASP v4.0.0)
+## 4. Matriz de Prevención de Vulnerabilidades (OWASP v4.1.0)
 
-| OWASP ID | Vulnerabilidad | Mecanismo Implementado en v4.0.0 / Ecosistema de Plugins |
+| OWASP ID | Vulnerabilidad | Mecanismo Implementado en v4.1.0 / Ecosistema de Plugins |
 |---|---|---|
-| **A03** | Inyección | Prepared Statements en Rust, escape de strings mediante `textContent` en reportes PDF, sandbox léxico en motor de fórmulas, whitelist de extensiones en copia de logos y sanitización de comillas para triggers DOM en plugins (`redactor`). |
+| **A03** | Inyección | Prepared Statements en Rust (incluyendo `set_plugin_auto_update`), escape de strings mediante `textContent` en reportes PDF, sandbox léxico en motor de fórmulas, whitelist de extensiones en copia de logos y sanitización de comillas para triggers DOM en plugins (`redactor`). |
 | **A01** | Control de Acceso / PII | Enmascaramiento dinámico e interactivo de datos sensibles en pantalla mediante el plugin `redactor` para DNI, Teléfonos y Correos. |
 | **A04** | Diseño Inseguro | Separación estricta de responsabilidades (SoC), logs de auditoría ISO 27001, control granular de adjuntos y cleanups automáticos de cascada. |
 | **A05** | Mala Configuración | Perfil de operador simplificado sin campos obsoletos expuestos; dispatch NgRx corregido para garantizar persistencia real de configuración. |
 | **A07** | Fallos de Identificación | Derivación de llaves AES-256-GCM mediante SHA-256 para paquetes encriptados `.srx`. |
-| **A08** | Fallos de Integridad | Inserción con mitigación de duplicados (`INSERT OR IGNORE`), auto-detección flexible de paquetes relacionales/legacy, UUIDs para adjuntos físicos, e interceptación de integridad en base de datos (`onBeforeInsert`) en plugins de CBU y Patentes. |
+| **A08** | Fallos de Integridad | Inserción con mitigación de duplicados (`INSERT OR IGNORE`), auto-detección flexible de paquetes relacionales/legacy, UUIDs para adjuntos físicos, interceptación de integridad en base de datos (`onBeforeInsert`) en plugins de CBU y Patentes, y verificación semántica de versiones en Auto Update de plugins para mitigar *downgrade attacks*. |
 | **ISO 27001** | Trazabilidad | Audit Log System: registro persistente en SQLite de eventos críticos sin almacenamiento de PII. |
 | **ISO 27002** | Privacidad de Datos | Procesamiento 100% offline y generación en memoria de códigos de barra (`barcode`) y combinación de correspondencia (`documento`) para evitar fugas de red. |
 
 ---
 
-*Este reporte certifica que SERA v4.0.0 "Poseidón" eleva los controles de seguridad a nivel de producto comercial universal, incorporando auditoría ISO 27001, gestión segura de activos de marca (logos), robustecimiento del ciclo de vida de la configuración del operador y un blindaje estricto en la inyección de plugins dinámicos del marketplace.*
+*Este reporte certifica que SERA v4.1.0 "Poseidón" eleva los controles de seguridad a nivel de producto comercial universal, incorporando auditoría ISO 27001, gestión segura de activos de marca (logos), robustecimiento del ciclo de vida de la configuración del operador, un blindaje estricto en la inyección de plugins dinámicos del marketplace, y un sistema seguro de actualización automática y manual de plugins basado en control semántico de versiones y consultas de SQLite preparadas.*

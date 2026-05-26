@@ -9,13 +9,77 @@
   /* GLOBAL RIBBON COMPONENT */
   .ribbon-container {
     position: relative;
-    height: 130px; /* ALTO FIJO PARA EL RIBBON */
+    height: 130px; /* ALTO FIJO PARA EL RIBBON EXPANDIDO */
     display: flex;
     flex-direction: column;
     background-color: var(--sera-surface-color);
     border-bottom: 1px solid rgba(var(--sera-text-rgb), 0.1);
-    padding: 4px;
+    padding: 0; /* Sin padding general para que las solapas toquen el tope horizontal */
     z-index: 10;
+    transition: height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                padding 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+                border-color 0.3s ease;
+  }
+
+  /* ─── SOLAPAS/PESTAÑAS DEL RIBBON (ESTILO OFFICE) ─── */
+  .ribbon-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 2px 8px 0 8px;
+    background-color: rgba(0, 0, 0, 0.25); /* Fusión del fondo del marco */
+    border-bottom: 1px solid rgba(var(--sera-text-rgb), 0.05);
+    height: 30px;
+    align-items: flex-end;
+    user-select: none;
+  }
+
+  .ribbon-tab-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    color: var(--sera-text-color);
+    opacity: 0.55;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      margin-bottom: 0 !important;
+      opacity: 0.8;
+    }
+
+    &:hover {
+      opacity: 0.9;
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    &.active {
+      opacity: 1;
+      background-color: var(--sera-surface-color);
+      color: var(--sera-text-color);
+      font-weight: 600;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: #ffc107; /* Línea de acento inferior en la solapa activa */
+        border-radius: 1px;
+      }
+    }
   }
 
   .ribbon-tab-content {
@@ -23,7 +87,9 @@
     flex-wrap: nowrap;
     gap: 8px;
     overflow-x: auto;
-    min-height: 80px;
+    min-height: 86px;
+    height: 100px;
+    padding: 6px 12px; /* Espaciado interno elegante para las herramientas */
     &::-webkit-scrollbar {
       height: 6px;
     }
@@ -158,6 +224,7 @@
     margin: 0;
     padding: 0;
     z-index: 5;
+    transition: top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 
     .empty-state {
       display: flex;
@@ -313,6 +380,194 @@
     display: flex;
     flex-direction: column;
     padding: 50px 20px 0 100px;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     🎨 ESTILOS MODO COMPACTO (RIBBON CONTRAÍDO PERO CON PESTAÑAS ACTIVAS)
+     ───────────────────────────────────────────────────────────────────────── */
+  &.ribbon-compact-active {
+    .main-workspace {
+      top: 80px; /* Desliza el workspace hacia arriba compensando las pestañas compactas */
+    }
+  }
+
+  .ribbon-container.ribbon-compact {
+    height: 80px; /* Alto perfecto para albergar pestañas (30px) + iconos grandes (50px) */
+    padding: 0;
+
+    .ribbon-tab-content {
+      min-height: 50px;
+      height: 50px;
+      overflow-y: hidden;
+      overflow-x: auto;
+      padding: 1px 12px;
+    }
+
+    .ribbon-group {
+      border-right: 1px solid rgba(var(--sera-text-rgb), 0.05);
+      padding: 0 8px;
+      justify-content: center;
+      min-width: max-content;
+
+      .ribbon-group-label {
+        display: none; /* Oculta la etiqueta del grupo inferior */
+      }
+    }
+
+    .ribbon-actions {
+      gap: 4px;
+    }
+
+    .ribbon-btn {
+      min-width: 48px;
+      min-height: 48px;
+      padding: 2px 8px;
+      flex-direction: row; /* Íconos en una sola fila con Tooltip */
+      gap: 4px;
+
+      mat-icon {
+        font-size: 24px; /* Icono grande y nítido de 24px */
+        width: 24px;
+        height: 24px;
+        margin-bottom: 0;
+      }
+
+      span {
+        display: none; /* Ocultar el texto por completo, el tooltip guiará al operador */
+      }
+    }
+  }
+
+  /* ─── BOTÓN TOGGLE CIRCULAR GHOST (ESTILO OFFICE) ─── */
+  .ribbon-toggle-btn {
+    position: absolute;
+    bottom: 8px; /* Ubicado abajo a la derecha en modo expandido */
+    right: 12px;
+    top: auto;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent; /* 100% transparente por defecto (Ghost) */
+    border: none;
+    border-radius: 50%; /* Redondo premium */
+    color: var(--sera-text-color);
+    cursor: pointer;
+    z-index: 20;
+    opacity: 0.45;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: var(--sera-text-color);
+      transition: transform 0.2s ease;
+    }
+
+    &:hover {
+      opacity: 1;
+      background: rgba(var(--sera-text-rgb), 0.08); /* Se revela sutilmente al pasar el mouse */
+      transform: scale(1.08);
+    }
+    
+    &:active {
+      transform: scale(0.92);
+    }
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     🌐 RESPONSIVIDAD FLUIDA POR MEDIA QUERIES (MODO EXPANDIDO)
+     ───────────────────────────────────────────────────────────────────────── */
+  @media (max-width: 1400px) {
+    .ribbon-container:not(.ribbon-compact) {
+      .ribbon-group {
+        padding: 0 8px !important; /* Compactar separación lateral entre secciones */
+      }
+      .ribbon-btn {
+        min-width: 50px !important;
+        padding: 4px 6px !important;
+        
+        mat-icon {
+          font-size: 20px !important; /* Achicar el icono a 20px de inmediato para pantallas medianas */
+          width: 20px !important;
+          height: 20px !important;
+          margin-bottom: 2px !important;
+        }
+
+        span {
+          font-size: 10px !important; /* Reducir tipografía a 10px */
+        }
+      }
+    }
+  }
+
+  @media (max-width: 1250px) {
+    .ribbon-container:not(.ribbon-compact) {
+      .ribbon-btn {
+        flex-direction: row !important; /* Alineación horizontal ultra-eficiente en ancho */
+        gap: 5px !important;
+        min-width: unset !important;
+        min-height: 40px !important;
+        padding: 4px 8px !important;
+        align-self: center !important;
+        
+        mat-icon {
+          font-size: 20px !important;
+          width: 20px !important;
+          height: 20px !important;
+          margin-bottom: 0 !important;
+        }
+        span {
+          font-size: 10.5px !important;
+        }
+      }
+      
+      .ribbon-group {
+        border-right: 1px solid rgba(var(--sera-text-rgb), 0.08) !important;
+        padding: 0 8px !important;
+        justify-content: center !important;
+      }
+      
+      .ribbon-actions {
+        display: flex !important;
+        gap: 5px !important;
+        align-items: center !important;
+      }
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .ribbon-container:not(.ribbon-compact) {
+      /* Ocultar etiquetas secundarias de texto, mantener solo iconos y tooltips */
+      .ribbon-btn:not(.file-btn):not(.add-btn):not(.pdf-btn) {
+        min-width: 38px !important;
+        padding: 6px !important;
+        
+        span {
+          display: none !important;
+        }
+      }
+      .ribbon-group-label {
+        font-size: 9.5px !important;
+      }
+      .ribbon-group {
+        padding: 0 6px !important;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .ribbon-container:not(.ribbon-compact) {
+      .ribbon-group-label {
+        display: none !important;
+      }
+      .ribbon-group {
+        padding: 0 4px !important;
+        border-right: none !important;
+      }
+    }
   }
 }
 

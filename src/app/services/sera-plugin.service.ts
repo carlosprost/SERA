@@ -19,6 +19,30 @@ export class SeraPluginService {
   cellRenderers = new Map<string, (value: any, row: any) => string>();
   beforeInsertInterceptors = new Map<string, ((record: any) => Promise<any>)[]>();
 
+  // Tracking para saber qué recurso registró cada plugin (y poder limpiarlos quirúrgicamente al descargar)
+  private cellRenderersByPlugin = new Map<string, string[]>();
+  private beforeInsertInterceptorsByPlugin = new Map<string, { tabla: string, fn: any }[]>();
+  private cargandoPluginId: string | null = null;
+
+  // Mapa para registrar la selección de cada tabla cargada en el sistema
+  private tableSelections = new Map<string, any>();
+
+  // Almacena las funciones de configuración de cada plugin activo
+  pluginSettingsActions = new Map<string, () => void>();
+
+  registerTableSelection(tabla: string, selectionModel: any) {
+    this.tableSelections.set(tabla.toLowerCase(), selectionModel);
+  }
+
+  unregisterTableSelection(tabla: string) {
+    this.tableSelections.delete(tabla.toLowerCase());
+  }
+
+  getSelectedRegistros(tabla: string): any[] {
+    const selection = this.tableSelections.get(tabla.toLowerCase());
+    return selection ? selection.selected : [];
+  }
+
   constructor(
     private snackBar: MatSnackBar,
     private store: Store,
@@ -55,7 +79,22 @@ export class SeraPluginService {
           // No-op: Los widgets en el Dashboard ya no se utilizan en SERA v4
         },
         registerCellRenderer: (columnName: string, rendererFn: (value: any, row: any) => string) => {
-          this.cellRenderers.set(columnName.toLowerCase(), rendererFn);
+          const colLower = columnName.toLowerCase();
+          this.cellRenderers.set(colLower, rendererFn);
+          
+          if (this.cargandoPluginId) {
+            const list = this.cellRenderersByPlugin.get(this.cargandoPluginId) || [];
+            if (!list.includes(colLower)) {
+              list.push(colLower);
+              this.cellRenderersByPlugin.set(this.cargandoPluginId, list);
+            }
+          }
+        },
+        registerPluginSettings: (actionFn: () => void) => {
+          if (this.cargandoPluginId) {
+            this.pluginSettingsActions.set(this.cargandoPluginId, actionFn);
+            console.log(`[SERA Plugins] Registrada acción de ajustes para plugin '${this.cargandoPluginId}'`);
+          }
         }
       },
 
@@ -70,11 +109,20 @@ export class SeraPluginService {
         getContenido: async (tabla: string) => {
           return invoke<any[]>('get_contenido', { tabla });
         },
+        getSelectedRegistros: async (tabla: string) => {
+          return this.getSelectedRegistros(tabla);
+        },
         onBeforeInsert: (tabla: string, interceptor: (record: any) => Promise<any>) => {
           const lower = tabla.toLowerCase();
           const list = this.beforeInsertInterceptors.get(lower) || [];
           list.push(interceptor);
           this.beforeInsertInterceptors.set(lower, list);
+
+          if (this.cargandoPluginId) {
+            const interceptorList = this.beforeInsertInterceptorsByPlugin.get(this.cargandoPluginId) || [];
+            interceptorList.push({ tabla: lower, fn: interceptor });
+            this.beforeInsertInterceptorsByPlugin.set(this.cargandoPluginId, interceptorList);
+          }
         }
       },
 
@@ -124,21 +172,26 @@ export class SeraPluginService {
           }
         }
 
-        // 2. Inyectar Bundle JavaScript mediante Blob URL
+        // 2. Inyectar Bundle JavaScript mediante inline script para carga síncrona controlada
         if (document.getElementById(`plugin-script-${plugin.id}`)) {
           console.log(`[SERA Plugins] Script para ${plugin.nombre} ya inyectado, omitiendo.`);
         } else {
           try {
             const jsContent = await invoke<string>('leer_recurso_plugin', { id: plugin.id, archivo: plugin.entrypoint });
-            const blob = new Blob([jsContent], { type: 'application/javascript' });
-            const url = URL.createObjectURL(blob);
+            
+            // Seteamos transitoriamente el ID del plugin que se está cargando
+            this.cargandoPluginId = plugin.id;
+            
             const script = document.createElement('script');
-            script.src = url;
             script.id = `plugin-script-${plugin.id}`;
-            script.async = true;
+            script.textContent = jsContent;
+            
             document.body.appendChild(script);
+            console.log(`[SERA Plugins] Bundle JS para ${plugin.nombre} inyectado y ejecutado síncronamente.`);
           } catch (e) {
             console.error(`[SERA Plugins] Error al cargar bundle JS del plugin ${plugin.nombre}:`, e);
+          } finally {
+            this.cargandoPluginId = null;
           }
         }
       }
@@ -152,6 +205,9 @@ export class SeraPluginService {
    */
   descargarPlugin(pluginId: string) {
     this.ngZone.run(() => {
+      // 0. Limpiar acción de ajustes si tuviera
+      this.pluginSettingsActions.delete(pluginId);
+
       // 1. Remover script del DOM
       const script = document.getElementById(`plugin-script-${pluginId}`);
       if (script) script.remove();
@@ -163,6 +219,34 @@ export class SeraPluginService {
       // 3. Limpiar registros visuales de Signals asociados a ese ID
       this.ribbonButtons.update(btns => btns.filter(b => !b.id.startsWith(pluginId)));
       this.sidebarTabs.update(tabs => tabs.filter(t => !t.id.startsWith(pluginId)));
+
+      // 4. Limpiar cellRenderers registrados por este plugin
+      const cols = this.cellRenderersByPlugin.get(pluginId);
+      if (cols) {
+        cols.forEach(col => {
+          this.cellRenderers.delete(col);
+          console.log(`[SERA Plugins] Limpiado cellRenderer para columna '${col}' del plugin '${pluginId}'`);
+        });
+        this.cellRenderersByPlugin.delete(pluginId);
+      }
+
+      // 5. Limpiar beforeInsertInterceptors registrados por este plugin
+      const interceptors = this.beforeInsertInterceptorsByPlugin.get(pluginId);
+      if (interceptors) {
+        interceptors.forEach(item => {
+          const lowerTabla = item.tabla;
+          const fn = item.fn;
+          const currentList = this.beforeInsertInterceptors.get(lowerTabla) || [];
+          const updatedList = currentList.filter(f => f !== fn);
+          if (updatedList.length > 0) {
+            this.beforeInsertInterceptors.set(lowerTabla, updatedList);
+          } else {
+            this.beforeInsertInterceptors.delete(lowerTabla);
+          }
+          console.log(`[SERA Plugins] Limpiado interceptor beforeInsert para tabla '${lowerTabla}' del plugin '${pluginId}'`);
+        });
+        this.beforeInsertInterceptorsByPlugin.delete(pluginId);
+      }
     });
   }
 }

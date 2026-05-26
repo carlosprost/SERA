@@ -76,6 +76,18 @@ import { RibbonButtonConfig } from './interfaces/plugin.interfaces';
 export class AppComponent implements AfterViewInit, OnInit {
   /** Señal para mostrar/ocultar el dashboard de la tabla activa */
   showTableDashboard = signal(false);
+  /** Señal para controlar si el Ribbon global está en modo compacto/colapsado */
+  ribbonCompacto = signal<boolean>(localStorage.getItem('sera_ribbon_compacto') === 'true');
+  /** Señal para controlar la pestaña activa del Ribbon global */
+  activeRibbonTab = signal<'inicio' | 'busqueda' | 'extensiones'>('inicio');
+
+  toggleRibbonCompacto() {
+    this.ribbonCompacto.update(c => {
+      const newVal = !c;
+      localStorage.setItem('sera_ribbon_compacto', String(newVal));
+      return newVal;
+    });
+  }
   /** Observable con los datos de configuración del usuario. */
   configData: Observable<ConfigData>;
   /** Observable con el listado de tablas disponibles. */
@@ -294,6 +306,11 @@ export class AppComponent implements AfterViewInit, OnInit {
       if (this.activeTable) {
         this.activeTable.openSearchPalette();
       }
+    }
+    // Ctrl + F1 para colapsar/expandir el Ribbon
+    else if (event.ctrlKey && event.key === 'F1') {
+      event.preventDefault();
+      this.toggleRibbonCompacto();
     }
   }
 

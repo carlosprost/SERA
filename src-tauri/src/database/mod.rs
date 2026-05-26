@@ -68,13 +68,16 @@ pub fn inicializar_db(db_path: &Path) -> Result<()> {
             entrypoint TEXT NOT NULL,
             stylesheet TEXT,
             activo INTEGER DEFAULT 0,
-            config TEXT DEFAULT '{}'
+            config TEXT DEFAULT '{}',
+            auto_update INTEGER NOT NULL DEFAULT 1
         );
         ",
     )?;
     let _ = conn.execute("ALTER TABLE tablas ADD COLUMN config TEXT DEFAULT '{}'", []);
     let _ = conn.execute("ALTER TABLE sera_config ADD COLUMN api_enabled INTEGER NOT NULL DEFAULT 0", []);
     let _ = conn.execute("ALTER TABLE sera_config ADD COLUMN api_port INTEGER NOT NULL DEFAULT 54321", []);
+    // Migración: agrega soporte de auto_update a plugins instalados antes de esta versión
+    let _ = conn.execute("ALTER TABLE _sera_plugins ADD COLUMN auto_update INTEGER NOT NULL DEFAULT 1", []);
 
     // Insertar fila por defecto una vez garantizadas todas las columnas
     let _ = conn.execute(
@@ -876,7 +879,7 @@ pub fn validar_acceso_tabla(db_path: &Path, tabla_nombre: &str, credencial: &str
 pub fn get_plugins(db_path: &Path) -> Result<Vec<Value>> {
     let conn = abrir_conn(db_path)?;
     let mut stmt = conn.prepare(
-        "SELECT id, nombre, version, descripcion, autor, entrypoint, stylesheet, activo, config 
+        "SELECT id, nombre, version, descripcion, autor, entrypoint, stylesheet, activo, config, auto_update 
          FROM _sera_plugins ORDER BY nombre"
     )?;
     
@@ -890,6 +893,7 @@ pub fn get_plugins(db_path: &Path) -> Result<Vec<Value>> {
         let stylesheet: Option<String> = row.get(6)?;
         let activo: i32 = row.get(7)?;
         let config: String = row.get(8)?;
+        let auto_update: i32 = row.get(9)?;
         
         Ok(json!({
             "id": id,
@@ -900,7 +904,8 @@ pub fn get_plugins(db_path: &Path) -> Result<Vec<Value>> {
             "entrypoint": entrypoint,
             "stylesheet": stylesheet,
             "activo": activo == 1,
-            "config": config
+            "config": config,
+            "auto_update": auto_update == 1
         }))
     })?;
     
@@ -923,8 +928,8 @@ pub fn registrar_plugin(
 ) -> Result<()> {
     let conn = abrir_conn(db_path)?;
     conn.execute(
-        "INSERT INTO _sera_plugins (id, nombre, version, descripcion, autor, entrypoint, stylesheet, activo, config)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 0, '{}')
+        "INSERT INTO _sera_plugins (id, nombre, version, descripcion, autor, entrypoint, stylesheet, activo, config, auto_update)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 0, '{}', 1)
          ON CONFLICT(id) DO UPDATE SET
             nombre = excluded.nombre,
             version = excluded.version,
@@ -957,3 +962,19 @@ pub fn eliminar_plugin_db(db_path: &Path, id: &str) -> Result<()> {
     Ok(())
 }
 
+/// Persiste la preferencia de actualización automática de un plugin instalado.
+pub fn set_plugin_auto_update(db_path: &Path, id: &str, auto_update: bool) -> Result<()> {
+    let conn = abrir_conn(db_path)?;
+    let val = if auto_update { 1 } else { 0 };
+    conn.execute(
+        "UPDATE _sera_plugins SET auto_update = ?1 WHERE id = ?2",
+        params![val, id],
+    )?;
+    let estado = if auto_update { "habilitado" } else { "deshabilitado" };
+    let _ = registrar_log(
+        db_path,
+        &format!("Auto-actualización del plugin '{}' {}.", id, estado),
+        "INFO"
+    );
+    Ok(())
+}

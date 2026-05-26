@@ -140,6 +140,7 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
         },
       }),
     ];
+    this.pluginService.registerTableSelection(this.tabla, this.selection);
   }
 
   private dataRaw: any[] = [];
@@ -208,6 +209,7 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.searchDialogRef) {
       this.searchDialogRef.close();
     }
+    this.pluginService.unregisterTableSelection(this.tabla);
   }
 
   emitSelected(row: any) {
@@ -636,11 +638,12 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
       return translation !== undefined ? translation : `ID: ${value}`;
     }
     
-    // Auto-detección de fechas ISO (YYYY-MM-DD) para formateo visual.
-    // Esto permite que en BD sigan siendo YYYY-MM-DD (para un ordenamiento perfecto),
+    // Auto-detección de fechas ISO (YYYY-MM-DD o YYYY-MM-DD HH:MM:SS) para formateo visual.
+    // Esto permite que en BD sigan siendo YYYY-MM-DD para un ordenamiento perfecto,
     // pero el usuario siempre las vea como DD/MM/YYYY.
-    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      const parts = value.split('-');
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+      const datePart = value.split(' ')[0];
+      const parts = datePart.split('-');
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
 
@@ -649,9 +652,10 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
 
   formatDateSafe(value: any): string {
     if (!value) return '';
-    // Si viene en formato ISO YYYY-MM-DD
-    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      const parts = value.split('-');
+    // Si viene en formato ISO YYYY-MM-DD o YYYY-MM-DD HH:MM:SS
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+      const datePart = value.split(' ')[0];
+      const parts = datePart.split('-');
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
     // Si ya viene como DD/MM/YYYY o cualquier otro string lo devolvemos tal cual para no romper

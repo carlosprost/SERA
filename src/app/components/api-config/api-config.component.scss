@@ -97,6 +97,11 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
     margin-top: 8px;
+
+    /* En ventanas angostas, colapsa a 1 columna */
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
   }
 
   &__conn-field {
@@ -137,12 +142,16 @@
   &__conn-value {
     font-size: 0.95rem;
     font-weight: 600;
+    min-width: 0; /* Evita desbordamiento en flex */
+    overflow: hidden;
 
     &--mono {
       font-family: 'Fira Code', 'Courier New', Courier, monospace;
       font-size: 0.85rem;
       letter-spacing: 0.5px;
       color: #9fa8da; // Tono primario claro
+      word-break: break-all; /* Rompe URLs largas para que no desborden */
+      overflow-wrap: anywhere;
     }
   }
 

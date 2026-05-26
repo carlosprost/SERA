@@ -34,7 +34,7 @@ import * as pdfjsLib from 'pdfjs-dist';
               @if (campo.Field !== 'id_' + data.tabla && campo.Field !== 'sera_adjuntos_count') {
                 <div class="data-item">
                   <span class="label">{{ campo.Field.split('_').join(' ') | uppercase }}</span>
-                  <span class="value">{{ data.row[campo.Field] || '-' }}</span>
+                  <span class="value">{{ formatValue(campo.Field, data.row[campo.Field]) }}</span>
                 </div>
               }
             }
@@ -631,5 +631,18 @@ export class DetalleRegistroComponent implements OnInit {
 
   close() {
     this.dialogRef.close();
+  }
+
+  formatValue(field: string, value: any): string {
+    if (value === undefined || value === null || value === '') return '-';
+    
+    // Auto-detección de fechas ISO (YYYY-MM-DD o YYYY-MM-DD HH:MM:SS) para formateo visual.
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+      const datePart = value.split(' ')[0];
+      const parts = datePart.split('-');
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    return value;
   }
 }

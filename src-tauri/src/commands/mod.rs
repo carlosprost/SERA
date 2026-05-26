@@ -802,3 +802,12 @@ pub fn leer_recurso_plugin(
     fs::read_to_string(file_path).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+pub fn set_plugin_auto_update(
+    db_path: State<DbPath>,
+    id: String,
+    auto_update: bool,
+) -> Result<(), String> {
+    database::set_plugin_auto_update(&db_path.0, &id, auto_update).map_err(|e| e.to_string())
+}
+

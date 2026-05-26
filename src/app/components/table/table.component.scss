@@ -152,12 +152,14 @@ tr.element-row:not(.expanded-row):hover {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 40px;
+    flex-wrap: wrap; /* Permite que los botones bajen de línea en ventanas angostas */
+    gap: 16px 40px;
     padding: 12px 30px;
     background: var(--sera-bg-color);
     border: 2px solid var(--sera-primary-color);
     border-radius: 50px;
-    min-width: 500px;
+    width: fit-content;
+    max-width: calc(100vw - 32px); /* Nunca desborda la ventana */
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.9);
 
     .selection-info {

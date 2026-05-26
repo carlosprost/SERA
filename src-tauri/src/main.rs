@@ -154,6 +154,7 @@ fn main() {
             commands::instalar_plugin_local,
             commands::eliminar_plugin,
             commands::leer_recurso_plugin,
+            commands::set_plugin_auto_update,
         ])
         .run(tauri::generate_context!())
         .expect("[SERA] Error al inicializar la aplicación");

@@ -61,6 +61,10 @@ export class ConfigDataDialogComponent {
   busquedaInstalados = signal<string>('');
   /** Sub-pestaña activa: instalados | marketplace */
   pluginSubTab = signal<'instalados' | 'marketplace'>('instalados');
+  /** IDs de plugins con una actualización disponible en el marketplace */
+  pluginsConUpdate = signal<string[]>([]);
+  /** ID del plugin que se está actualizando manualmente (spinner) */
+  actualizandoPluginId = signal<string | null>(null);
 
   // ESTADO DEL MARKETPLACE
   /** Plugins del catálogo de GitHub/jsDelivr */
@@ -140,6 +144,13 @@ export class ConfigDataDialogComponent {
       await this.cargarLogoPreview(ruta);
     } catch {
       // No hay logo guardado, el estado vacío es el correcto
+    }
+  }
+
+  configurarPlugin(pluginId: string) {
+    const action = this.pluginService.pluginSettingsActions.get(pluginId);
+    if (action) {
+      action();
     }
   }
 
@@ -279,13 +290,18 @@ export class ConfigDataDialogComponent {
   // ============================================================
 
   /**
-   * Carga el listado de plugins instalados desde SQLite mediante el comando Tauri.
+   * Carga el listado de plugins instalados desde SQLite mediante el comando Tauri
+   * y dispara la verificación de actualizaciones en paralelo.
    */
-  async cargarPluginsInstalados() {
+  async cargarPluginsInstalados(evitarVerificacion: boolean = false) {
     this.cargandoPlugins.set(true);
     try {
       const plugins = await invoke<PluginInfo[]>('get_plugins');
       this.pluginsInstalados.set(plugins);
+      // Verificar actualizaciones en segundo plano solo si no se solicita omitirlo (evita recursión infinita)
+      if (!evitarVerificacion) {
+        this.verificarActualizaciones(plugins);
+      }
     } catch (err) {
       console.error('[SERA Plugins] Error al cargar plugins instalados:', err);
       this.snackBar.open('No se pudo cargar la lista de plugins', 'Cerrar', { duration: 3000 });
@@ -310,13 +326,10 @@ export class ConfigDataDialogComponent {
    */
   async togglePlugin(plugin: PluginInfo) {
     try {
-      // Enviamos el NUEVO estado deseado (inverso del actual) para que Rust lo persista directamente.
       await invoke('toggle_plugin', { id: plugin.id, activo: !plugin.activo });
       if (plugin.activo) {
-        // Descargar del DOM si se desactiva
         this.pluginService.descargarPlugin(plugin.id);
       } else {
-        // Recargar en caliente si se activa
         await this.pluginService.cargarPluginsActivos();
       }
       await this.cargarPluginsInstalados();
@@ -328,6 +341,106 @@ export class ConfigDataDialogComponent {
     } catch (err) {
       console.error('[SERA Plugins] Error al cambiar estado:', err);
       this.snackBar.open('Error al cambiar el estado del plugin', 'Cerrar', { duration: 3000 });
+    }
+  }
+
+  /**
+   * Persiste el cambio de preferencia de auto-actualización de un plugin.
+   */
+  async toggleAutoUpdate(plugin: PluginInfo) {
+    const nuevoEstado = !(plugin.auto_update ?? true);
+    try {
+      await invoke('set_plugin_auto_update', { id: plugin.id, autoUpdate: nuevoEstado });
+      // Actualizar el signal localmente para que la UI responda sin re-fetch
+      this.pluginsInstalados.update(lista =>
+        lista.map(p => p.id === plugin.id ? { ...p, auto_update: nuevoEstado } : p)
+      );
+      this.snackBar.open(
+        nuevoEstado
+          ? `"${plugin.nombre}" se actualizará automáticamente`
+          : `Auto-actualización desactivada para "${plugin.nombre}"`,
+        'OK',
+        { duration: 2500 }
+      );
+    } catch (err) {
+      console.error('[SERA Plugins] Error al cambiar auto-actualización:', err);
+      this.snackBar.open('Error al guardar la preferencia', 'Cerrar', { duration: 3000 });
+    }
+  }
+
+  /**
+   * Verifica si hay actualizaciones disponibles en el Marketplace para cada plugin instalado.
+   * Los plugins con auto_update=true se actualizan silenciosamente en segundo plano.
+   * Los demás quedan marcados con el badge de actualización manual.
+   */
+  async verificarActualizaciones(instalados: PluginInfo[]) {
+    if (instalados.length === 0) return;
+    try {
+      const response = await fetch(this.MARKETPLACE_URL);
+      if (!response.ok) return; // Sin conexión: fallo silencioso
+      const data = await response.json();
+      const catalogo: any[] = Array.isArray(data) ? data : data.plugins || [];
+
+      const conUpdate: string[] = [];
+      const autoActualizados: string[] = [];
+
+      for (const plugin of instalados) {
+        const mp = catalogo.find(m => m.id === plugin.id);
+        if (!mp) continue; // Plugin no listado en marketplace, se ignora
+
+        const hayUpdate = mp.version.localeCompare(plugin.version, undefined, { numeric: true, sensitivity: 'base' }) > 0;
+        if (!hayUpdate) continue;
+
+        if (plugin.auto_update ?? true) {
+          // Auto-actualización silenciosa en segundo plano
+          try {
+            await this.instalarDesdeMarketplace(mp, true); // Forzar actualización de versión
+            autoActualizados.push(plugin.nombre);
+          } catch (e) {
+            console.error(`[SERA Auto-Update] Error al actualizar ${plugin.nombre}:`, e);
+          }
+        } else {
+          conUpdate.push(plugin.id);
+        }
+      }
+
+      this.pluginsConUpdate.set(conUpdate);
+
+      if (autoActualizados.length > 0) {
+        this.snackBar.open(
+          `🔄 ${autoActualizados.length} plugin${autoActualizados.length > 1 ? 's actualizados' : ' actualizado'} automáticamente: ${autoActualizados.join(', ')}`,
+          'OK',
+          { duration: 5000, panelClass: ['snackbar-exito'] }
+        );
+        await this.cargarPluginsInstalados(true);
+      }
+    } catch (err) {
+      // Fallo silencioso: la verificación es best-effort
+      console.warn('[SERA Auto-Update] No se pudo verificar actualizaciones:', err);
+    }
+  }
+
+  /**
+   * Actualiza manualmente un plugin puntual desde el marketplace (sin importar auto_update).
+   */
+  async actualizarPluginManual(pluginId: string) {
+    // Cargar catálogo si no está cargado aún
+    if (this.marketplacePlugins().length === 0) {
+      await this.cargarMarketplace();
+    }
+    const mp = this.marketplacePlugins().find((m: any) => m.id === pluginId);
+    if (!mp) {
+      this.snackBar.open('No se encontró el plugin en el marketplace', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    this.actualizandoPluginId.set(pluginId);
+    try {
+      await this.instalarDesdeMarketplace(mp, true); // Forzar actualización de versión
+      // Quitar del badge de updates pendientes
+      this.pluginsConUpdate.update(ids => ids.filter(id => id !== pluginId));
+      await this.cargarPluginsInstalados(true); // Evitar recarga infinita
+    } finally {
+      this.actualizandoPluginId.set(null);
     }
   }
 
@@ -393,9 +506,9 @@ export class ConfigDataDialogComponent {
    * 2. Invoca el comando Rust `instalar_plugin_local` para escribirlos en disco y registrarlos en SQLite.
    * 3. Recarga los plugins activos en caliente.
    */
-  async instalarDesdeMarketplace(mp: any) {
+  async instalarDesdeMarketplace(mp: any, forzarActualizacion: boolean = false) {
     const id = mp.id;
-    if (this.estaInstalado(id)) return;
+    if (this.estaInstalado(id) && !forzarActualizacion) return;
     this.instalandoPluginId.set(id);
 
     try {
@@ -429,17 +542,26 @@ export class ConfigDataDialogComponent {
         cssContent: cssContent ?? '',
       });
 
+      // Descargar/limpiar en caliente el plugin viejo del DOM y memoria antes de cargar el nuevo bundle
+      this.pluginService.descargarPlugin(id);
+
       // Recargar plugins en caliente
       await this.pluginService.cargarPluginsActivos();
-      await this.cargarPluginsInstalados();
+      await this.cargarPluginsInstalados(forzarActualizacion);
 
-      this.snackBar.open(`¡Plugin "${mp.name || id}" instalado correctamente!`, 'ÉXITO', {
-        duration: 3500,
-        panelClass: ['snackbar-exito']
-      });
+      this.snackBar.open(
+        forzarActualizacion 
+          ? `¡Plugin "${mp.name || id}" actualizado a la versión ${mp.version || '1.0.0'} correctamente!`
+          : `¡Plugin "${mp.name || id}" instalado correctamente!`, 
+        'ÉXITO', 
+        {
+          duration: 3500,
+          panelClass: ['snackbar-exito']
+        }
+      );
     } catch (err: any) {
-      console.error('[SERA Marketplace] Error al instalar plugin:', err);
-      this.snackBar.open(`Error al instalar el plugin: ${err.message || err}`, 'Cerrar', { duration: 4000 });
+      console.error('[SERA Marketplace] Error al instalar/actualizar plugin:', err);
+      this.snackBar.open(`Error al procesar el plugin: ${err.message || err}`, 'Cerrar', { duration: 4000 });
     } finally {
       this.instalandoPluginId.set(null);
     }

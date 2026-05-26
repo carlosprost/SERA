@@ -8,6 +8,8 @@ export interface PluginInfo {
   stylesheet?: string;
   activo: boolean;
   config?: string; // JSON String
+  /** Si está en true, SERA verifica y actualiza el plugin automáticamente al abrir la sección */
+  auto_update?: boolean;
 }
 
 export interface RibbonButtonConfig {
