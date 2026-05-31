@@ -64,6 +64,14 @@ El modelo de negocio de SERA mantiene la filosofía **sin suscripciones** y priv
 - **Estado:** EN ANÁLISIS / POSTERGADO 🕒
 - **Detalle:** Extraer texto automáticamente de fotos (DNI, expedientes) arrastradas a SERA usando OCR local.
 
+### 11. ⌨️ Motor de Productividad Avanzado (Atajos de Teclado Globales y Contextuales)
+- **Estado:** EN PLANIFICACIÓN 📝 (previsto para v4.3.0)
+- **Detalle:** Implementación de un sistema integral de atajos de teclado para operaciones rápidas sin mouse.
+- **Objetivos de Cobertura:**
+  - **Globales:** Nueva tabla (`Ctrl + N`), Paleta de comandos (`Ctrl + P`), Importar archivo (`Ctrl + I`), Exportar base de datos (`Ctrl + E`), Acerca de SERA (`F1`).
+  - **En Grilla:** Nuevo registro (`Ctrl + Enter`), Editar registro seleccionado (`Enter` / Doble clic), Eliminar registros seleccionados (`Supr`), Seleccionar todo (`Ctrl + A`), Filtrar tabla (`Ctrl + Shift + L`), Generar PDF (`Ctrl + Shift + P`).
+  - **En Formularios:** Guardar registro (`Ctrl + S`), cerrar/cancelar ventana (`Esc`).
+
 ---
 
 ## ✅ Hitos Completados & Estabilizados (Serie v3.x y v4.0.0 Poseidón)
