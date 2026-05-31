@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Documentación completa de SERA — Sistema de Expedientes de Registro Avanzado. Guías de uso, referencia de funciones, atajos de teclado y arquitectura de seguridad." />
+  <meta name="theme-color" content="#6B17C2" />
+  <title>Documentación — SERA v4.2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="docs-page">
+
+  <!-- ─── NAVBAR ─────────────────────────────────────────────────────────── -->
+  <nav class="navbar scrolled" id="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand">
+        <div class="nav-logo-icon">
+          <img src="assets/logo.png" alt="SERA Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+        </div>
+        <span class="nav-logo-text">SERA</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html#features">Funcionalidades</a></li>
+        <li><a href="index.html#security">Seguridad</a></li>
+        <li><a href="docs.html" class="active-link">Documentación</a></li>
+        <li><a href="https://apps.microsoft.com/store/detail/9N0DK1TGM63J" target="_blank" class="nav-cta">Descargar</a></li>
+      </ul>
+      <button class="nav-hamburger" id="hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ─── DOCS LAYOUT ────────────────────────────────────────────────────── -->
+  <div class="docs-layout">
+
+    <!-- Sidebar -->
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-version">v4.2.0 · Phoenix-420</span>
+        <h2>Documentación</h2>
+      </div>
+      <nav class="sidebar-nav">
+
+        <div class="sidebar-group">
+          <span class="sidebar-group-label">Primeros pasos</span>
+          <a href="#introduccion" class="sidebar-link active" data-section="introduccion">¿Qué es SERA?</a>
+          <a href="#instalacion" class="sidebar-link" data-section="instalacion">Instalación</a>
+          <a href="#primeros-pasos" class="sidebar-link" data-section="primeros-pasos">Primeros pasos</a>
+        </div>
+
+        <div class="sidebar-group">
+          <span class="sidebar-group-label">Gestión de datos</span>
+          <a href="#tipos-de-campos" class="sidebar-link" data-section="tipos-de-campos">Tipos de campos</a>
+          <a href="#motor-relacional" class="sidebar-link" data-section="motor-relacional">Motor Relacional</a>
+          <a href="#vengine" class="sidebar-link" data-section="vengine">V-Engine: Fórmulas</a>
+          <a href="#reglas-formato" class="sidebar-link" data-section="reglas-formato">Reglas de Formato</a>
+          <a href="#buscador" class="sidebar-link" data-section="buscador">Buscador Spotlight</a>
+        </div>
+
+        <div class="sidebar-group">
+          <span class="sidebar-group-label">Exportación</span>
+          <a href="#reportes-pdf" class="sidebar-link" data-section="reportes-pdf">Reportes PDF</a>
+          <a href="#portabilidad-srx" class="sidebar-link" data-section="portabilidad-srx">Portabilidad .srx</a>
+          <a href="#importacion" class="sidebar-link" data-section="importacion">Importar Excel/CSV</a>
+        </div>
+
+        <div class="sidebar-group">
+          <span class="sidebar-group-label">Ecosistema</span>
+          <a href="#plugins" class="sidebar-link" data-section="plugins">Plugins y Marketplace</a>
+          <a href="#seguridad" class="sidebar-link" data-section="seguridad">Seguridad</a>
+          <a href="#temas" class="sidebar-link" data-section="temas">Temas Visuales</a>
+          <a href="#atajos" class="sidebar-link" data-section="atajos">Atajos de Teclado</a>
+        </div>
+
+      </nav>
+      <button class="sidebar-toggle-mobile" id="sidebar-toggle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </aside>
+
+    <!-- Contenido principal -->
+    <main class="docs-content" id="docs-content">
+
+      <!-- ── 1. INTRODUCCIÓN ───────────────────────────────────────────── -->
+      <section class="docs-section" id="introduccion">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Primeros pasos</span>
+          <h1>¿Qué es SERA?</h1>
+          <p class="docs-lead">Sistema de Expedientes de Registro Avanzado — una aplicación de escritorio nativa para Windows que te permite gestionar cualquier tipo de información estructurada de forma privada, segura y sin depender de servicios en la nube.</p>
+        </div>
+
+        <div class="docs-callout note">
+          <span class="callout-icon">💡</span>
+          <div><strong>Filosofía central:</strong> SERA funciona 100% offline. Tus datos nunca salen de tu computadora. No hay servidores de terceros, no hay telemetría, no hay cuentas requeridas.</div>
+        </div>
+
+        <h2>¿Para qué sirve?</h2>
+        <p>SERA es una herramienta universal adaptable a cualquier industria o necesidad. Algunos casos de uso típicos:</p>
+        <ul class="docs-list">
+          <li><strong>PyMEs:</strong> gestión de inventario, clientes, proveedores, presupuestos.</li>
+          <li><strong>Estudios profesionales:</strong> expedientes de casos, seguimiento de clientes, vencimientos.</li>
+          <li><strong>Organismos:</strong> registros de personas, eventos, auditorías internas.</li>
+          <li><strong>Uso personal:</strong> colecciones, proyectos, registros médicos, biblioteca personal.</li>
+        </ul>
+
+        <h2>Stack tecnológico</h2>
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Capa</th><th>Tecnología</th><th>Versión</th><th>Rol</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>UI Framework</td><td>Angular (Signals &amp; Control Flow)</td><td>21.0</td><td>Vista reactiva de alta velocidad</td></tr>
+              <tr><td>Design System</td><td>Angular Material 3</td><td>21.0</td><td>Componentes oscuros premium</td></tr>
+              <tr><td>Runtime Desktop</td><td>Tauri</td><td>2.x</td><td>Runtime nativo con IPC blindado</td></tr>
+              <tr><td>Backend / Lógica</td><td>Rust (2021 Edition)</td><td>—</td><td>Motor nativo asíncrono y criptográfico</td></tr>
+              <tr><td>Base de datos</td><td>SQLite</td><td>—</td><td>Almacenamiento local estructurado</td></tr>
+              <tr><td>Cifrado</td><td>AES-256-GCM (AEAD)</td><td>—</td><td>Portabilidad y adjuntos encriptados</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 2. INSTALACIÓN ─────────────────────────────────────────────── -->
+      <section class="docs-section" id="instalacion">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Primeros pasos</span>
+          <h1>Instalación</h1>
+        </div>
+
+        <h2>Desde la Microsoft Store (Recomendado)</h2>
+        <p>La forma más simple y segura. SERA está certificado y firmado digitalmente por Microsoft.</p>
+        <ol class="docs-list ordered">
+          <li>Abrí la <strong>Microsoft Store</strong> en Windows 10/11.</li>
+          <li>Buscá <strong>"SERA"</strong> o accedé directamente con el ID de producto <code>9N0DK1TGM63J</code>.</li>
+          <li>Hacé clic en <strong>Obtener</strong>. La instalación es automática.</li>
+          <li>Al terminar, SERA aparece en el menú de inicio.</li>
+        </ol>
+
+        <div class="docs-callout tip">
+          <span class="callout-icon">✅</span>
+          <div>La versión de Store recibe <strong>actualizaciones automáticas</strong> sin necesidad de reinstalar manualmente.</div>
+        </div>
+
+        <h2>Requisitos del sistema</h2>
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead><tr><th>Componente</th><th>Mínimo</th><th>Recomendado</th></tr></thead>
+            <tbody>
+              <tr><td>Sistema operativo</td><td>Windows 10 v1903 (64-bit)</td><td>Windows 11 22H2+</td></tr>
+              <tr><td>RAM</td><td>4 GB</td><td>8 GB o más</td></tr>
+              <tr><td>Almacenamiento</td><td>200 MB libres</td><td>1 GB (para adjuntos)</td></tr>
+              <tr><td>Arquitectura</td><td>x64</td><td>x64</td></tr>
+              <tr><td>Resolución</td><td>1280 × 720</td><td>1920 × 1080 o superior</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Modo desarrollo (para desarrolladores WolfTeI)</h2>
+        <pre class="docs-code"><code><span class="code-comment"># Requisitos: Node.js 18+, Rust stable, Angular CLI 21</span>
+npm install --legacy-peer-deps
+npm run tauri dev</code></pre>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 3. PRIMEROS PASOS ──────────────────────────────────────────── -->
+      <section class="docs-section" id="primeros-pasos">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Primeros pasos</span>
+          <h1>Primeros pasos</h1>
+          <p class="docs-lead">La primera vez que abrís SERA, el asistente de configuración inicial te guía por tres pasos para dejar el sistema listo.</p>
+        </div>
+
+        <h2>Paso 1 — Configurar el operador</h2>
+        <p>Ingresá tu <strong>nombre completo</strong> y tus <strong>iniciales</strong>. Estos datos se usan para:</p>
+        <ul class="docs-list">
+          <li>Pre-cargar automáticamente el campo de <strong>firma</strong> en los reportes PDF.</li>
+          <li>Registrar al responsable en los <strong>logs de auditoría ISO 27001</strong>.</li>
+          <li>Personalizar el saludo en el <strong>dashboard principal</strong>.</li>
+        </ul>
+
+        <h2>Paso 2 — Crear la primera tabla</h2>
+        <p>Una <strong>tabla</strong> es la unidad base de SERA. Equivale a una hoja de cálculo o una tabla de base de datos. Para crearla:</p>
+        <ol class="docs-list ordered">
+          <li>Desde el dashboard, hacé clic en <strong>"Nueva Tabla"</strong> o usá el menú <strong>Archivo → Nueva tabla</strong>.</li>
+          <li>Ingresá el nombre descriptivo de la tabla (ej: <em>"Clientes"</em>, <em>"Inventario"</em>).</li>
+          <li>Definí si la tabla permite <strong>adjuntos de archivos</strong>.</li>
+          <li>Guardá. La tabla queda disponible en el selector de la barra lateral.</li>
+        </ol>
+
+        <h2>Paso 3 — Definir los campos</h2>
+        <p>Los campos son las columnas de tu tabla. Al crear o editar una tabla, el gestor de campos te permite agregar, reordenar y configurar cada columna con su tipo de dato específico. Ver la sección <a href="#tipos-de-campos" class="docs-inline-link">Tipos de campos</a> para la referencia completa.</p>
+
+        <h2>Paso 4 — Cargar datos</h2>
+        <p>Tenés tres opciones para poblar una tabla:</p>
+        <ul class="docs-list">
+          <li><strong>Formulario manual:</strong> el botón <kbd>+ Nuevo Registro</kbd> abre el formulario de alta con todos los campos configurados.</li>
+          <li><strong>Importación masiva:</strong> desde un archivo Excel o CSV. Ver <a href="#importacion" class="docs-inline-link">Importar Excel/CSV</a>.</li>
+          <li><strong>Portabilidad:</strong> importar un archivo <code>.srx</code> exportado desde otra instalación de SERA. Ver <a href="#portabilidad-srx" class="docs-inline-link">Portabilidad .srx</a>.</li>
+        </ul>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 4. TIPOS DE CAMPOS ─────────────────────────────────────────── -->
+      <section class="docs-section" id="tipos-de-campos">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Gestión de datos</span>
+          <h1>Tipos de campos</h1>
+          <p class="docs-lead">Cada columna de una tabla tiene un tipo que determina cómo se valida, muestra e interactúa con el dato. SERA soporta 9 tipos nativos.</p>
+        </div>
+
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead><tr><th>Tipo</th><th>Identificador</th><th>Descripción</th><th>Ejemplo</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="field-badge text">Texto</span></td>
+                <td><code>text</code></td>
+                <td>Cadena de caracteres libre. Soporta búsqueda full-text.</td>
+                <td>"Juan Pérez", "Observaciones..."</td>
+              </tr>
+              <tr>
+                <td><span class="field-badge number">Número</span></td>
+                <td><code>number</code></td>
+                <td>Enteros o decimales. Usable en fórmulas matemáticas.</td>
+                <td>42, 3.14, -100</td>
+              </tr>
+              <tr>
+                <td><span class="field-badge date">Fecha</span></td>
+                <td><code>date</code></td>
+                <td>Selector de fecha. Soporta funciones de diferencia de días.</td>
+                <td>2026-05-30</td>
+              </tr>
+              <tr>
+                <td><span class="field-badge list">Lista</span></td>
+                <td><code>list</code></td>
+                <td>Desplegable con opciones predefinidas. Admite múltiple selección.</td>
+                <td>Activo / Inactivo / Pendiente</td>
+              </tr>
+              <tr>
+                <td><span class="field-badge bool">Booleano</span></td>
+                <td><code>boolean</code></td>
+                <td>Checkbox de verdadero/falso.</td>
+                <td>✓ / ✗</td>
+              </tr>
+              <tr>
+                <td><span class="field-badge attach">Adjunto</span></td>
+                <td><code>attachment</code></td>
+                <td>Referencia a archivo físico. Almacenado localmente, encriptado en exportación.</td>
+                <td>contrato.pdf, foto.jpg</td>
+              </tr>
+              <tr>
+                <td><span class="field-badge relation">Relacional</span></td>
+                <td><code>relation</code></td>
+                <td>Vínculo a un registro de otra tabla. Ver <a href="#motor-relacional" class="docs-inline-link">Motor Relacional</a>.</td>
+                <td>→ Tabla "Clientes"</td>
+              </tr>
+              <tr>
+                <td><span class="field-badge formula">Fórmula</span></td>
+                <td><code>formula</code></td>
+                <td>Columna virtual calculada en tiempo real. Ver <a href="#vengine" class="docs-inline-link">V-Engine</a>.</td>
+                <td>= precio * cantidad</td>
+              </tr>
+              <tr>
+                <td><span class="field-badge long">Texto Largo</span></td>
+                <td><code>textarea</code></td>
+                <td>Área de texto multilínea para contenido extenso.</td>
+                <td>Notas, descripción extensa</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="docs-callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div>Los campos de tipo <strong>Fórmula</strong> son <em>virtuales</em>: no se almacenan en la base de datos y se recalculan en cada lectura. No pueden usarse como campos de destino en relaciones ni importarse desde Excel.</div>
+        </div>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 5. MOTOR RELACIONAL ────────────────────────────────────────── -->
+      <section class="docs-section" id="motor-relacional">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Gestión de datos</span>
+          <h1>Motor Relacional</h1>
+          <p class="docs-lead">SERA implementa un sistema de relaciones entre tablas del estilo Lookup/Foreign Key. Permite que un registro de una tabla apunte a un registro de otra, resolviendo automáticamente la visualización del dato relacionado.</p>
+        </div>
+
+        <h2>Crear un vínculo entre tablas</h2>
+        <ol class="docs-list ordered">
+          <li>Abrí el gestor de campos de la tabla origen (ej: <em>"Pedidos"</em>).</li>
+          <li>Agregá un campo nuevo de tipo <strong>Relacional</strong>.</li>
+          <li>Seleccioná la <strong>tabla destino</strong> (ej: <em>"Clientes"</em>).</li>
+          <li>Elegí el <strong>campo de visualización</strong> de la tabla destino (ej: <em>"Nombre"</em>). Este es el campo que el usuario verá en el desplegable.</li>
+          <li>Guardá la configuración.</li>
+        </ol>
+
+        <h2>Cómo funciona en tiempo real</h2>
+        <p>Al editar un registro que tiene campos relacionales, SERA presenta un <strong>desplegable asíncrono inteligente</strong> que:</p>
+        <ul class="docs-list">
+          <li>Carga bajo demanda los registros de la tabla destino para no saturar la RAM.</li>
+          <li>Permite búsqueda por texto dentro del desplegable.</li>
+          <li>Almacena internamente el <strong>ID del registro relacionado</strong>, no el texto visible (esto evita datos inconsistentes ante renombramientos).</li>
+          <li>Traduce el ID a texto legible en cada renderizado de la grilla principal.</li>
+        </ul>
+
+        <h2>Exportación relacional (.srx)</h2>
+        <p>Al exportar una tabla con vínculos relacionales, SERA <strong>detecta recursivamente</strong> todas las tablas relacionadas y las empaqueta en un único archivo <code>.srx</code>, garantizando la integridad referencial al importar en otra instalación.</p>
+
+        <div class="docs-callout note">
+          <span class="callout-icon">💡</span>
+          <div>La resolución de relaciones usa <strong>Prepared Statements nativos en Rust</strong>, blindado contra SQL Injection (OWASP A03). Los IDs nunca se interpolan como strings.</div>
+        </div>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 6. V-ENGINE ───────────────────────────────────────────────── -->
+      <section class="docs-section" id="vengine">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Gestión de datos</span>
+          <h1>V-Engine: Fórmulas Inteligentes</h1>
+          <p class="docs-lead">El Virtual Engine (V-Engine) es el motor de cálculo de SERA. Permite definir columnas virtuales cuyo valor se calcula automáticamente en tiempo real a partir de otros campos del mismo registro.</p>
+        </div>
+
+        <h2>Sintaxis básica</h2>
+        <p>Las fórmulas usan nombres de campo entre llaves <code>{}</code>. Son insensibles a mayúsculas.</p>
+        <pre class="docs-code"><code><span class="code-comment"># Suma de dos campos numéricos</span>
+{precio} * {cantidad}
+
+<span class="code-comment"># Concatenación de texto</span>
+CONCAT({apellido}, ", ", {nombre})
+
+<span class="code-comment"># Condicional</span>
+SI({stock} &lt; 5, "CRÍTICO", "OK")</code></pre>
+
+        <h2>Referencia de funciones</h2>
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead><tr><th>Función</th><th>Descripción</th><th>Ejemplo</th></tr></thead>
+            <tbody>
+              <tr><td><code>SI(cond, si_true, si_false)</code></td><td>Condicional ternario. Soporta operadores <code>AND</code> / <code>OR</code>.</td><td><code>SI({activo} == true, "Activo", "Inactivo")</code></td></tr>
+              <tr><td><code>CONCAT(a, b, ...)</code></td><td>Concatena múltiples strings.</td><td><code>CONCAT({nombre}, " ", {apellido})</code></td></tr>
+              <tr><td><code>MAYUS(texto)</code></td><td>Convierte texto a mayúsculas.</td><td><code>MAYUS({nombre})</code></td></tr>
+              <tr><td><code>MINUS(texto)</code></td><td>Convierte texto a minúsculas.</td><td><code>MINUS({email})</code></td></tr>
+              <tr><td><code>DIF_DIAS(fecha1, fecha2)</code></td><td>Diferencia en días entre dos campos de tipo Fecha.</td><td><code>DIF_DIAS({fecha_inicio}, {fecha_fin})</code></td></tr>
+              <tr><td><code>REDONDEAR(num, decimales)</code></td><td>Redondea un número.</td><td><code>REDONDEAR({precio} * 1.21, 2)</code></td></tr>
+              <tr><td><code>ABS(num)</code></td><td>Valor absoluto.</td><td><code>ABS({diferencia})</code></td></tr>
+              <tr><td><code>HOY()</code></td><td>Fecha actual del sistema.</td><td><code>DIF_DIAS({vencimiento}, HOY())</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Operadores</h2>
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead><tr><th>Operador</th><th>Descripción</th></tr></thead>
+            <tbody>
+              <tr><td><code>+ - * /</code></td><td>Aritmética básica</td></tr>
+              <tr><td><code>== != &lt; &gt; &lt;= &gt;=</code></td><td>Comparación</td></tr>
+              <tr><td><code>AND</code></td><td>Conjunción lógica (dentro de <code>SI()</code>)</td></tr>
+              <tr><td><code>OR</code></td><td>Disyunción lógica (dentro de <code>SI()</code>)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="docs-callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div><strong>Aislamiento de seguridad:</strong> las fórmulas se tokenizan y evalúan en un contexto cerrado sin acceso a variables globales del navegador, Tauri ni el DOM. No es posible ejecutar código arbitrario desde una fórmula.</div>
+        </div>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 7. REGLAS DE FORMATO ──────────────────────────────────────── -->
+      <section class="docs-section" id="reglas-formato">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Gestión de datos</span>
+          <h1>Reglas de Formato Condicional</h1>
+          <p class="docs-lead">Las reglas de formato condicional permiten que SERA coloree automáticamente filas o celdas individuales de la grilla según condiciones lógicas definidas por el usuario.</p>
+        </div>
+
+        <h2>Cómo crear una regla</h2>
+        <ol class="docs-list ordered">
+          <li>Abrí la tabla y hacé clic en <strong>Formato Condicional</strong> en la barra de herramientas.</li>
+          <li>Elegí el <strong>campo</strong> sobre el que aplica la condición.</li>
+          <li>Seleccioná el <strong>operador</strong>: <code>igual a</code>, <code>contiene</code>, <code>mayor que</code>, etc.</li>
+          <li>Ingresá el <strong>valor de referencia</strong>.</li>
+          <li>Elegí el <strong>color de resaltado</strong> para la fila o celda.</li>
+          <li>Guardá la regla. Se aplica inmediatamente sin recargar.</li>
+        </ol>
+
+        <h2>Reglas múltiples y prioridades</h2>
+        <p>Podés definir <strong>múltiples reglas</strong> para la misma tabla. Cuando un registro cumple más de una condición, se aplica la regla de <strong>mayor prioridad</strong> (la que está más arriba en la lista). Podés reordenarlas con drag &amp; drop.</p>
+
+        <h2>Operadores lógicos</h2>
+        <p>Las reglas soportan condiciones compuestas con operadores <code>AND</code> y <code>OR</code>. Por ejemplo:</p>
+        <pre class="docs-code"><code><span class="code-comment"># Pintar de rojo si el stock es 0 O el estado es "Agotado"</span>
+{stock} == 0  OR  {estado} == "Agotado"
+
+<span class="code-comment"># Pintar de amarillo si el stock &lt; 5 Y el estado es "Disponible"</span>
+{stock} &lt; 5  AND  {estado} == "Disponible"</code></pre>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 8. BUSCADOR SPOTLIGHT ─────────────────────────────────────── -->
+      <section class="docs-section" id="buscador">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Gestión de datos</span>
+          <h1>Buscador Global Spotlight</h1>
+          <p class="docs-lead">El Spotlight de SERA es un motor de búsqueda profunda que indexa simultáneamente todos los campos de todas las tablas de tu espacio de trabajo, entregando resultados en tiempo real con salto directo al registro.</p>
+        </div>
+
+        <h2>Activación</h2>
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead><tr><th>Método</th><th>Acción</th></tr></thead>
+            <tbody>
+              <tr><td>Teclado</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd></td></tr>
+              <tr><td>Barra de herramientas</td><td>Ícono de lupa → "Búsqueda Global"</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Cómo funciona</h2>
+        <ul class="docs-list">
+          <li>La búsqueda se ejecuta contra <strong>todos los campos de texto</strong> de todas las tablas en simultáneo.</li>
+          <li>Los resultados se agrupan por tabla y muestran el campo donde se encontró la coincidencia.</li>
+          <li>Al hacer clic en un resultado, SERA <strong>navega directamente</strong> a la tabla correspondiente y selecciona el registro en la grilla.</li>
+          <li>El motor usa <code>LIKE</code> parametrizado en SQLite, que es inmune a SQL Injection.</li>
+        </ul>
+
+        <h2>Búsqueda avanzada</h2>
+        <p>Podés usar la paleta de búsqueda avanzada (<kbd>Ctrl</kbd> + <kbd>P</kbd>) para buscar por tabla específica o combinar filtros por campo. La paleta recuerda las últimas 10 búsquedas de la sesión.</p>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 9. REPORTES PDF ───────────────────────────────────────────── -->
+      <section class="docs-section" id="reportes-pdf">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Exportación</span>
+          <h1>Reportes PDF Profesionales</h1>
+          <p class="docs-lead">SERA incluye un generador de reportes PDF de nivel empresarial con soporte para membrete corporativo, firma tipo sello, selección y ordenamiento de columnas por drag &amp; drop.</p>
+        </div>
+
+        <h2>Generar un reporte</h2>
+        <ol class="docs-list ordered">
+          <li>Abrí la tabla que querés exportar.</li>
+          <li>Hacé clic en <strong>Exportar → Generar PDF</strong> en la barra de herramientas.</li>
+          <li>Se abre el configurador de reporte:</li>
+        </ol>
+
+        <h2>Opciones del configurador</h2>
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead><tr><th>Opción</th><th>Descripción</th></tr></thead>
+            <tbody>
+              <tr><td>Título del reporte</td><td>Texto libre que aparece en el encabezado del documento.</td></tr>
+              <tr><td>Columnas incluidas</td><td>Seleccioná las columnas a mostrar. Reordenalas con drag &amp; drop para definir el orden en el PDF.</td></tr>
+              <tr><td>Membrete (Logo)</td><td>Toggle para incluir/excluir el logo corporativo configurado en el perfil. Aparece en el encabezado a ancho completo.</td></tr>
+              <tr><td>Firma</td><td>Toggle para incluir una firma tipo sello alineada a la derecha. Se pre-carga con el nombre del operador activo.</td></tr>
+              <tr><td>Pie de página</td><td>Texto personalizable vinculado al fondo de la hoja A4.</td></tr>
+              <tr><td>Registros</td><td>Elegí si exportás todos los registros o solo los seleccionados en la grilla.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Configurar el membrete corporativo</h2>
+        <p>Desde <strong>Ajustes → Perfil del Operador</strong>:</p>
+        <ol class="docs-list ordered">
+          <li>Hacé clic en <strong>Seleccionar imagen</strong>.</li>
+          <li>El archivo se copia automáticamente a la carpeta de datos de SERA.</li>
+          <li>SERA auto-detecta el membrete en disco en futuras sesiones (no necesitás volver a configurarlo).</li>
+        </ol>
+
+        <div class="docs-callout note">
+          <span class="callout-icon">💡</span>
+          <div>El PDF se genera con una <strong>pantalla de carga interactiva</strong> con efecto glow/desenfoque, usando una arquitectura asíncrona aislada para no bloquear la interfaz durante el procesamiento.</div>
+        </div>
+
+        <div class="docs-callout tip">
+          <span class="callout-icon">🔒</span>
+          <div><strong>Seguridad (OWASP A03):</strong> todos los textos del reporte se escapan automáticamente con <code>textContent</code> nativo antes de renderizar, bloqueando inyecciones HTML y ataques XSS.</div>
+        </div>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 10. PORTABILIDAD .SRX ─────────────────────────────────────── -->
+      <section class="docs-section" id="portabilidad-srx">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Exportación</span>
+          <h1>Portabilidad Segura (.srx)</h1>
+          <p class="docs-lead">El formato <code>.srx</code> (SERA eXport) es el contenedor de portabilidad nativo de SERA. Es un archivo ZIP encriptado con AES-256-GCM que puede contener una o más tablas, sus relaciones y todos los adjuntos físicos.</p>
+        </div>
+
+        <h2>Exportar datos</h2>
+        <ol class="docs-list ordered">
+          <li>Abrí la tabla y seleccioná <strong>Exportar → Exportar como .srx</strong>.</li>
+          <li>Elegí si incluir <strong>archivos adjuntos</strong> en el paquete.</li>
+          <li>SERA detecta recursivamente todas las tablas vinculadas y las incluye automáticamente.</li>
+          <li>Ingresá la <strong>contraseña de cifrado</strong> (mínimo 8 caracteres).</li>
+          <li>Seleccioná la ubicación de destino. El archivo se genera con extensión <code>.srx</code>.</li>
+        </ol>
+
+        <h2>¿Qué contiene un .srx?</h2>
+        <ul class="docs-list">
+          <li><code>manifest.json</code> — metadatos del paquete, versión de SERA, lista de tablas incluidas.</li>
+          <li><code>tables/[nombre].json</code> — esquema (definición de campos) de cada tabla.</li>
+          <li><code>data/[nombre].json</code> — registros de cada tabla.</li>
+          <li><code>adjuntos/</code> — archivos físicos encriptados (si se eligió incluirlos).</li>
+        </ul>
+
+        <h2>Importar un .srx</h2>
+        <ol class="docs-list ordered">
+          <li>Desde el dashboard, seleccioná <strong>Archivo → Importar .srx</strong>.</li>
+          <li>Elegí el archivo y luego ingresá la contraseña de descifrado.</li>
+          <li>SERA autodetecta el contenido (multi-tabla o legacy unidimensional).</li>
+          <li>Para colisiones de IDs primarios (registros ya existentes), SERA usa <code>INSERT OR IGNORE</code> — nunca sobreescribe registros existentes sin confirmación.</li>
+          <li>Los adjuntos se restauran a la carpeta de datos local automáticamente.</li>
+        </ol>
+
+        <div class="docs-callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div>La contraseña de cifrado <strong>no se puede recuperar</strong>. Si la perdés, el archivo <code>.srx</code> es irrecuperable. Guardá tus contraseñas en un gestor de claves.</div>
+        </div>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 11. IMPORTACIÓN EXCEL ─────────────────────────────────────── -->
+      <section class="docs-section" id="importacion">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Exportación</span>
+          <h1>Importar desde Excel / CSV</h1>
+          <p class="docs-lead">SERA puede importar masivamente miles de registros desde archivos Excel (.xlsx) o CSV. El motor de importación detecta la estructura automáticamente y permite mapear columnas de origen a destino.</p>
+        </div>
+
+        <h2>Proceso de importación</h2>
+        <ol class="docs-list ordered">
+          <li>Abrí la tabla destino y hacé clic en <strong>Importar Excel/CSV</strong> en la barra de herramientas.</li>
+          <li>Seleccioná el archivo desde el explorador nativo de Windows.</li>
+          <li>SERA lee las primeras filas y muestra una <strong>vista previa</strong> con las columnas detectadas.</li>
+          <li>En el mapeador, asignás cada columna del archivo al campo correspondiente en SERA.</li>
+          <li>Confirmás la importación. SERA procesa los registros en lotes para no bloquear la UI.</li>
+        </ol>
+
+        <h2>Validación de datos</h2>
+        <ul class="docs-list">
+          <li>Los campos de tipo <strong>Fecha</strong> se validan y normalizan al formato interno.</li>
+          <li>Los campos de tipo <strong>Número</strong> rechazan strings no numéricos y registran un warning.</li>
+          <li>Los campos de tipo <strong>Lista</strong> solo aceptan valores que existan en las opciones definidas.</li>
+          <li>Los campos <strong>Relacionales</strong> no pueden importarse (requieren resolución de IDs internos).</li>
+        </ul>
+
+        <div class="docs-callout tip">
+          <span class="callout-icon">✅</span>
+          <div>Para importar grandes volúmenes (10.000+ registros), SERA usa transacciones atómicas en SQLite que garantizan la integridad: si algo falla a mitad del proceso, el estado de la base de datos no queda inconsistente.</div>
+        </div>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 12. PLUGINS ───────────────────────────────────────────────── -->
+      <section class="docs-section" id="plugins">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Ecosistema</span>
+          <h1>Plugins y Marketplace</h1>
+          <p class="docs-lead">SERA cuenta con un ecosistema de plugins que extienden la funcionalidad base. Los plugins se cargan en caliente (hot-loading) de forma completamente offline, sin reiniciar la aplicación.</p>
+        </div>
+
+        <h2>Plugins oficiales disponibles</h2>
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead><tr><th>Plugin</th><th>Versión</th><th>Descripción</th></tr></thead>
+            <tbody>
+              <tr><td>Validador CBU</td><td>v1.x</td><td>Valida y formatea CBUs bancarios argentinos.</td></tr>
+              <tr><td>Validador CUIT</td><td>v1.x</td><td>Verifica dígito verificador de CUIT/CUIL.</td></tr>
+              <tr><td>Redactor PII</td><td>v1.x</td><td>Ocultamiento de datos de identificación personal en reportes.</td></tr>
+              <tr><td>Control de Vencimientos</td><td>v1.x</td><td>Alertas visuales automáticas para fechas próximas a vencer.</td></tr>
+              <tr><td>Barcodes</td><td>v1.x</td><td>Generación de códigos de barras y QR en registros.</td></tr>
+              <tr><td>Patentes Metálicas 3D</td><td>v1.x</td><td>Renderizado visual de patentes vehiculares argentinas.</td></tr>
+              <tr><td>Creador de Documentos</td><td>v1.x</td><td>Generación de documentos desde plantillas offline.</td></tr>
+              <tr><td>Localizador Geográfico</td><td>v1.0.6</td><td>Mapas interactivos con OpenStreetMap para coordenadas GPS offline.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Instalar un plugin</h2>
+        <ol class="docs-list ordered">
+          <li>Abrí el Ribbon y hacé clic en la pestaña <strong>Extensiones</strong>.</li>
+          <li>Abrí el <strong>Marketplace</strong> (ícono de tienda).</li>
+          <li>Buscá el plugin y hacé clic en <strong>Instalar</strong>.</li>
+          <li>SERA descarga el archivo del plugin y lo carga inmediatamente. No requiere reiniciar.</li>
+        </ol>
+
+        <h2>Actualizar plugins (v4.2.0+)</h2>
+        <p>Desde la pestaña <strong>Extensiones → Gestionar plugins</strong>, el botón <strong>↑ Actualizar</strong> aparece automáticamente cuando hay una versión más nueva disponible en el Marketplace. La actualización es en caliente.</p>
+
+        <h2>Configurar un plugin</h2>
+        <p>Los plugins que soportan configuración muestran un ícono de <strong>engranaje ⚙️</strong> en la lista de plugins activos. Al hacer clic, se abre el panel de ajustes específico del plugin, registrado mediante la API:</p>
+        <pre class="docs-code"><code><span class="code-comment">// API disponible para desarrolladores de plugins</span>
+window.SeraAPI.ui.registerPluginSettings({
+  pluginId: 'mi-plugin',
+  label: 'Configuración',
+  fields: [
+    { key: 'apiKey', type: 'text', label: 'Clave de API' },
+    { key: 'modo',   type: 'select', options: ['simple', 'avanzado'] }
+  ]
+});</code></pre>
+
+        <h2>Sandbox de seguridad</h2>
+        <p>Todos los plugins se ejecutan en un <strong>sandbox estricto</strong> con acceso limitado a la API <code>window.SeraAPI</code>. No tienen acceso al sistema de archivos nativo, al sistema operativo ni a otras tablas que no hayan sido explícitamente autorizadas por el usuario.</p>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 13. SEGURIDAD ─────────────────────────────────────────────── -->
+      <section class="docs-section" id="seguridad">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Ecosistema</span>
+          <h1>Seguridad y Privacidad</h1>
+          <p class="docs-lead">SERA implementa una arquitectura de seguridad defensiva por diseño, alineada con los estándares OWASP Top 10 e ISO 27001/27002.</p>
+        </div>
+
+        <h2>Cifrado (AES-256-GCM)</h2>
+        <p>El algoritmo AEAD (Authenticated Encryption with Associated Data) garantiza simultáneamente <strong>confidencialidad e integridad</strong>. Si un archivo <code>.srx</code> fue modificado externamente, SERA detectará la adulteración y rechazará la importación.</p>
+
+        <h2>Auditoría ISO 27001</h2>
+        <p>SERA registra los siguientes eventos en un log persistente en SQLite:</p>
+        <ul class="docs-list">
+          <li>Inicio y cierre de sesión del operador.</li>
+          <li>Exportaciones e importaciones de datos.</li>
+          <li>Errores de acceso o permisos.</li>
+          <li>Cambios en la configuración del sistema.</li>
+          <li>Acciones masivas (borrado, importación).</li>
+        </ul>
+        <p>El visor de auditoría está disponible en <strong>Ajustes → Auditoría</strong>. Los logs nunca contienen contraseñas ni datos PII sensibles.</p>
+
+        <h2>Arquitectura defensiva (OWASP)</h2>
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead><tr><th>Amenaza (OWASP)</th><th>Mitigación en SERA</th></tr></thead>
+            <tbody>
+              <tr><td>A03 — Injection</td><td>Prepared Statements nativos en Rust (rusqlite). Cero interpolación de strings en queries.</td></tr>
+              <tr><td>A03 — XSS</td><td>Escape automático con <code>textContent</code> en todos los renders de datos del usuario en el PDF.</td></tr>
+              <tr><td>A04 — Insecure Design</td><td>Evaluación de fórmulas V-Engine en contexto aislado sin acceso a globales del DOM o Tauri.</td></tr>
+              <tr><td>A08 — Integrity Failures</td><td>AES-256-GCM autentica el contenido del .srx. <code>INSERT OR IGNORE</code> previene colisiones en importaciones concurrentes.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Clave Maestra del Sistema (Phoenix Engine)</h2>
+        <p>La Clave Maestra es la contraseña raíz que protege el acceso al sistema de cifrado de SERA. Se configura una sola vez en el primer inicio. <strong>No se almacena en texto plano</strong> — se usa como material de derivación de claves para el sistema de cifrado AES.</p>
+
+        <div class="docs-callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div>Si perdés la Clave Maestra, <strong>no existe mecanismo de recuperación</strong>. Los datos cifrados con ella serán irrecuperables. Guardala en un gestor de contraseñas.</div>
+        </div>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 14. TEMAS VISUALES ─────────────────────────────────────────── -->
+      <section class="docs-section" id="temas">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Ecosistema</span>
+          <h1>Temas Visuales</h1>
+          <p class="docs-lead">SERA incluye un sistema de temas visuales que permite personalizar completamente la apariencia de la interfaz sin afectar el funcionamiento.</p>
+        </div>
+
+        <h2>Temas incluidos</h2>
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead><tr><th>Tema</th><th>Descripción</th><th>Paleta</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Deep Professional</strong></td><td>Oscuro profundo con acentos teal/cyan. Predeterminado.</td><td>Negro + Teal</td></tr>
+              <tr><td><strong>Emerald Forest</strong></td><td>Oscuro con acentos verdes vibrantes.</td><td>Gris oscuro + Verde</td></tr>
+              <tr><td><strong>Midnight Blue</strong></td><td>Azul medianoche con acentos índigo.</td><td>Azul noche + Índigo</td></tr>
+              <tr><td><strong>Sophisticated Light</strong></td><td>Modo claro premium para entornos con alta iluminación.</td><td>Blanco + Gris + Azul</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Cambiar el tema</h2>
+        <p>Desde <strong>Ajustes → Apariencia → Tema visual</strong>. El cambio se aplica al instante sin reiniciar. La preferencia se persiste entre sesiones.</p>
+
+        <h2>Opciones adicionales</h2>
+        <ul class="docs-list">
+          <li><strong>Animaciones fluidas:</strong> toggle para activar/desactivar transiciones CSS. Útil en equipos con bajo rendimiento gráfico.</li>
+          <li><strong>Modo transparente:</strong> aplica un efecto de transparencia/acrilico a paneles y barras. Requiere Windows 11 con efectos de composición activos.</li>
+        </ul>
+      </section>
+
+      <div class="docs-divider"></div>
+
+      <!-- ── 15. ATAJOS DE TECLADO ─────────────────────────────────────── -->
+      <section class="docs-section" id="atajos">
+        <div class="docs-section-header">
+          <span class="docs-eyebrow">Ecosistema</span>
+          <h1>Atajos de Teclado</h1>
+          <p class="docs-lead">Referencia completa de todos los atajos de teclado disponibles en SERA para máxima productividad.</p>
+        </div>
+
+        <h2>Globales</h2>
+        <div class="docs-table-wrapper">
+          <table class="docs-table shortcuts-table">
+            <thead><tr><th>Acción</th><th>Atajo</th></tr></thead>
+            <tbody>
+              <tr><td>Búsqueda global Spotlight</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd></td></tr>
+              <tr><td>Paleta de comandos</td><td><kbd>Ctrl</kbd> + <kbd>P</kbd></td></tr>
+              <tr><td>Nueva tabla</td><td><kbd>Ctrl</kbd> + <kbd>N</kbd></td></tr>
+              <tr><td>Importar archivo</td><td><kbd>Ctrl</kbd> + <kbd>I</kbd></td></tr>
+              <tr><td>Exportar .srx</td><td><kbd>Ctrl</kbd> + <kbd>E</kbd></td></tr>
+              <tr><td>Acerca de SERA</td><td><kbd>F1</kbd></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>En la grilla de datos</h2>
+        <div class="docs-table-wrapper">
+          <table class="docs-table shortcuts-table">
+            <thead><tr><th>Acción</th><th>Atajo</th></tr></thead>
+            <tbody>
+              <tr><td>Nuevo registro</td><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td></tr>
+              <tr><td>Editar registro seleccionado</td><td><kbd>Enter</kbd> / doble clic</td></tr>
+              <tr><td>Eliminar registros seleccionados</td><td><kbd>Supr</kbd></td></tr>
+              <tr><td>Seleccionar todo</td><td><kbd>Ctrl</kbd> + <kbd>A</kbd></td></tr>
+              <tr><td>Copiar celda</td><td><kbd>Ctrl</kbd> + <kbd>C</kbd></td></tr>
+              <tr><td>Filtrar tabla</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd></td></tr>
+              <tr><td>Generar PDF</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>En formularios</h2>
+        <div class="docs-table-wrapper">
+          <table class="docs-table shortcuts-table">
+            <thead><tr><th>Acción</th><th>Atajo</th></tr></thead>
+            <tbody>
+              <tr><td>Guardar registro</td><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td></tr>
+              <tr><td>Cancelar / Cerrar</td><td><kbd>Esc</kbd></td></tr>
+              <tr><td>Campo siguiente</td><td><kbd>Tab</kbd></td></tr>
+              <tr><td>Campo anterior</td><td><kbd>Shift</kbd> + <kbd>Tab</kbd></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── Footer de docs ───────────────────────────────────────────── -->
+      <div class="docs-footer">
+        <p>¿Encontraste un error en la documentación? Contactanos en <a href="https://wolftei.com.ar" target="_blank" class="docs-inline-link">wolftei.com.ar</a></p>
+        <p class="docs-footer-version">SERA v4.2.0 "Poseidón · Phoenix-420" · © 2026 WolfTeI</p>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
