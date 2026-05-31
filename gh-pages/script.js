@@ -132,3 +132,66 @@ function crearParticulas() {
 }
 
 crearParticulas();
+
+/* ─── DOCS PAGE — Sidebar scroll spy & toggle mobile ──────────────────────── */
+
+/**
+ * Verifica si estamos en la página de documentación.
+ * Si es así, inicializa el scroll spy del sidebar y el toggle mobile.
+ */
+if (document.body.classList.contains('docs-page')) {
+
+  const sidebar       = document.getElementById('docs-sidebar');
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const sidebarLinks  = document.querySelectorAll('.sidebar-link');
+  const docsSections  = document.querySelectorAll('.docs-section');
+
+  /**
+   * Marca el link del sidebar correspondiente a la sección actualmente visible.
+   * Usa el IntersectionObserver para detectar la sección más visible.
+   */
+  const sectionObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute('id');
+          sidebarLinks.forEach(link => {
+            link.classList.toggle(
+              'active',
+              link.getAttribute('data-section') === id
+            );
+          });
+        }
+      });
+    },
+    { rootMargin: '-20% 0px -70% 0px', threshold: 0 }
+  );
+
+  docsSections.forEach(section => sectionObserver.observe(section));
+
+  /**
+   * Al hacer clic en un link del sidebar, cierra el panel en mobile
+   * y desplaza suavemente hasta la sección destino.
+   */
+  sidebarLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      sidebar?.classList.remove('open');
+    });
+  });
+
+  /** Toggle del sidebar en mobile */
+  sidebarToggle?.addEventListener('click', () => {
+    sidebar?.classList.toggle('open');
+  });
+
+  /** Cierra el sidebar al hacer clic fuera de él en mobile */
+  document.addEventListener('click', (e) => {
+    if (
+      sidebar?.classList.contains('open') &&
+      !sidebar.contains(e.target) &&
+      e.target !== sidebarToggle
+    ) {
+      sidebar.classList.remove('open');
+    }
+  });
+}
