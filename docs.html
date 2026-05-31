@@ -333,29 +333,38 @@ npm run tauri dev</code></pre>
         </div>
 
         <h2>Sintaxis básica</h2>
-        <p>Las fórmulas usan nombres de campo entre llaves <code>{}</code>. Son insensibles a mayúsculas.</p>
-        <pre class="docs-code"><code><span class="code-comment"># Suma de dos campos numéricos</span>
-{precio} * {cantidad}
+        <p>Los campos se referencian usando <strong>corchetes</strong> <code>[nombre_del_campo]</code>. Los argumentos de funciones se separan con <strong>punto y coma</strong> <code>;</code>. Opcionalmente podés iniciar la fórmula con <code>=</code> (estilo Excel).</p>
+        <pre class="docs-code"><code><span class="code-comment"># Multiplicación de dos campos numéricos</span>
+[precio] * [cantidad]
 
 <span class="code-comment"># Concatenación de texto</span>
-CONCAT({apellido}, ", ", {nombre})
+CONCAT([apellido]; ", "; [nombre])
 
-<span class="code-comment"># Condicional</span>
-SI({stock} &lt; 5, "CRÍTICO", "OK")</code></pre>
+<span class="code-comment"># Condicional: si el stock es menor a 5, mostrar "CRÍTICO"</span>
+SI([stock] &lt; 5; "CRÍTICO"; "OK")
+
+<span class="code-comment"># Días restantes hasta el vencimiento</span>
+DIF_DIAS(HOY(); [fecha_vencimiento])</code></pre>
+
+        <div class="docs-callout note">
+          <span class="callout-icon">💡</span>
+          <div>El motor acepta tanto <code>;</code> (punto y coma, estilo Excel/LibreOffice) como <code>,</code> (coma, estilo JS) como separador de argumentos. Se recomienda usar <code>;</code> para mayor consistencia con herramientas de oficina.</div>
+        </div>
 
         <h2>Referencia de funciones</h2>
         <div class="docs-table-wrapper">
           <table class="docs-table">
             <thead><tr><th>Función</th><th>Descripción</th><th>Ejemplo</th></tr></thead>
             <tbody>
-              <tr><td><code>SI(cond, si_true, si_false)</code></td><td>Condicional ternario. Soporta operadores <code>AND</code> / <code>OR</code>.</td><td><code>SI({activo} == true, "Activo", "Inactivo")</code></td></tr>
-              <tr><td><code>CONCAT(a, b, ...)</code></td><td>Concatena múltiples strings.</td><td><code>CONCAT({nombre}, " ", {apellido})</code></td></tr>
-              <tr><td><code>MAYUS(texto)</code></td><td>Convierte texto a mayúsculas.</td><td><code>MAYUS({nombre})</code></td></tr>
-              <tr><td><code>MINUS(texto)</code></td><td>Convierte texto a minúsculas.</td><td><code>MINUS({email})</code></td></tr>
-              <tr><td><code>DIF_DIAS(fecha1, fecha2)</code></td><td>Diferencia en días entre dos campos de tipo Fecha.</td><td><code>DIF_DIAS({fecha_inicio}, {fecha_fin})</code></td></tr>
-              <tr><td><code>REDONDEAR(num, decimales)</code></td><td>Redondea un número.</td><td><code>REDONDEAR({precio} * 1.21, 2)</code></td></tr>
-              <tr><td><code>ABS(num)</code></td><td>Valor absoluto.</td><td><code>ABS({diferencia})</code></td></tr>
-              <tr><td><code>HOY()</code></td><td>Fecha actual del sistema.</td><td><code>DIF_DIAS({vencimiento}, HOY())</code></td></tr>
+              <tr><td><code>SI(cond; si_true; si_false)</code></td><td>Condicional ternario. Soporta <code>AND</code> y <code>OR</code> en la condición.</td><td><code>SI([activo] == true; "Activo"; "Inactivo")</code></td></tr>
+              <tr><td><code>IGUAL(val1; val2)</code></td><td>Compara dos valores ignorando mayúsculas/minúsculas.</td><td><code>IGUAL([estado]; "activo")</code></td></tr>
+              <tr><td><code>ESTA_VACIO(val)</code></td><td>Devuelve <code>true</code> si el campo está vacío o nulo.</td><td><code>SI(ESTA_VACIO([nombre]); "Sin nombre"; [nombre])</code></td></tr>
+              <tr><td><code>CONCAT(a; b; ...)</code></td><td>Concatena múltiples strings o campos.</td><td><code>CONCAT([nombre]; " "; [apellido])</code></td></tr>
+              <tr><td><code>MAYUS(texto)</code></td><td>Convierte el valor a mayúsculas.</td><td><code>MAYUS([nombre])</code></td></tr>
+              <tr><td><code>MINUS(texto)</code></td><td>Convierte el valor a minúsculas.</td><td><code>MINUS([email])</code></td></tr>
+              <tr><td><code>DIF_DIAS(fecha1; fecha2)</code></td><td>Diferencia en días entre dos fechas. Acepta campos de tipo Fecha y <code>HOY()</code>.</td><td><code>DIF_DIAS([fecha_inicio]; [fecha_fin])</code></td></tr>
+              <tr><td><code>HOY()</code></td><td>Timestamp de la fecha actual del sistema (sin hora).</td><td><code>DIF_DIAS(HOY(); [vencimiento])</code></td></tr>
+              <tr><td><code>AHORA()</code></td><td>Timestamp completo con fecha y hora actuales.</td><td><code>AHORA()</code></td></tr>
             </tbody>
           </table>
         </div>
@@ -363,19 +372,37 @@ SI({stock} &lt; 5, "CRÍTICO", "OK")</code></pre>
         <h2>Operadores</h2>
         <div class="docs-table-wrapper">
           <table class="docs-table">
-            <thead><tr><th>Operador</th><th>Descripción</th></tr></thead>
+            <thead><tr><th>Operador</th><th>Descripción</th><th>Equivalente JS</th></tr></thead>
             <tbody>
-              <tr><td><code>+ - * /</code></td><td>Aritmética básica</td></tr>
-              <tr><td><code>== != &lt; &gt; &lt;= &gt;=</code></td><td>Comparación</td></tr>
-              <tr><td><code>AND</code></td><td>Conjunción lógica (dentro de <code>SI()</code>)</td></tr>
-              <tr><td><code>OR</code></td><td>Disyunción lógica (dentro de <code>SI()</code>)</td></tr>
+              <tr><td><code>+ - * /</code></td><td>Aritmética básica</td><td>—</td></tr>
+              <tr><td><code>== &lt; &gt; &lt;= &gt;=</code></td><td>Comparación</td><td>—</td></tr>
+              <tr><td><code>&lt;&gt;</code></td><td>Distinto de (alternativa a <code>!=</code>)</td><td><code>!==</code></td></tr>
+              <tr><td><code>AND</code></td><td>Conjunción lógica</td><td><code>&amp;&amp;</code></td></tr>
+              <tr><td><code>OR</code></td><td>Disyunción lógica</td><td><code>||</code></td></tr>
+              <tr><td><code>NOT</code></td><td>Negación lógica</td><td><code>!</code></td></tr>
             </tbody>
           </table>
         </div>
 
+        <h2>Ejemplos completos</h2>
+        <pre class="docs-code"><code><span class="code-comment"># Total con IVA (aritmética)</span>
+[precio] * [cantidad] * 1.21
+
+<span class="code-comment"># Nombre completo en mayúsculas</span>
+MAYUS(CONCAT([nombre]; " "; [apellido]))
+
+<span class="code-comment"># Estado de vencimiento</span>
+SI(DIF_DIAS(HOY(); [vencimiento]) &lt; 0; "VENCIDO"; SI(DIF_DIAS(HOY(); [vencimiento]) &lt;= 7; "PRÓXIMO"; "OK"))
+
+<span class="code-comment"># Campo vacío con fallback</span>
+SI(ESTA_VACIO([observaciones]); "Sin observaciones"; [observaciones])
+
+<span class="code-comment"># Comparación insensible a mayúsculas</span>
+SI(IGUAL([tipo]; "urgente"); "⚠️ URGENTE"; [tipo])</code></pre>
+
         <div class="docs-callout warning">
           <span class="callout-icon">⚠️</span>
-          <div><strong>Aislamiento de seguridad:</strong> las fórmulas se tokenizan y evalúan en un contexto cerrado sin acceso a variables globales del navegador, Tauri ni el DOM. No es posible ejecutar código arbitrario desde una fórmula.</div>
+          <div><strong>Aislamiento de seguridad:</strong> las fórmulas se evalúan en un contexto cerrado sin acceso a variables globales del navegador, Tauri ni el DOM. No es posible ejecutar código arbitrario desde una fórmula.</div>
         </div>
       </section>
 
@@ -405,10 +432,10 @@ SI({stock} &lt; 5, "CRÍTICO", "OK")</code></pre>
         <h2>Operadores lógicos</h2>
         <p>Las reglas soportan condiciones compuestas con operadores <code>AND</code> y <code>OR</code>. Por ejemplo:</p>
         <pre class="docs-code"><code><span class="code-comment"># Pintar de rojo si el stock es 0 O el estado es "Agotado"</span>
-{stock} == 0  OR  {estado} == "Agotado"
+[stock] == 0  OR  [estado] == "Agotado"
 
 <span class="code-comment"># Pintar de amarillo si el stock &lt; 5 Y el estado es "Disponible"</span>
-{stock} &lt; 5  AND  {estado} == "Disponible"</code></pre>
+[stock] &lt; 5  AND  [estado] == "Disponible"</code></pre>
       </section>
 
       <div class="docs-divider"></div>
