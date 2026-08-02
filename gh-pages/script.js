@@ -133,6 +133,85 @@ function crearParticulas() {
 
 crearParticulas();
 
+/* ─── Hero Tabs Switcher ─────────────────────────────────────────────────── */
+const heroTabBtns = document.querySelectorAll('.hero-tab-btn');
+const heroImages  = document.querySelectorAll('.hero-preview-img');
+
+heroTabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const targetId = btn.getAttribute('data-target');
+    heroTabBtns.forEach(b => b.classList.remove('active'));
+    heroImages.forEach(img => img.classList.remove('active'));
+
+    btn.classList.add('active');
+    const targetImg = document.getElementById(targetId);
+    if (targetImg) targetImg.classList.add('active');
+  });
+});
+
+/* ─── Examples Panel Switcher ────────────────────────────────────────────── */
+const exTabBtns = document.querySelectorAll('.ex-tab-btn');
+const exPanels  = document.querySelectorAll('.example-panel');
+
+exTabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const panelId = btn.getAttribute('data-panel');
+    exTabBtns.forEach(b => b.classList.remove('active'));
+    exPanels.forEach(p => p.classList.remove('active'));
+
+    btn.classList.add('active');
+    const targetPanel = document.getElementById(panelId);
+    if (targetPanel) targetPanel.classList.add('active');
+  });
+});
+
+/* ─── Lightbox Modal Viewer ──────────────────────────────────────────────── */
+const lightboxModal   = document.getElementById('lightbox-modal');
+const lightboxImg     = document.getElementById('lightbox-img');
+const lightboxCaption = document.getElementById('lightbox-caption');
+const lightboxClose   = document.getElementById('lightbox-close');
+const lightboxBackdrop = document.querySelector('.lightbox-backdrop');
+
+/**
+ * Abre el modal de visualización en alta definición de la captura.
+ * @param {string} src
+ * @param {string} alt
+ */
+function openLightbox(src, alt) {
+  if (!lightboxModal || !lightboxImg) return;
+  lightboxImg.src = src;
+  lightboxImg.alt = alt || 'Captura ampliada';
+  if (lightboxCaption) lightboxCaption.textContent = alt || '';
+  lightboxModal.classList.add('active');
+  lightboxModal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+/** Cierra el modal de lightbox y restaura el scroll */
+function closeLightbox() {
+  if (!lightboxModal) return;
+  lightboxModal.classList.remove('active');
+  lightboxModal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+document.querySelectorAll('.lightbox-trigger').forEach(el => {
+  el.addEventListener('click', () => {
+    const src = el.getAttribute('src');
+    const alt = el.getAttribute('alt') || el.getAttribute('title');
+    if (src) openLightbox(src, alt);
+  });
+});
+
+lightboxClose?.addEventListener('click', closeLightbox);
+lightboxBackdrop?.addEventListener('click', closeLightbox);
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && lightboxModal?.classList.contains('active')) {
+    closeLightbox();
+  }
+});
+
 /* ─── DOCS PAGE — Sidebar scroll spy & toggle mobile ──────────────────────── */
 
 /**

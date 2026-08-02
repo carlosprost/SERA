@@ -205,6 +205,11 @@ npm run tauri dev</code></pre>
           <li><strong>Importación masiva:</strong> desde un archivo Excel o CSV. Ver <a href="#importacion" class="docs-inline-link">Importar Excel/CSV</a>.</li>
           <li><strong>Portabilidad:</strong> importar un archivo <code>.srx</code> exportado desde otra instalación de SERA. Ver <a href="#portabilidad-srx" class="docs-inline-link">Portabilidad .srx</a>.</li>
         </ul>
+
+        <div class="docs-img-box">
+          <img src="assets/v4.2.2/ejemplo de tablas/Ej1.png" alt="Grilla principal de datos en SERA v4.2.2" class="lightbox-trigger" loading="lazy" />
+          <div class="docs-img-caption">Grilla interactiva principal: selector de vistas, filtros rápidos y gestión de registros.</div>
+        </div>
       </section>
 
       <div class="docs-divider"></div>
@@ -316,6 +321,11 @@ npm run tauri dev</code></pre>
         <h2>Exportación relacional (.srx)</h2>
         <p>Al exportar una tabla con vínculos relacionales, SERA <strong>detecta recursivamente</strong> todas las tablas relacionadas y las empaqueta en un único archivo <code>.srx</code>, garantizando la integridad referencial al importar en otra instalación.</p>
 
+        <div class="docs-img-box">
+          <img src="assets/v4.2.2/NuevoRegistro-Vinculo-relacional.png" alt="Selector y vínculo relacional en formulario de registro" class="lightbox-trigger" loading="lazy" />
+          <div class="docs-img-caption">Formulario con campo relacional conectado a la tabla "Empresas".</div>
+        </div>
+
         <div class="docs-callout note">
           <span class="callout-icon">💡</span>
           <div>La resolución de relaciones usa <strong>Prepared Statements nativos en Rust</strong>, blindado contra SQL Injection (OWASP A03). Los IDs nunca se interpolan como strings.</div>
@@ -378,7 +388,7 @@ DIF_DIAS(HOY(); [fecha_vencimiento])</code></pre>
               <tr><td><code>== &lt; &gt; &lt;= &gt;=</code></td><td>Comparación</td><td>—</td></tr>
               <tr><td><code>&lt;&gt;</code></td><td>Distinto de (alternativa a <code>!=</code>)</td><td><code>!==</code></td></tr>
               <tr><td><code>AND</code></td><td>Conjunción lógica</td><td><code>&amp;&amp;</code></td></tr>
-              <tr><td><code>OR</code></td><td>Disyunción lógica</td><td><code>||</code></td></tr>
+              <tr><td><code>OR</code></td><td>Disjunción lógica</td><td><code>||</code></td></tr>
               <tr><td><code>NOT</code></td><td>Negación lógica</td><td><code>!</code></td></tr>
             </tbody>
           </table>
@@ -436,6 +446,11 @@ SI(IGUAL([tipo]; "urgente"); "⚠️ URGENTE"; [tipo])</code></pre>
 
 <span class="code-comment"># Pintar de amarillo si el stock &lt; 5 Y el estado es "Disponible"</span>
 [stock] &lt; 5  AND  [estado] == "Disponible"</code></pre>
+
+        <div class="docs-img-box">
+          <img src="assets/v4.2.2/ejemplo de tablas/Ej3-reglas.png" alt="Reglas de formato condicional aplicadas a filas y celdas" class="lightbox-trigger" loading="lazy" />
+          <div class="docs-img-caption">Reglas visuales activas: estados coloreados automáticamente según valores del registro.</div>
+        </div>
       </section>
 
       <div class="docs-divider"></div>
@@ -469,6 +484,11 @@ SI(IGUAL([tipo]; "urgente"); "⚠️ URGENTE"; [tipo])</code></pre>
 
         <h2>Búsqueda avanzada</h2>
         <p>Podés usar la paleta de búsqueda avanzada (<kbd>Ctrl</kbd> + <kbd>P</kbd>) para buscar por tabla específica o combinar filtros por campo. La paleta recuerda las últimas 10 búsquedas de la sesión.</p>
+
+        <div class="docs-img-box">
+          <img src="assets/v4.2.2/BusquedaGlobal-resultado.png" alt="Resultados del Buscador Global Spotlight" class="lightbox-trigger" loading="lazy" />
+          <div class="docs-img-caption">Spotlight en acción: búsqueda instantánea indexada a través de todas las tablas.</div>
+        </div>
       </section>
 
       <div class="docs-divider"></div>
@@ -501,6 +521,20 @@ SI(IGUAL([tipo]; "urgente"); "⚠️ URGENTE"; [tipo])</code></pre>
               <tr><td>Registros</td><td>Elegí si exportás todos los registros o solo los seleccionados en la grilla.</td></tr>
             </tbody>
           </table>
+        </div>
+
+        <h2>Configuración y Diseñador Visual de Tablas</h2>
+        <p>En SERA v4.2.2 podés personalizar completamente la estética de la tabla en el documento:</p>
+        <ul class="docs-list">
+          <li><strong>Estilos predefinidos:</strong> elegí entre estilos profesionales como Clásico, Moderno Teal, Ejecutivo Índigo, Minimalista o Elegante.</li>
+          <li><strong>Tipografía y tamaños:</strong> fuentes Sans-Serif, Serif o Monoespaciada con ajuste dinámico de tamaño de fuente.</li>
+          <li><strong>Color personalizado de encabezado:</strong> selector de color hexadecimal para adaptar el reporte a la identidad visual de tu organización.</li>
+          <li><strong>Bordes y filas alternadas:</strong> control fino de contraste para máxima legibilidad.</li>
+        </ul>
+
+        <div class="docs-img-box">
+          <img src="assets/v4.2.2/ReportePDF-DiesñoTabla.png" alt="Diseñador visual de tablas y estilos en reporte PDF" class="lightbox-trigger" loading="lazy" />
+          <div class="docs-img-caption">Diseñador de tablas para reportes PDF: personalización de temas, cabeceras y fuentes.</div>
         </div>
 
         <h2>Configurar el membrete corporativo</h2>
@@ -557,6 +591,11 @@ SI(IGUAL([tipo]; "urgente"); "⚠️ URGENTE"; [tipo])</code></pre>
           <li>Para colisiones de IDs primarios (registros ya existentes), SERA usa <code>INSERT OR IGNORE</code> — nunca sobreescribe registros existentes sin confirmación.</li>
           <li>Los adjuntos se restauran a la carpeta de datos local automáticamente.</li>
         </ol>
+
+        <div class="docs-img-box">
+          <img src="assets/v4.2.2/Exportar-srx.png" alt="Diálogo de exportación segura a paquete .srx" class="lightbox-trigger" loading="lazy" />
+          <div class="docs-img-caption">Empaquetado y cifrado criptográfico AES-256 en contenedor .srx.</div>
+        </div>
 
         <div class="docs-callout warning">
           <span class="callout-icon">⚠️</span>
@@ -649,6 +688,11 @@ window.SeraAPI.ui.registerPluginSettings({
 
         <h2>Sandbox de seguridad</h2>
         <p>Todos los plugins se ejecutan en un <strong>sandbox estricto</strong> con acceso limitado a la API <code>window.SeraAPI</code>. No tienen acceso al sistema de archivos nativo, al sistema operativo ni a otras tablas que no hayan sido explícitamente autorizadas por el usuario.</p>
+
+        <div class="docs-img-box">
+          <img src="assets/v4.2.2/Ajustes-MarketPlugins.png" alt="Marketplace oficial de extensiones de SERA" class="lightbox-trigger" loading="lazy" />
+          <div class="docs-img-caption">Marketplace de Plugins en Ajustes: instalación y actualización en caliente con 1 clic.</div>
+        </div>
       </section>
 
       <div class="docs-divider"></div>
@@ -728,6 +772,11 @@ window.SeraAPI.ui.registerPluginSettings({
           <li><strong>Animaciones fluidas:</strong> toggle para activar/desactivar transiciones CSS. Útil en equipos con bajo rendimiento gráfico.</li>
           <li><strong>Modo transparente:</strong> aplica un efecto de transparencia/acrilico a paneles y barras. Requiere Windows 11 con efectos de composición activos.</li>
         </ul>
+
+        <div class="docs-img-box">
+          <img src="assets/v4.2.2/Ajustes-Temas.png" alt="Selector de temas y personalización visual en Ajustes" class="lightbox-trigger" loading="lazy" />
+          <div class="docs-img-caption">Panel de personalización de temas visuales y modo transparente en SERA.</div>
+        </div>
       </section>
 
       <div class="docs-divider"></div>
@@ -786,6 +835,18 @@ window.SeraAPI.ui.registerPluginSettings({
       </div>
 
     </main>
+  </div>
+
+  <!-- ─── LIGHTBOX MODAL ────────────────────────────────────────────────── -->
+  <div class="lightbox-modal" id="lightbox-modal" aria-hidden="true" role="dialog">
+    <div class="lightbox-backdrop"></div>
+    <div class="lightbox-container">
+      <button class="lightbox-close" id="lightbox-close" aria-label="Cerrar vista ampliada">✕</button>
+      <div class="lightbox-content">
+        <img src="" alt="" id="lightbox-img" />
+        <div class="lightbox-caption" id="lightbox-caption"></div>
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>

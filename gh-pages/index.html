@@ -24,6 +24,8 @@
       </a>
       <ul class="nav-links">
         <li><a href="#features">Funcionalidades</a></li>
+        <li><a href="#ejemplos">Ejemplos de Tablas</a></li>
+        <li><a href="#showcase">Interfaz</a></li>
         <li><a href="#security">Seguridad</a></li>
         <li><a href="#how">Cómo funciona</a></li>
         <li><a href="docs.html">Documentación</a></li>
@@ -66,8 +68,8 @@
             <span class="btn-store-name">Microsoft Store</span>
           </div>
         </a>
-        <a href="#features" class="btn-secondary">
-          Ver funcionalidades
+        <a href="#ejemplos" class="btn-secondary">
+          Ver capturas y ejemplos
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M7 17l9.2-9.2M17 17V7H7"/>
           </svg>
@@ -91,41 +93,25 @@
       </div>
     </div>
     <div class="hero-visual">
-      <div class="app-window">
+      <div class="app-window" data-aos>
         <div class="window-bar">
           <div class="window-dots">
             <span></span><span></span><span></span>
           </div>
-          <span class="window-title">SERA — Control de Inventario</span>
+          <span class="window-title">SERA v4.2.2 — Poseidón</span>
+          <div class="window-actions-badge">100% Nativo</div>
         </div>
-        <div class="window-body">
-          <div class="mock-ribbon">
-            <span class="ribbon-btn active">Archivo</span>
-            <span class="ribbon-btn">Importar</span>
-            <span class="ribbon-btn">Ajustes</span>
-            <span class="ribbon-btn highlight">Nuevo Registro</span>
-          </div>
-          <div class="mock-table">
-            <div class="mock-row mock-header">
-              <span>Código</span><span>Producto</span><span>Estado</span><span>Stock</span>
-            </div>
-            <div class="mock-row" style="animation-delay:.1s">
-              <span class="mono">SKU-1001</span><span>Monitor 24"</span>
-              <span class="badge-status ok">DISPONIBLE</span><span>10</span>
-            </div>
-            <div class="mock-row" style="animation-delay:.2s">
-              <span class="mono">SKU-1002</span><span>Teclado Mecánico</span>
-              <span class="badge-status warn">CRÍTICO</span><span>3</span>
-            </div>
-            <div class="mock-row" style="animation-delay:.3s">
-              <span class="mono">SKU-1003</span><span>Sillas de Oficina</span>
-              <span class="badge-status err">AGOTADO</span><span>0</span>
-            </div>
-            <div class="mock-row" style="animation-delay:.4s">
-              <span class="mono">SKU-1004</span><span>Escritorio PC</span>
-              <span class="badge-status ok">DISPONIBLE</span><span>30</span>
-            </div>
-          </div>
+        <div class="hero-tabs">
+          <button class="hero-tab-btn active" data-target="hero-img-home">Dashboard</button>
+          <button class="hero-tab-btn" data-target="hero-img-grid">Grilla de Datos</button>
+          <button class="hero-tab-btn" data-target="hero-img-rules">Reglas Visuales</button>
+          <button class="hero-tab-btn" data-target="hero-img-formulas">Fórmulas</button>
+        </div>
+        <div class="window-body-img">
+          <img id="hero-img-home" class="hero-preview-img active lightbox-trigger" src="assets/v4.2.2/Home.png" alt="SERA v4.2.2 Dashboard Principal" title="Click para ampliar captura" />
+          <img id="hero-img-grid" class="hero-preview-img lightbox-trigger" src="assets/v4.2.2/ejemplo de tablas/Ej4.png" alt="SERA Grilla de Datos con Relaciones" title="Click para ampliar captura" />
+          <img id="hero-img-rules" class="hero-preview-img lightbox-trigger" src="assets/v4.2.2/ejemplo de tablas/Ej3-reglas.png" alt="SERA Reglas Visuales Condicionales" title="Click para ampliar captura" />
+          <img id="hero-img-formulas" class="hero-preview-img lightbox-trigger" src="assets/v4.2.2/ejemplo de tablas/Ej3-campos-inteligentes.png" alt="SERA Campos Inteligentes V-Engine" title="Click para ampliar captura" />
         </div>
       </div>
     </div>
@@ -160,8 +146,8 @@
               <line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
             </svg>
           </div>
-          <h3>Reportes PDF Profesionales</h3>
-          <p>Generá documentos con el logo de tu empresa, firma tipo sello y pie de página. Seleccioná y ordenás las columnas con drag & drop.</p>
+          <h3>Reportes PDF con Estilo Excel</h3>
+          <p>Diseñá tablas con presets visuales (Elegante, Clásico, Minimalista), colores de cabecera, bordes, membrete y firma.</p>
         </div>
 
         <div class="feature-card" data-aos>
@@ -180,8 +166,8 @@
               <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
             </svg>
           </div>
-          <h3>Columnas Inteligentes</h3>
-          <p>Motor de fórmulas tipo Excel. Calculá sumas, diferencias de fechas, concatenaciones y condiciones en tiempo real.</p>
+          <h3>Columnas Inteligentes (V-Engine)</h3>
+          <p>Fórmulas reactivas tipo Excel. Calculá sumas, márgenes, diferencias de fechas y concatenaciones en tiempo real.</p>
         </div>
 
         <div class="feature-card" data-aos>
@@ -191,8 +177,8 @@
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
             </svg>
           </div>
-          <h3>Motor Relacional</h3>
-          <p>Vinculá tablas entre sí. Los datos relacionados se resuelven y muestran automáticamente sin configuración compleja.</p>
+          <h3>Motor Relacional Inter-Tabla</h3>
+          <p>Vinculá tablas entre sí con selección múltiple y badges interactivos. Toda la integridad referencial en SQLite local.</p>
         </div>
 
         <div class="feature-card" data-aos>
@@ -203,79 +189,265 @@
             </svg>
           </div>
           <h3>Portabilidad Segura (.srx)</h3>
-          <p>Exportá e importá tus datos encriptados con AES-256-GCM incluyendo adjuntos y todas las relaciones entre tablas.</p>
+          <p>Exportá e importá tus bases de datos protegidas con cifrado militar AES-256-GCM incluyendo adjuntos y relaciones.</p>
         </div>
 
       </div>
     </div>
   </section>
 
-  <!-- ─── SHOWCASE ────────────────────────────────────────────────────────── -->
+  <!-- ─── EJEMPLOS REALES Y MOTOR DE TABLAS ─────────────────────────────────── -->
+  <section class="examples-section" id="ejemplos">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-eyebrow">Casos de Uso Reales</span>
+        <h2>Tablas potentes en acción</h2>
+        <p>Descubrí cómo SERA transforma registros planos en sistemas interactivos con reglas de formato, fórmulas reactivas y relaciones automáticas.</p>
+      </div>
+
+      <!-- Tab Navigator de Ejemplos -->
+      <div class="examples-tabs">
+        <button class="ex-tab-btn active" data-panel="panel-reglas">
+          <span class="ex-tab-icon">🎨</span>
+          <span>Reglas Visuales</span>
+        </button>
+        <button class="ex-tab-btn" data-panel="panel-formulas">
+          <span class="ex-tab-icon">⚡</span>
+          <span>Campos Inteligentes (V-Engine)</span>
+        </button>
+        <button class="ex-tab-btn" data-panel="panel-relaciones">
+          <span class="ex-tab-icon">🔗</span>
+          <span>Vínculos Relacionales</span>
+        </button>
+        <button class="ex-tab-btn" data-panel="panel-galeria">
+          <span class="ex-tab-icon">📊</span>
+          <span>Muestrario de Tablas</span>
+        </button>
+      </div>
+
+      <!-- Paneles de Contenido -->
+      <div class="examples-content">
+
+        <!-- Panel 1: Reglas Visuales -->
+        <div class="example-panel active" id="panel-reglas">
+          <div class="example-grid">
+            <div class="example-preview" data-aos>
+              <div class="img-frame">
+                <img src="assets/v4.2.2/ejemplo de tablas/Ej3-reglas.png" alt="Configuración de Reglas Visuales" class="lightbox-trigger" />
+                <span class="img-badge">Editor de Reglas</span>
+              </div>
+              <div class="img-frame" style="margin-top: 16px;">
+                <img src="assets/v4.2.2/ejemplo de tablas/Ej4-reglas.png" alt="Reglas Visuales en la Grilla" class="lightbox-trigger" />
+                <span class="img-badge">Grilla con Formateo Condicional</span>
+              </div>
+            </div>
+            <div class="example-info" data-aos>
+              <div class="badge-pill">Formato Condicional Sin Código</div>
+              <h3>Resaltá lo urgente al instante</h3>
+              <p>SERA analiza tus datos en tiempo real y aplica colores de fondo, bordes o texto automáticamente según las condiciones lógicas que definas.</p>
+              <ul class="example-feature-list">
+                <li>
+                  <span class="bullet-icon">🟢</span>
+                  <div><strong>Estados y Progreso:</strong> Pintá celdas en verde para "Completado" o "Disponible", y en amarillo para "En Revisión".</div>
+                </li>
+                <li>
+                  <span class="bullet-icon">🔴</span>
+                  <div><strong>Alertas Críticas:</strong> Destacá en rojo registros con stock menor a 5 o facturas vencidas para actuar sin demora.</div>
+                </li>
+                <li>
+                  <span class="bullet-icon">🎯</span>
+                  <div><strong>Filas completas o Celdas individuales:</strong> Elegí si colorear la fila entera o solo la columna afectada.</div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 2: Campos Inteligentes y Fórmulas -->
+        <div class="example-panel" id="panel-formulas">
+          <div class="example-grid">
+            <div class="example-preview" data-aos>
+              <div class="img-frame">
+                <img src="assets/v4.2.2/ejemplo de tablas/Ej3-campos-inteligentes.png" alt="Campos Inteligentes V-Engine" class="lightbox-trigger" />
+                <span class="img-badge">Fórmulas Reactivas V-Engine</span>
+              </div>
+            </div>
+            <div class="example-info" data-aos>
+              <div class="badge-pill">Cálculos en Tiempo Real</div>
+              <h3>La potencia de Excel directamente en tu base de datos</h3>
+              <p>Creá columnas calculadas con el motor <strong>V-Engine</strong>. Las fórmulas se evalúan dinámicamente y se actualizan al instante ante cualquier cambio de valor.</p>
+              <ul class="example-feature-list">
+                <li>
+                  <span class="bullet-icon">📐</span>
+                  <div><strong>Operaciones Aritméticas:</strong> Calculá totales, subtotales, IVA, márgenes de ganancia y descuentos automáticamente.</div>
+                </li>
+                <li>
+                  <span class="bullet-icon">📅</span>
+                  <div><strong>Fechas y Antigüedad:</strong> Obtené días restantes para un vencimiento o días transcurridos entre dos eventos.</div>
+                </li>
+                <li>
+                  <span class="bullet-icon">📝</span>
+                  <div><strong>Texto y Condiciones:</strong> Concatená campos (ej: <code>[Nombre] + ' ' + [Apellido]</code>) y usá condicionales <code>IF()</code>.</div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 3: Vínculos Relacionales -->
+        <div class="example-panel" id="panel-relaciones">
+          <div class="example-grid">
+            <div class="example-preview" data-aos>
+              <div class="img-frame">
+                <img src="assets/v4.2.2/ejemplo de tablas/Ej4-vinculos-relacionales.png" alt="Vínculos Relacionales en Grilla" class="lightbox-trigger" />
+                <span class="img-badge">Grilla con Chips Relacionales</span>
+              </div>
+              <div class="img-frame" style="margin-top: 16px;">
+                <img src="assets/v4.2.2/NuevoRegistro-Vinculo-relacional.png" alt="Selector de Vínculo Relacional" class="lightbox-trigger" />
+                <span class="img-badge">Selector de Registros Relacionados</span>
+              </div>
+            </div>
+            <div class="example-info" data-aos>
+              <div class="badge-pill">Arquitectura Relacional Nativa</div>
+              <h3>Conectá tu información sin duplicar datos</h3>
+              <p>Relacioná cualquier tabla con otra mediante claves foráneas y visualización multivariable. Al vincular un registro, SERA muestra sus campos clave con badges interactivos.</p>
+              <ul class="example-feature-list">
+                <li>
+                  <span class="bullet-icon">👥</span>
+                  <div><strong>Proyectos ⟷ Clientes ⟷ Facturas:</strong> Asociá fácilmente cada venta a su cliente y su responsable de área.</div>
+                </li>
+                <li>
+                  <span class="bullet-icon">🏷️</span>
+                  <div><strong>Selección y Reordenamiento en Vivo:</strong> Elegí qué campos mostrar en el badge relacional y en qué orden.</div>
+                </li>
+                <li>
+                  <span class="bullet-icon">🛡️</span>
+                  <div><strong>Integridad Referencial:</strong> SQLite local garantiza que tus relaciones se mantengan consistentes en todo momento.</div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 4: Muestrario de Tablas -->
+        <div class="example-panel" id="panel-galeria">
+          <div class="tables-cards-grid">
+            <div class="table-card" data-aos>
+              <div class="table-card-img">
+                <img src="assets/v4.2.2/ejemplo de tablas/Ej1.png" alt="Ejemplo 1 - Gestión de Clientes" class="lightbox-trigger" />
+              </div>
+              <div class="table-card-body">
+                <h4>Gestión Comercial & Clientes</h4>
+                <p>Monitoreo de cuentas, datos de contacto, estados y fechas de seguimiento.</p>
+              </div>
+            </div>
+            <div class="table-card" data-aos>
+              <div class="table-card-img">
+                <img src="assets/v4.2.2/ejemplo de tablas/Ej2.png" alt="Ejemplo 2 - Control de Inventario" class="lightbox-trigger" />
+              </div>
+              <div class="table-card-body">
+                <h4>Control de Inventario & Stock</h4>
+                <p>SKUs, cantidades críticas, precios unitarios y cálculo de valuación de inventario.</p>
+              </div>
+            </div>
+            <div class="table-card" data-aos>
+              <div class="table-card-img">
+                <img src="assets/v4.2.2/ejemplo de tablas/Ej3.png" alt="Ejemplo 3 - Proyectos y Plazos" class="lightbox-trigger" />
+              </div>
+              <div class="table-card-body">
+                <h4>Proyectos, Tareas y Vencimientos</h4>
+                <p>Barras de avance, fechas de entrega y alertas de vencimiento automáticas.</p>
+              </div>
+            </div>
+            <div class="table-card" data-aos>
+              <div class="table-card-img">
+                <img src="assets/v4.2.2/ejemplo de tablas/Ej4.png" alt="Ejemplo 4 - Facturación Relacional" class="lightbox-trigger" />
+              </div>
+              <div class="table-card-body">
+                <h4>Facturación y Órdenes Relacionales</h4>
+                <p>Asociación cruzada con clientes, montos calculados y estados de pago.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── SHOWCASE INTERFAZ ────────────────────────────────────────────────── -->
   <section class="showcase" id="showcase">
     <div class="section-container">
       <div class="section-header">
-        <span class="section-eyebrow">Interfaz</span>
+        <span class="section-eyebrow">Interfaz v4.2.2</span>
         <h2>Diseño enfocado en la productividad</h2>
-        <p>Una herramienta potente no tiene por qué ser complicada. SERA combina potencia relacional con una interfaz limpia e intuitiva.</p>
+        <p>Una herramienta potente no tiene por qué ser complicada. SERA combina potencia relacional con una interfaz limpia, moderna y ultra fluida.</p>
       </div>
 
+      <!-- Item 1: Reporte PDF con Diseñador de Tablas (Novedad 4.2.2) -->
       <div class="showcase-item">
         <div class="showcase-img" data-aos>
-          <img src="assets/SERA_4.0.0_1.png" alt="Dashboard Principal" loading="lazy">
+          <img src="assets/v4.2.2/ReportePDF-DiesñoTabla.png" alt="Diseñador de Tablas PDF en SERA" class="lightbox-trigger" loading="lazy">
         </div>
         <div class="showcase-text" data-aos>
-          <h3>Panel de Control Principal</h3>
-          <p>Visualizá el estado general de tu espacio de trabajo al instante. Accedé a estadísticas rápidas de tus tablas y registros, monitoreá el estado del cifrado y usá los accesos directos para importar o crear bases de datos nuevas.</p>
+          <div class="badge-pill">Novedad v4.2.2</div>
+          <h3>Diseñador Visual de Tablas PDF</h3>
+          <p>Personalizá tus reportes como nunca antes. Elegí entre presets visuales tipo Excel (Elegante, Ejecutivo, Clásico, Minimalista), seleccioná la tipografía, colores del encabezado, estilos de borde y ajustá columnas con drag & drop y vista previa en tiempo real.</p>
         </div>
       </div>
 
+      <!-- Item 2: Buscador Spotlight Global -->
       <div class="showcase-item reverse">
         <div class="showcase-img" data-aos>
-          <img src="assets/SERA_4.0.0_2.png" alt="Tabla Interactiva" loading="lazy">
+          <img src="assets/v4.2.2/BusquedaGlobal-resultado.png" alt="Búsqueda Global Spotlight en SERA" class="lightbox-trigger" loading="lazy">
         </div>
         <div class="showcase-text" data-aos>
-          <h3>Gestor de Datos Flexible</h3>
-          <p>Interfaz tipo tabla de alta densidad. Operá con columnas ricas: barras de progreso, badges de estado, relaciones inter-tabla y botones de acción. Todo soportado por una potente barra de herramientas para buscar, filtrar y exportar a PDF o Excel.</p>
+          <h3>Búsqueda Global Spotlight (Ctrl+Shift+F)</h3>
+          <p>Encontrá cualquier registro o expediente en cualquier tabla al instante. El motor Spotlight busca de forma asíncrona sobre todo tu repositorio local en milisegundos con navegación total por teclado.</p>
         </div>
       </div>
 
+      <!-- Item 3: Formularios y Filtros Avanzados -->
       <div class="showcase-item">
         <div class="showcase-img" data-aos>
-          <img src="assets/SERA_4.0.0_3.png" alt="Reglas de Color" loading="lazy">
+          <img src="assets/v4.2.2/Filtros.png" alt="Filtros Avanzados en SERA" class="lightbox-trigger" loading="lazy">
         </div>
         <div class="showcase-text" data-aos>
-          <h3>Reglas Condicionales Visuales</h3>
-          <p>Resaltá la información crítica automáticamente. Definí reglas lógicas (por ejemplo, pintar de rojo cuando el stock es menor a 5 o el estado es "Agotado") y SERA formateará las filas o celdas en tiempo real sin escribir una sola línea de código.</p>
+          <h3>Filtros Inteligentes y Alta de Registros</h3>
+          <p>Segmentá grandes volúmenes de datos con filtros por texto, números, rangos de fechas o valores relacionales. El asistente de nuevo registro valida automáticamente cada campo para evitar inconsistencias.</p>
         </div>
       </div>
 
+      <!-- Item 4: Marketplace Oficial de Plugins -->
       <div class="showcase-item reverse">
         <div class="showcase-img" data-aos>
-          <img src="assets/SERA_4.0.0_4.png" alt="Detalle de Registro" loading="lazy">
+          <img src="assets/v4.2.2/Ajustes-MarketPlugins.png" alt="Marketplace Oficial de Plugins SERA" class="lightbox-trigger" loading="lazy">
         </div>
         <div class="showcase-text" data-aos>
-          <h3>Detalles del Registro</h3>
-          <p>Revisá cada ítem en profundidad. Desde este visor podés previsualizar al instante todos los archivos adjuntos encriptados y desplegar más datos de los registros vinculados de forma inteligente gracias a la arquitectura relacional local.</p>
+          <h3>Marketplace Oficial de Plugins</h3>
+          <p>Expandí las capacidades de SERA en un clic: Localizador Geográfico en OpenStreetMap con exportación KML, Validador de CUIT/CUIL y CBU bancario argentino, Generador de Códigos de Barras offline, Redactor de Datos Sensibles PII y auto-actualización transparente.</p>
         </div>
       </div>
-      
+
+      <!-- Item 5: Personalización Estética y Temas -->
       <div class="showcase-item">
         <div class="showcase-img" data-aos>
-          <img src="assets/SERA_4.0.0_5.png" alt="Perfil y Membrete" loading="lazy">
-        </div>
-        <div class="showcase-text" data-aos>
-          <h3>Identidad Corporativa</h3>
-          <p>Personalizá tus exportaciones. Configurá el nombre de tu organización, tus iniciales como operador y subí un membrete oficial. SERA inyectará este logotipo con calidad profesional en cada documento PDF que generes.</p>
-        </div>
-      </div>
-
-      <div class="showcase-item reverse">
-        <div class="showcase-img" data-aos>
-          <img src="assets/SERA_4.0.0_6.png" alt="Temas Visuales" loading="lazy">
+          <img src="assets/v4.2.2/Ajustes-Temas.png" alt="Temas Visuales en SERA" class="lightbox-trigger" loading="lazy">
         </div>
         <div class="showcase-text" data-aos>
           <h3>Personalización Estética Absoluta</h3>
-          <p>Tu espacio, tus reglas. Elegí entre múltiples temas cuidadosamente diseñados (Deep Professional, Emerald Forest, Midnight Blue, Sophisticated Light) o creá tu estilo propio, con opciones de animaciones fluidas y modo transparente.</p>
+          <p>Tu espacio, tus reglas. Alterná entre temas profesionales (Deep Professional, Emerald Forest, Midnight Blue, Sophisticated Light), activá el modo transparente con efecto mica y ajustá la densidad de la interfaz a tu gusto.</p>
+        </div>
+      </div>
+
+      <!-- Item 6: Portabilidad Cifrada Militar (.srx) -->
+      <div class="showcase-item reverse">
+        <div class="showcase-img" data-aos>
+          <img src="assets/v4.2.2/Exportar-srx.png" alt="Exportación Cifrada .srx" class="lightbox-trigger" loading="lazy">
+        </div>
+        <div class="showcase-text" data-aos>
+          <h3>Portabilidad Cifrada Militar (.srx)</h3>
+          <p>Hacé copias de seguridad de tus tablas completas con protección por contraseña mediante AES-256-GCM y derivación PBKDF2. El contenedor <code>.srx</code> empaqueta tablas, esquemas, reglas y archivos adjuntos en un solo archivo protegido.</p>
         </div>
       </div>
 
@@ -452,6 +624,18 @@
       </div>
     </div>
   </footer>
+
+  <!-- ─── LIGHTBOX MODAL ────────────────────────────────────────────────────── -->
+  <div id="lightbox-modal" class="lightbox-modal" aria-hidden="true">
+    <div class="lightbox-backdrop"></div>
+    <div class="lightbox-container">
+      <button class="lightbox-close" id="lightbox-close" aria-label="Cerrar vista previa">✕</button>
+      <div class="lightbox-content">
+        <img id="lightbox-img" src="" alt="Captura ampliada" />
+        <div id="lightbox-caption" class="lightbox-caption"></div>
+      </div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
