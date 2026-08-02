@@ -133,21 +133,7 @@ function crearParticulas() {
 
 crearParticulas();
 
-/* ─── Hero Tabs Switcher ─────────────────────────────────────────────────── */
-const heroTabBtns = document.querySelectorAll('.hero-tab-btn');
-const heroImages  = document.querySelectorAll('.hero-preview-img');
 
-heroTabBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    const targetId = btn.getAttribute('data-target');
-    heroTabBtns.forEach(b => b.classList.remove('active'));
-    heroImages.forEach(img => img.classList.remove('active'));
-
-    btn.classList.add('active');
-    const targetImg = document.getElementById(targetId);
-    if (targetImg) targetImg.classList.add('active');
-  });
-});
 
 /* ─── Examples Panel Switcher ────────────────────────────────────────────── */
 const exTabBtns = document.querySelectorAll('.ex-tab-btn');
