@@ -1,6 +1,6 @@
-# SECURITY_REPORT.md — SERA v4.2.1 "Poseidón"
+# SECURITY_REPORT.md — SERA v4.2.2 "Poseidón"
 **WolfTeI | Sistema de Expedientes de Registro Avanzado**
-*Última actualización: 2026-08-02 — Release v4.2.1 (Phoenix-421)*
+*Última actualización: 2026-08-02 — Release v4.2.2 (Phoenix-422)*
 
 ---
 
@@ -126,4 +126,4 @@ Para garantizar que el marketplace y las extensiones locales activas no comprome
 
 ---
 
-*Este reporte certifica que SERA v4.2.1 "Poseidón" eleva los controles de seguridad a nivel de producto comercial universal, incorporando auditoría ISO 27001, gestión segura de activos de marca (logos), robustecimiento del ciclo de vida de la configuración del operador, un blindaje estricto en la inyección de plugins dinámicos del marketplace, y un sistema seguro de actualización automática y manual de plugins basado en control semántico de versiones y consultas de SQLite preparadas.*
+*Este reporte certifica que SERA v4.2.2 "Poseidón" eleva los controles de seguridad a nivel de producto comercial universal, incorporando auditoría ISO 27001, gestión segura de activos de marca (logos), robustecimiento del ciclo de vida de la configuración del operador, un blindaje estricto en la inyección de plugins dinámicos del marketplace, y un sistema seguro de actualización automática y manual de plugins basado en control semántico de versiones y consultas de SQLite preparadas.*

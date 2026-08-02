@@ -3,11 +3,12 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeFile } from '@tauri-apps/plugin-fs';
+import { PdfTableStyle, DEFAULT_PDF_TABLE_STYLE } from '../interfaces/pdf-styles.interfaces';
 
 /**
  * Servicio de generación de PDF para SERA.
  * Encapsula la lógica de creación del documento PDF a partir
- * de los registros seleccionados en una tabla.
+ * de los registros seleccionados en una tabla con soporte de estilos y presets tipo Excel.
  *
  * Extraído de AppComponent siguiendo el principio de
  * Separación de Intereses (SoC) y el patrón Controller-Service.
@@ -21,8 +22,7 @@ export class PdfService {
    * Genera y descarga un PDF con los registros seleccionados.
    *
    * @param contenedor - Elemento HTML div donde se renderiza la tabla temporal.
-   * @param titulo - Título del documento PDF.
-   * @param descripcion - Descripción o cuerpo introductorio del documento.
+   * @param config - Configuración de textos, membrete, firma y estilos de tabla.
    * @param contenido - Array de registros seleccionados de la tabla.
    */
   async generarPdf(
@@ -32,7 +32,12 @@ export class PdfService {
       descripcion: string,
       descripcion_post?: string,
       incluir_firma?: boolean,
-      firma_texto?: string
+      firma_texto?: string,
+      incluir_membrete?: boolean,
+      logo_base64?: string,
+      nombre_operador?: string,
+      columnas?: string[],
+      estilo_tabla?: PdfTableStyle
     },
     contenido: any[]
   ): Promise<boolean> {
@@ -189,44 +194,100 @@ export class PdfService {
   }
 
   /**
-   * Construye la tabla HTML basada en el contenido y la configuración de columnas.
+   * Construye la tabla HTML basada en el contenido, columnas seleccionadas y estilo configurado.
    */
   private construirTablaHtml(contenido: any[], config: any): HTMLTableElement {
+    const estilo: PdfTableStyle = config.estilo_tabla || DEFAULT_PDF_TABLE_STYLE;
     const tabla = this.crearElemento('table') as HTMLTableElement;
     tabla.style.width = '100%';
     tabla.style.borderCollapse = 'collapse';
-    tabla.style.fontSize = '10px';
-    tabla.style.color = 'black';
+    tabla.style.fontFamily = estilo.fontFamily || 'Arial, Helvetica, sans-serif';
+    tabla.style.color = '#1e293b';
+
+    // Tamaño de fuente según configuración
+    const fontSizes: Record<string, string> = {
+      compact: '8.5pt',
+      normal: '9.5pt',
+      large: '11pt'
+    };
+    tabla.style.fontSize = fontSizes[estilo.fontSize] || '9.5pt';
 
     // Definir las columnas a mostrar y su orden
     const headers = config.columnas && config.columnas.length > 0 
       ? config.columnas 
-      : Object.keys(contenido[0]).filter(key => !key.toLowerCase().includes('id'));
+      : (contenido.length > 0 ? Object.keys(contenido[0]).filter(key => !key.toLowerCase().includes('id')) : []);
 
-    // Encabezado
+    const borderColor = estilo.borderColor || '#cbd5e1';
+    const borderStyle = estilo.borderStyle || 'full';
+
+    const getThBorder = (): string => {
+      switch (borderStyle) {
+        case 'none': return 'none';
+        case 'horizontal': return `1px solid ${borderColor}`;
+        case 'minimal': return `2px solid ${borderColor}`;
+        case 'full':
+        default: return `1px solid ${borderColor}`;
+      }
+    };
+
+    const getTdBorder = (): { top: string; bottom: string; left: string; right: string } => {
+      switch (borderStyle) {
+        case 'none': return { top: 'none', bottom: 'none', left: 'none', right: 'none' };
+        case 'horizontal': return { top: 'none', bottom: `1px solid ${borderColor}`, left: 'none', right: 'none' };
+        case 'minimal': return { top: 'none', bottom: `1px dashed ${borderColor}`, left: 'none', right: 'none' };
+        case 'full':
+        default: return { top: `1px solid ${borderColor}`, bottom: `1px solid ${borderColor}`, left: `1px solid ${borderColor}`, right: `1px solid ${borderColor}` };
+      }
+    };
+
+    // Encabezado (thead)
     const thead = this.crearElemento('thead');
     const trHead = this.crearElemento('tr');
     headers.forEach((header: string) => {
-      const displayHeader = header.replace(/_/g, ' '); // Reemplazar guiones por espacios
+      const displayHeader = header.replace(/_/g, ' ');
       const th = this.crearElemento('th', '', displayHeader);
-      th.style.border = '1px solid #ddd';
-      th.style.padding = '8px';
-      th.style.backgroundColor = '#f2f2f2';
-      th.style.textAlign = 'left';
-      th.style.textTransform = 'capitalize';
+      th.style.padding = '8px 10px';
+      th.style.backgroundColor = estilo.headerBg || '#1e3a8a';
+      th.style.color = estilo.headerTextColor || '#ffffff';
+      th.style.textAlign = estilo.headerAlign || 'left';
+      th.style.textTransform = 'uppercase';
+      th.style.fontSize = '8pt';
+      th.style.letterSpacing = '0.5px';
+      th.style.fontWeight = '700';
+      th.style.border = getThBorder();
       trHead.appendChild(th);
     });
     thead.appendChild(trHead);
     tabla.appendChild(thead);
 
-    // Cuerpo
+    // Cuerpo (tbody)
     const tbody = this.crearElemento('tbody');
-    contenido.forEach((row) => {
+    const tdBorders = getTdBorder();
+
+    contenido.forEach((row, rowIndex) => {
       const tr = this.crearElemento('tr');
-      headers.forEach((header: string) => {
-        const td = this.crearElemento('td', '', row[header]?.toString() || '');
-        td.style.border = '1px solid #ddd';
-        td.style.padding = '8px';
+      
+      // Fondo de fila alternada (zebra striping)
+      if (estilo.alternateRows && rowIndex % 2 === 1) {
+        tr.style.backgroundColor = estilo.alternateRowBg || '#f8fafc';
+      } else {
+        tr.style.backgroundColor = '#ffffff';
+      }
+
+      headers.forEach((header: string, colIndex: number) => {
+        const td = this.crearElemento('td', '', row[header] !== undefined && row[header] !== null ? String(row[header]) : '');
+        td.style.padding = '7px 10px';
+        td.style.borderTop = tdBorders.top;
+        td.style.borderBottom = tdBorders.bottom;
+        td.style.borderLeft = tdBorders.left;
+        td.style.borderRight = tdBorders.right;
+        td.style.color = '#1f2937';
+
+        if (estilo.highlightFirstColumn && colIndex === 0) {
+          td.style.fontWeight = '700';
+          td.style.color = '#0f172a';
+        }
+
         tr.appendChild(td);
       });
       tbody.appendChild(tr);

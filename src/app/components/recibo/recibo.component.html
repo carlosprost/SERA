@@ -72,6 +72,235 @@
                   </div>
               </div>
           </mat-tab>
+
+          <!-- PESTAÑA: DISEÑO Y ESTILO DE TABLA (TIPO EXCEL) -->
+          <mat-tab label="Diseño de Tabla">
+              <div class="table-design-container tab-section">
+                  
+                  <!-- FILTROS DE CATEGORÍA DE PRESETS -->
+                  <div class="presets-filter-bar">
+                      <span class="filter-label">Galería de Estilos:</span>
+                      <div class="filter-pills">
+                          <button type="button" class="filter-pill" [class.active]="categoriaSeleccionada() === 'todos'" (click)="categoriaSeleccionada.set('todos')">
+                              Todos ({{presets.length}})
+                          </button>
+                          <button type="button" class="filter-pill" [class.active]="categoriaSeleccionada() === 'medio'" (click)="categoriaSeleccionada.set('medio')">
+                              Corporativo / Medio
+                          </button>
+                          <button type="button" class="filter-pill" [class.active]="categoriaSeleccionada() === 'claro'" (click)="categoriaSeleccionada.set('claro')">
+                              Claro / Suave
+                          </button>
+                          <button type="button" class="filter-pill" [class.active]="categoriaSeleccionada() === 'oscuro'" (click)="categoriaSeleccionada.set('oscuro')">
+                              Oscuro / Ejecutivo
+                          </button>
+                          <button type="button" class="filter-pill" [class.active]="categoriaSeleccionada() === 'minimal'" (click)="categoriaSeleccionada.set('minimal')">
+                              Minimalista
+                          </button>
+                      </div>
+                  </div>
+
+                  <!-- GRID DE PRESETS VISUALES -->
+                  <div class="presets-gallery-grid">
+                      @for (preset of presetsFiltrados(); track preset.id) {
+                          <div class="preset-card" 
+                               [class.active]="estiloTabla().presetId === preset.id"
+                               (click)="seleccionarPreset(preset)">
+                              <!-- Miniatura representativa de la tabla -->
+                              <div class="preset-card__preview" [style.border-color]="preset.style.borderColor">
+                                  <div class="preview-head" [style.background]="preset.style.headerBg" [style.color]="preset.style.headerTextColor">
+                                      <span>Col 1</span>
+                                      <span>Col 2</span>
+                                      <span>Col 3</span>
+                                  </div>
+                                  <div class="preview-row" [style.border-bottom-color]="preset.style.borderColor">
+                                      <span>Dato</span><span>Dato</span><span>Dato</span>
+                                  </div>
+                                  <div class="preview-row" 
+                                       [style.background]="preset.style.alternateRows ? preset.style.alternateRowBg : '#ffffff'"
+                                       [style.border-bottom-color]="preset.style.borderColor">
+                                      <span>Dato</span><span>Dato</span><span>Dato</span>
+                                  </div>
+                                  <div class="preview-row" [style.border-bottom-color]="preset.style.borderColor">
+                                      <span>Dato</span><span>Dato</span><span>Dato</span>
+                                  </div>
+                              </div>
+                              <div class="preset-card__footer">
+                                  <span class="preset-name">{{preset.nombre}}</span>
+                                  @if (estiloTabla().presetId === preset.id) {
+                                      <mat-icon class="preset-check">check_circle</mat-icon>
+                                  }
+                              </div>
+                          </div>
+                      }
+                  </div>
+
+                  <!-- PERSONALIZACIÓN FINA / AJUSTES DETALLADOS -->
+                  <div class="customizer-panel">
+                      <div class="customizer-header">
+                          <h4>
+                              <mat-icon>tune</mat-icon>
+                              Personalización Fina
+                          </h4>
+                          <span class="customizer-subtitle">Ajustá colores, tipografía y bordes a tu gusto</span>
+                      </div>
+
+                      <div class="customizer-grid">
+                          <!-- Selector de Tipografía -->
+                          <div class="customizer-item">
+                              <label class="customizer-label">Fuente de la Tabla</label>
+                              <mat-form-field appearance="outline" class="sera-compact-field">
+                                  <mat-select [value]="estiloTabla().fontFamily" (selectionChange)="actualizarEstilo('fontFamily', $event.value)">
+                                      @for (f of fuentesDisponibles; track f.value) {
+                                          <mat-option [value]="f.value">{{f.label}}</mat-option>
+                                      }
+                                  </mat-select>
+                              </mat-form-field>
+                          </div>
+
+                          <!-- Selector de Tamaño de Fuente -->
+                          <div class="customizer-item">
+                              <label class="customizer-label">Tamaño de Texto</label>
+                              <mat-form-field appearance="outline" class="sera-compact-field">
+                                  <mat-select [value]="estiloTabla().fontSize" (selectionChange)="actualizarEstilo('fontSize', $event.value)">
+                                      <mat-option value="compact">Compacto (8.5pt)</mat-option>
+                                      <mat-option value="normal">Estándar (9.5pt)</mat-option>
+                                      <mat-option value="large">Grande (11pt)</mat-option>
+                                  </mat-select>
+                              </mat-form-field>
+                          </div>
+
+                          <!-- Estilo de Bordes -->
+                          <div class="customizer-item">
+                              <label class="customizer-label">Estilo de Bordes</label>
+                              <mat-form-field appearance="outline" class="sera-compact-field">
+                                  <mat-select [value]="estiloTabla().borderStyle" (selectionChange)="actualizarEstilo('borderStyle', $event.value)">
+                                      <mat-option value="full">Cuadrícula Completa</mat-option>
+                                      <mat-option value="horizontal">Solo Horizontales</mat-option>
+                                      <mat-option value="minimal">Minimalista (Sutil)</mat-option>
+                                      <mat-option value="none">Sin Bordes</mat-option>
+                                  </mat-select>
+                              </mat-form-field>
+                          </div>
+
+                          <!-- Alineación de Encabezado -->
+                          <div class="customizer-item">
+                              <label class="customizer-label">Alineación Cabecera</label>
+                              <mat-form-field appearance="outline" class="sera-compact-field">
+                                  <mat-select [value]="estiloTabla().headerAlign" (selectionChange)="actualizarEstilo('headerAlign', $event.value)">
+                                      <mat-option value="left">Alineado a la Izquierda</mat-option>
+                                      <mat-option value="center">Centrado</mat-option>
+                                  </mat-select>
+                              </mat-form-field>
+                          </div>
+                      </div>
+
+                      <!-- SELECTORES DE COLOR RÁPIDOS -->
+                      <div class="colors-row">
+                          <!-- Color Encabezado -->
+                          <div class="color-picker-group">
+                              <label>Fondo Encabezado</label>
+                              <div class="color-input-wrapper">
+                                  <input type="color" [value]="estiloTabla().headerBg" (input)="actualizarEstilo('headerBg', $any($event.target).value)">
+                                  <span class="hex-text">{{estiloTabla().headerBg}}</span>
+                              </div>
+                          </div>
+
+                          <!-- Color Texto Encabezado -->
+                          <div class="color-picker-group">
+                              <label>Texto Encabezado</label>
+                              <div class="color-input-wrapper">
+                                  <input type="color" [value]="estiloTabla().headerTextColor" (input)="actualizarEstilo('headerTextColor', $any($event.target).value)">
+                                  <div class="quick-text-colors">
+                                      <button type="button" class="swatch-btn text-white" title="Blanco" (click)="actualizarEstilo('headerTextColor', '#ffffff')"></button>
+                                      <button type="button" class="swatch-btn text-dark" title="Oscuro" (click)="actualizarEstilo('headerTextColor', '#1e293b')"></button>
+                                  </div>
+                              </div>
+                          </div>
+
+                          <!-- Color Filas Alternadas -->
+                          <div class="color-picker-group" [class.disabled]="!estiloTabla().alternateRows">
+                              <label>Fondo Filas Zebra</label>
+                              <div class="color-input-wrapper">
+                                  <input type="color" [value]="estiloTabla().alternateRowBg" (input)="actualizarEstilo('alternateRowBg', $any($event.target).value)" [disabled]="!estiloTabla().alternateRows">
+                                  <span class="hex-text">{{estiloTabla().alternateRowBg}}</span>
+                              </div>
+                          </div>
+
+                          <!-- Color de Bordes -->
+                          <div class="color-picker-group" [class.disabled]="estiloTabla().borderStyle === 'none'">
+                              <label>Color de Bordes</label>
+                              <div class="color-input-wrapper">
+                                  <input type="color" [value]="estiloTabla().borderColor" (input)="actualizarEstilo('borderColor', $any($event.target).value)" [disabled]="estiloTabla().borderStyle === 'none'">
+                                  <span class="hex-text">{{estiloTabla().borderColor}}</span>
+                              </div>
+                          </div>
+                      </div>
+
+                      <!-- TOGGLES DE COMPORTAMIENTO -->
+                      <div class="toggles-row">
+                          <mat-slide-toggle [checked]="estiloTabla().alternateRows" (change)="actualizarEstilo('alternateRows', $event.checked)" color="primary">
+                              Filas alternadas (Zebra striping)
+                          </mat-slide-toggle>
+
+                          <mat-slide-toggle [checked]="estiloTabla().highlightFirstColumn" (change)="actualizarEstilo('highlightFirstColumn', $event.checked)" color="primary">
+                              Resaltar 1ª columna (Negrita)
+                          </mat-slide-toggle>
+                      </div>
+                  </div>
+
+                  <!-- VISTA PREVIA EN VIVO (LIVE PREVIEW) -->
+                  <div class="live-preview-box">
+                      <div class="live-preview-header">
+                          <div class="preview-badge">
+                              <mat-icon>visibility</mat-icon>
+                              <span>Vista Previa en Vivo (Así saldrá en el PDF)</span>
+                          </div>
+                          <span class="preview-info">Fuente: {{estiloTabla().fontFamily.split(',')[0].replace("'", "").replace("'", "")}}</span>
+                      </div>
+
+                      <div class="live-table-wrapper">
+                          <table class="live-preview-table" 
+                                 [style.font-family]="estiloTabla().fontFamily"
+                                 [style.font-size]="estiloTabla().fontSize === 'compact' ? '11px' : (estiloTabla().fontSize === 'large' ? '13.5px' : '12px')">
+                              <thead>
+                                  <tr>
+                                      @for (header of getLivePreviewHeaders(); track header) {
+                                          <th [style.background]="estiloTabla().headerBg"
+                                              [style.color]="estiloTabla().headerTextColor"
+                                              [style.text-align]="estiloTabla().headerAlign"
+                                              [style.border-color]="estiloTabla().borderColor"
+                                              [class.border-full]="estiloTabla().borderStyle === 'full'"
+                                              [class.border-horizontal]="estiloTabla().borderStyle === 'horizontal'"
+                                              [class.border-minimal]="estiloTabla().borderStyle === 'minimal'"
+                                              [class.border-none]="estiloTabla().borderStyle === 'none'">
+                                              {{header.replace('_', ' ')}}
+                                          </th>
+                                      }
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  @for (row of getLivePreviewRows(); track $index; let idx = $index) {
+                                      <tr [style.background]="(estiloTabla().alternateRows && idx % 2 === 1) ? estiloTabla().alternateRowBg : '#ffffff'">
+                                          @for (header of getLivePreviewHeaders(); track header; let colIdx = $index) {
+                                              <td [style.border-color]="estiloTabla().borderColor"
+                                                  [class.border-full]="estiloTabla().borderStyle === 'full'"
+                                                  [class.border-horizontal]="estiloTabla().borderStyle === 'horizontal'"
+                                                  [class.border-minimal]="estiloTabla().borderStyle === 'minimal'"
+                                                  [class.border-none]="estiloTabla().borderStyle === 'none'"
+                                                  [class.bold-first-col]="estiloTabla().highlightFirstColumn && colIdx === 0">
+                                                  {{row[header]}}
+                                              </td>
+                                          }
+                                      </tr>
+                                  }
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+
+              </div>
+          </mat-tab>
+
   
       </mat-tab-group>
   </mat-dialog-content>

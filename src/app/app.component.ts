@@ -394,8 +394,9 @@ export class AppComponent implements AfterViewInit, OnInit {
       : [];
 
     const dialogRef = this.dialog.open(ReciboComponent, {
-      width: "650px",
-      maxHeight: "90vh",
+      width: "740px",
+      maxWidth: "95vw",
+      maxHeight: "92vh",
       data: { 
         message: "Configurar Reporte",
         campos: camposDisponibles,
