@@ -368,10 +368,25 @@ export class ConfigDataDialogComponent {
     }
   }
 
+  /** Compara dos versiones SemVer. Retorna true si vNueva es estrictamente mayor que vActual. */
+  private esVersionMayor(vNueva: string, vActual: string): boolean {
+    if (!vNueva || !vActual) return false;
+    const clean = (v: string) => v.replace(/^v/i, '').trim();
+    const pNew = clean(vNueva).split('.').map(n => parseInt(n, 10) || 0);
+    const pAct = clean(vActual).split('.').map(n => parseInt(n, 10) || 0);
+    for (let i = 0; i < Math.max(pNew.length, pAct.length); i++) {
+      const n = pNew[i] || 0;
+      const a = pAct[i] || 0;
+      if (n > a) return true;
+      if (n < a) return false;
+    }
+    return false;
+  }
+
   /**
    * Verifica si hay actualizaciones disponibles en el Marketplace para cada plugin instalado.
-   * Los plugins con auto_update=true se actualizan silenciosamente en segundo plano.
-   * Los demás quedan marcados con el badge de actualización manual.
+   * Los plugins con auto_update=true se actualizan de forma transparente en segundo plano.
+   * Los demás quedan marcados con el badge de actualización manual ("Actualizar").
    */
   async verificarActualizaciones(instalados: PluginInfo[]) {
     if (instalados.length === 0) return;
@@ -382,22 +397,22 @@ export class ConfigDataDialogComponent {
       const catalogo: any[] = Array.isArray(data) ? data : data.plugins || [];
 
       const conUpdate: string[] = [];
-      const autoActualizados: string[] = [];
+      let huboSincronizacionSilenciosa = false;
 
       for (const plugin of instalados) {
         const mp = catalogo.find(m => m.id === plugin.id);
         if (!mp) continue; // Plugin no listado en marketplace, se ignora
 
-        const hayUpdate = mp.version.localeCompare(plugin.version, undefined, { numeric: true, sensitivity: 'base' }) > 0;
+        const hayUpdate = this.esVersionMayor(mp.version, plugin.version);
         if (!hayUpdate) continue;
 
         if (plugin.auto_update ?? true) {
-          // Auto-actualización silenciosa en segundo plano
+          // Auto-actualización transparente en segundo plano (sin spam de snackbars)
           try {
-            await this.instalarDesdeMarketplace(mp, true); // Forzar actualización de versión
-            autoActualizados.push(plugin.nombre);
+            await this.instalarDesdeMarketplace(mp, true, true); // modo silencioso = true
+            huboSincronizacionSilenciosa = true;
           } catch (e) {
-            console.error(`[SERA Auto-Update] Error al actualizar ${plugin.nombre}:`, e);
+            console.error(`[SERA Auto-Update] Error al auto-actualizar ${plugin.nombre}:`, e);
           }
         } else {
           conUpdate.push(plugin.id);
@@ -406,12 +421,7 @@ export class ConfigDataDialogComponent {
 
       this.pluginsConUpdate.set(conUpdate);
 
-      if (autoActualizados.length > 0) {
-        this.snackBar.open(
-          `🔄 ${autoActualizados.length} plugin${autoActualizados.length > 1 ? 's actualizados' : ' actualizado'} automáticamente: ${autoActualizados.join(', ')}`,
-          'OK',
-          { duration: 5000, panelClass: ['snackbar-exito'] }
-        );
+      if (huboSincronizacionSilenciosa) {
         await this.cargarPluginsInstalados(true);
       }
     } catch (err) {
@@ -506,7 +516,7 @@ export class ConfigDataDialogComponent {
    * 2. Invoca el comando Rust `instalar_plugin_local` para escribirlos en disco y registrarlos en SQLite.
    * 3. Recarga los plugins activos en caliente.
    */
-  async instalarDesdeMarketplace(mp: any, forzarActualizacion: boolean = false) {
+  async instalarDesdeMarketplace(mp: any, forzarActualizacion: boolean = false, silencioso: boolean = false) {
     const id = mp.id;
     if (this.estaInstalado(id) && !forzarActualizacion) return;
     this.instalandoPluginId.set(id);
@@ -549,19 +559,23 @@ export class ConfigDataDialogComponent {
       await this.pluginService.cargarPluginsActivos();
       await this.cargarPluginsInstalados(forzarActualizacion);
 
-      this.snackBar.open(
-        forzarActualizacion 
-          ? `¡Plugin "${mp.name || id}" actualizado a la versión ${mp.version || '1.0.0'} correctamente!`
-          : `¡Plugin "${mp.name || id}" instalado correctamente!`, 
-        'ÉXITO', 
-        {
-          duration: 3500,
-          panelClass: ['snackbar-exito']
-        }
-      );
+      if (!silencioso) {
+        this.snackBar.open(
+          forzarActualizacion 
+            ? `¡Plugin "${mp.name || id}" actualizado a la versión ${mp.version || '1.0.0'} correctamente!`
+            : `¡Plugin "${mp.name || id}" instalado correctamente!`, 
+          'ÉXITO', 
+          {
+            duration: 3500,
+            panelClass: ['snackbar-exito']
+          }
+        );
+      }
     } catch (err: any) {
       console.error('[SERA Marketplace] Error al instalar/actualizar plugin:', err);
-      this.snackBar.open(`Error al procesar el plugin: ${err.message || err}`, 'Cerrar', { duration: 4000 });
+      if (!silencioso) {
+        this.snackBar.open(`Error al procesar el plugin: ${err.message || err}`, 'Cerrar', { duration: 4000 });
+      }
     } finally {
       this.instalandoPluginId.set(null);
     }
