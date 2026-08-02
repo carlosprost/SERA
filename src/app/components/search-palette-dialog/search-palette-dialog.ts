@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MaterialModule } from '../../shared/material.module';
@@ -22,6 +22,7 @@ export class SearchPaletteDialog implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(
     public dialogRef: MatDialogRef<SearchPaletteDialog>,
+    private cdr: ChangeDetectorRef,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     if (data && data.initialValue) {
@@ -56,6 +57,7 @@ export class SearchPaletteDialog implements OnInit, OnDestroy, AfterViewInit {
         } else {
           this.matchCount = res.filtered === 0 ? 'Sin resultados' : `${res.filtered} de ${res.total}`;
         }
+        this.cdr.markForCheck();
       }
     }
   }

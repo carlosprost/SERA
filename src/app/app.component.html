@@ -160,7 +160,7 @@
                 <span>Columnas</span>
               </button>
               <mat-menu #columnsMenu="matMenu">
-                @for (col of activeTable.allColumns; track col) {
+                @for (col of activeTable.allColumns; track $index) {
                   @if (col !== activeTable.campoSeleccion && col !== 'actions') {
                     <button mat-menu-item (click)="activeTable.toggleColumnVisibility(col); $event.stopPropagation()">
                       <mat-icon [color]="activeTable.hiddenColumns.has(col) ? '' : 'primary'">{{ activeTable.hiddenColumns.has(col) ? 'check_box_outline_blank' : 'check_box' }}</mat-icon>

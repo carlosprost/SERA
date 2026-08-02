@@ -278,7 +278,9 @@ export class AppComponent implements AfterViewInit, OnInit {
    */
   ngAfterViewInit() {
     this.tablasCargadas.changes.subscribe(() => {
-      this.cdr.detectChanges();
+      queueMicrotask(() => {
+        this.cdr.markForCheck();
+      });
     });
   }
 
