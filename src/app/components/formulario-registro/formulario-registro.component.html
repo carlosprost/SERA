@@ -60,9 +60,7 @@
         <mat-divider></mat-divider>
         <div class="section-header">
           <h3><mat-icon>attachment</mat-icon> Archivos Adjuntos</h3>
-          <button mat-stroked-button color="primary" (click)="subirAdjunto()">
-            <mat-icon>add_circle</mat-icon> Adjuntar
-          </button>
+          <sera-button variant="outlined" label="Adjuntar" icon="add_circle" (click)="subirAdjunto()" />
         </div>
 
         @if (adjuntos.length > 0) {
@@ -75,12 +73,8 @@
                   <span class="file-date">{{ adj.fecha | date:'dd/MM/yy HH:mm' }}</span>
                 </div>
                 <div class="item-actions">
-                  <button mat-icon-button color="primary" matTooltip="Abrir archivo" (click)="abrirAdjunto(adj.ruta)">
-                    <mat-icon>launch</mat-icon>
-                  </button>
-                  <button mat-icon-button color="warn" matTooltip="Eliminar" (click)="borrarAdjunto(adj)">
-                    <mat-icon>delete</mat-icon>
-                  </button>
+                  <sera-button variant="icon" icon="launch" matTooltip="Abrir archivo" (click)="abrirAdjunto(adj.ruta)" />
+                  <sera-button variant="icon" icon="delete" class="btn-warn" matTooltip="Eliminar" (click)="borrarAdjunto(adj)" />
                 </div>
               </div>
             }
@@ -94,13 +88,12 @@
     }
 </div>
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="dialogClose()">Cancelar</button>
-  <button
-    mat-button
+  <sera-button variant="text" label="Cancelar" (click)="dialogClose()" />
+  <sera-button
+    variant="flat"
+    [label]="isUpload ? 'Actualizar Registro' : 'Crear Registro'"
+    icon="save"
     type="submit"
     [disabled]="newRegister.invalid"
-    (click)="onSubmit()"
-    >
-    {{ isUpload ? "Actualizar Registro" : "Crear Registro"}}
-  </button>
+    (click)="onSubmit()" />
 </div>

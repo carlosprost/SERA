@@ -112,7 +112,12 @@ import { invoke } from '@tauri-apps/api/core';
       font-size: 36px;
       width: 36px;
       height: 36px;
-      color: #3f51b5;
+      line-height: 36px;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      overflow: visible !important;
+      color: var(--sera-primary-color, #38bdf8);
     }
 
     .remote-conn__title {

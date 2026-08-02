@@ -101,7 +101,7 @@ async fn handle_status() -> impl IntoResponse {
         Json(json!({
             "status": "online",
             "app": "SERA",
-            "version": "4.0.0"
+            "version": env!("CARGO_PKG_VERSION")
         })),
     )
 }

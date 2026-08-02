@@ -83,7 +83,9 @@ export class ReciboComponent {
 
   initCampos() {
     if (this.data.campos) {
-      this.camposConfig = this.data.campos.map(c => ({ nombre: c, seleccionado: true }));
+      this.camposConfig = this.data.campos
+        .filter(c => c !== 'sera_adjuntos_count')
+        .map(c => ({ nombre: c, seleccionado: true }));
     }
   }
 
@@ -151,14 +153,17 @@ export class ReciboComponent {
         }
       }
 
-      await this.pdfService.generarPdf(
+      const success = await this.pdfService.generarPdf(
         null,
         { ...result, logo_base64, nombre_operador },
         this.data.datos
       );
 
-      this.snackBar.open("Documento PDF generado correctamente", "", { duration: 3000 });
-      this.dialogRef.close(result);
+      if (success) {
+        this.snackBar.open("Documento PDF generado correctamente", "", { duration: 3000 });
+        this.dialogRef.close(result);
+      }
+      // Si fue falso, el usuario canceló, por lo que no cerramos el diálogo y vuelve a mostrar el formulario
     } catch (error) {
       console.error("[SERA] Error generando reporte PDF:", error);
       this.snackBar.open("Error al generar el documento PDF", "Cerrar", { duration: 5000 });

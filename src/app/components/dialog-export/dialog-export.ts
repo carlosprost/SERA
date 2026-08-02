@@ -88,7 +88,7 @@ import { FormsModule } from '@angular/forms';
     .warning-box {
       margin-top: 16px;
       padding: 10px 14px;
-      background: rgba(var(--sera-primary-color-rgb), 0.1);
+      background: rgba(var(--sera-primary-rgb, 33, 150, 243), 0.1);
       border-radius: 6px;
       display: flex;
       align-items: center;

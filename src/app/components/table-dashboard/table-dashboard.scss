@@ -1,7 +1,7 @@
 .table-dashboard-panel {
   width: 100%;
-  background: rgba(var(--sera-primary-color-rgb, 33, 150, 243), 0.02);
-  border-bottom: 1px solid rgba(var(--sera-primary-color-rgb), 0.1);
+  background: rgba(var(--sera-primary-rgb, 33, 150, 243), 0.02);
+  border-bottom: 1px solid rgba(var(--sera-primary-rgb, 33, 150, 243), 0.1);
   padding: 20px 24px;
   animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;

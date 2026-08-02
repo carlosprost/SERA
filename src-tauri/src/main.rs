@@ -6,6 +6,8 @@ mod commands;
 mod database;
 mod models;
 mod security;
+mod ejemplos;
+
 
 use commands::{DbPath, ApiShutdownChannel};
 use tauri::Manager;
@@ -89,6 +91,16 @@ fn main() {
             database::inicializar_db(db_path.as_path())
                 .expect("[SERA] No se pudo inicializar la base de datos SQLite");
 
+            // --- Lógica de Onboarding ---
+            if let Ok(tablas) = database::get_tablas(db_path.as_path()) {
+                if tablas.is_empty() {
+                    println!("[SERA] Primera ejecución detectada. Cargando ejemplo de inventario...");
+                    if let Err(e) = crate::ejemplos::cargar_ejemplo_sql(db_path.as_path(), "inventario") {
+                        println!("[SERA] Error cargando ejemplo predeterminado: {}", e);
+                    }
+                }
+            }
+
             // Inicializar el estado de apagado asíncrono de la API
             let shutdown_state = ApiShutdownChannel(std::sync::Mutex::new(None));
 
@@ -155,6 +167,7 @@ fn main() {
             commands::eliminar_plugin,
             commands::leer_recurso_plugin,
             commands::set_plugin_auto_update,
+            commands::cargar_ejemplo_sql_cmd,
         ])
         .run(tauri::generate_context!())
         .expect("[SERA] Error al inicializar la aplicación");

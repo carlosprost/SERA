@@ -17,6 +17,7 @@ export interface TableRule {
     formula?: string;
     backgroundColor: string;
     textColor: string;
+    icon?: string;
     applyTo: 'row' | 'cell';
     targetColumn?: string;
 }
@@ -31,7 +32,8 @@ export interface LinkedField {
     localField: string;
     remoteTable: string;
     remoteField: string;
-    displayField: string;
+    displayField?: string;
+    displayFields?: string[];
 }
 
 export interface TableConfig {

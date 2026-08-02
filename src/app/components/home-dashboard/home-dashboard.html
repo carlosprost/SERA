@@ -61,18 +61,9 @@
   <section class="quick-actions">
     <h3>Acciones Rápidas</h3>
     <div class="actions-buttons">
-      <button mat-flat-button color="primary" class="action-btn" (click)="createNewTable()">
-        <mat-icon>add</mat-icon>
-        Nueva Tabla
-      </button>
-      <button mat-stroked-button class="action-btn" (click)="importExcel()">
-        <mat-icon>file_upload</mat-icon>
-        Importar Excel
-      </button>
-      <button mat-stroked-button class="action-btn" (click)="openAttachments()">
-        <mat-icon>folder_open</mat-icon>
-        Adjuntos
-      </button>
+      <sera-button size="lg" variant="flat" label="Nueva Tabla" icon="add" (click)="createNewTable()" />
+      <sera-button size="lg" variant="outlined" label="Importar Excel" icon="file_upload" (click)="importExcel()" />
+      <sera-button size="lg" variant="outlined" label="Adjuntos" icon="folder_open" (click)="openAttachments()" />
     </div>
   </section>
 

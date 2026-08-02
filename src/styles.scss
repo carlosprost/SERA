@@ -86,15 +86,19 @@ body.theme-dark, .theme-dark {
   @include mat.all-component-themes($sera-dark-theme);
   --sera-primary-color: #00bcd4;
   --sera-primary-rgb: 0, 188, 212;
+  --sera-primary-color-rgb: 0, 188, 212;
   --sera-bg-color: #05080c;
   --sera-bg-rgb: 5, 8, 12;
   --sera-surface-color: rgba(10, 16, 24, 0.85);
   --sera-text-color: #e2e8f0;
   --sera-text-rgb: 226, 232, 240;
+  --sera-text-color-rgb: 226, 232, 240;
   --sera-card-bg: #0d131c;
   --sera-on-bg: #ffffff;
   --sera-on-surface: #ffffff;
   --sera-on-primary: #000000;
+  --mat-sys-primary: #00bcd4;
+  --mat-sys-on-primary: #000000;
 }
 
 /* MIDNIGHT BLUE */
@@ -102,15 +106,19 @@ body.theme-midnight, .theme-midnight {
   @include mat.all-component-themes($sera-dark-theme);
   --sera-primary-color: #38bdf8;
   --sera-primary-rgb: 56, 189, 248;
+  --sera-primary-color-rgb: 56, 189, 248;
   --sera-bg-color: #0f172a;
   --sera-bg-rgb: 15, 23, 42;
   --sera-surface-color: rgba(30, 41, 59, 0.85);
   --sera-text-color: #f1f5f9;
   --sera-text-rgb: 241, 245, 249;
+  --sera-text-color-rgb: 241, 245, 249;
   --sera-card-bg: #1e293b;
   --sera-on-bg: #f1f5f9;
   --sera-on-surface: #f1f5f9;
   --sera-on-primary: #ffffff;
+  --mat-sys-primary: #38bdf8;
+  --mat-sys-on-primary: #ffffff;
 }
 
 /* EMERALD FOREST */
@@ -118,15 +126,19 @@ body.theme-emerald, .theme-emerald {
   @include mat.all-component-themes($sera-dark-theme);
   --sera-primary-color: #2ecc71;
   --sera-primary-rgb: 46, 204, 113;
+  --sera-primary-color-rgb: 46, 204, 113;
   --sera-bg-color: #1b262c;
   --sera-bg-rgb: 27, 38, 44;
   --sera-surface-color: rgba(27, 38, 44, 0.85);
   --sera-text-color: #bbe1fa;
   --sera-text-rgb: 187, 225, 250;
+  --sera-text-color-rgb: 187, 225, 250;
   --sera-card-bg: #2a3a42;
   --sera-on-bg: #bbe1fa;
   --sera-on-surface: #bbe1fa;
   --sera-on-primary: #ffffff;
+  --mat-sys-primary: #2ecc71;
+  --mat-sys-on-primary: #ffffff;
 }
 
 /* SOPHISTICATED LIGHT */
@@ -134,15 +146,19 @@ body.theme-light, .theme-light {
   @include mat.all-component-themes($sera-light-theme);
   --sera-primary-color: #2563eb;
   --sera-primary-rgb: 37, 99, 235;
+  --sera-primary-color-rgb: 37, 99, 235;
   --sera-bg-color: #f8fafc;
   --sera-bg-rgb: 248, 250, 252;
   --sera-surface-color: #f1f5f9;
   --sera-text-color: #1e293b;
   --sera-text-rgb: 30, 41, 59;
+  --sera-text-color-rgb: 30, 41, 59;
   --sera-card-bg: #ffffff;
   --sera-on-bg: #1e293b;
   --sera-on-surface: #1e293b;
   --sera-on-primary: #ffffff;
+  --mat-sys-primary: #2563eb;
+  --mat-sys-on-primary: #ffffff;
   
   /* Optimizaciones de UI para tema claro */
   ::-webkit-scrollbar-thumb { background: #cbd5e1; }
@@ -152,6 +168,8 @@ body.theme-light, .theme-light {
 /* CUSTOM THEME */
 body.theme-custom, .theme-custom {
   @include mat.all-component-themes($sera-dark-theme);
+  --mat-sys-primary: var(--sera-primary-color);
+  --mat-sys-on-primary: var(--sera-on-primary, #ffffff);
 }
 
 app-root {
@@ -204,36 +222,289 @@ app-root {
   }
 }
 
-/* Global Form Field Overrides */
-::ng-deep .mat-mdc-text-field-wrapper {
-  background-color: rgba(var(--sera-text-rgb), 0.03) !important;
-  
-  .mdc-text-field__input {
-    color: var(--sera-on-surface) !important;
-    &::placeholder {
-      color: var(--sera-on-surface) !important;
-      opacity: 0.8 !important;
+/* Global Form Field Overrides & Dynamic Theme Adaptation */
+mat-form-field,
+.mat-mdc-form-field,
+.mat-mdc-form-field.mat-primary,
+.mat-mdc-form-field.mat-accent {
+  /* Tokens M3 (Angular Material 18+) */
+  --mat-sys-primary: var(--sera-primary-color) !important;
+  --mat-form-field-outlined-outline-color: rgba(var(--sera-text-rgb), 0.18) !important;
+  --mat-form-field-outlined-hover-outline-color: rgba(var(--sera-primary-rgb), 0.5) !important;
+  --mat-form-field-outlined-focus-outline-color: var(--sera-primary-color) !important;
+  --mat-form-field-outlined-label-text-color: rgba(var(--sera-text-rgb), 0.7) !important;
+  --mat-form-field-outlined-hover-label-text-color: var(--sera-text-color) !important;
+  --mat-form-field-outlined-focus-label-text-color: var(--sera-primary-color) !important;
+  --mat-form-field-outlined-input-text-color: var(--sera-text-color) !important;
+  --mat-form-field-outlined-input-text-placeholder-color: rgba(var(--sera-text-rgb), 0.45) !important;
+  --mat-form-field-outlined-caret-color: var(--sera-primary-color) !important;
+  --mat-form-field-focus-select-arrow-color: var(--sera-primary-color) !important;
+  --mat-form-field-focus-indicator-color: var(--sera-primary-color) !important;
+  --mat-form-field-state-layer-color: transparent !important;
+  --mat-form-field-hover-state-layer-opacity: 0 !important;
+  --mat-form-field-focus-state-layer-opacity: 0 !important;
+
+  /* Tokens MDC heredados */
+  --mdc-outlined-text-field-outline-color: rgba(var(--sera-text-rgb), 0.18) !important;
+  --mdc-outlined-text-field-hover-outline-color: rgba(var(--sera-primary-rgb), 0.5) !important;
+  --mdc-outlined-text-field-focus-outline-color: var(--sera-primary-color) !important;
+  --mdc-outlined-text-field-label-text-color: rgba(var(--sera-text-rgb), 0.7) !important;
+  --mdc-outlined-text-field-hover-label-text-color: var(--sera-text-color) !important;
+  --mdc-outlined-text-field-focus-label-text-color: var(--sera-primary-color) !important;
+  --mdc-outlined-text-field-input-text-color: var(--sera-text-color) !important;
+  --mdc-outlined-text-field-input-text-placeholder-color: rgba(var(--sera-text-rgb), 0.45) !important;
+  --mdc-outlined-text-field-caret-color: var(--sera-primary-color) !important;
+
+  &.mat-focused {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--sera-primary-color) !important;
+    }
+
+    .mdc-floating-label,
+    .mdc-floating-label--float-above,
+    .mat-mdc-floating-label {
+      color: var(--sera-primary-color) !important;
+    }
+
+    .mat-mdc-select-arrow {
+      color: var(--sera-primary-color) !important;
     }
   }
-  
+
+  /* Wrapper: fondo sutilmente oscuro en todos los estados */
+  .mat-mdc-text-field-wrapper {
+    background-color: rgba(var(--sera-text-rgb), 0.03) !important;
+
+    /* Bloquear completamente el overlay de foco (el div que se pinta de celeste) */
+    .mat-mdc-form-field-focus-overlay {
+      background: transparent !important;
+      opacity: 0 !important;
+      display: none !important;
+    }
+
+    /* Bloquear pseudo-elementos de state-layer */
+    &::before,
+    &::after {
+      background-color: transparent !important;
+      opacity: 0 !important;
+    }
+
+    /* Mantener el fondo en cualquier estado MDC */
+    &.mdc-text-field--focused,
+    &.mdc-text-field--filled,
+    &:hover,
+    &:focus-within {
+      background-color: rgba(var(--sera-text-rgb), 0.03) !important;
+    }
+  }
+
+  /* Bloquear el ripple/state-layer interno del trigger de mat-select */
+  .mat-mdc-select-trigger::before,
+  .mat-mdc-select-trigger::after {
+    display: none !important;
+  }
+
+  .mdc-text-field__input {
+    color: var(--sera-text-color) !important;
+    caret-color: var(--sera-primary-color) !important;
+    background: transparent !important;
+
+    &::placeholder {
+      color: var(--sera-text-color) !important;
+      opacity: 0.5;
+      transition: opacity 0.15s ease;
+    }
+  }
+
+  /* Ocultar placeholder si la etiqueta está en reposo */
+  &:not(.mat-focused):not(.mat-form-field-should-float) {
+    .mdc-text-field__input::placeholder {
+      opacity: 0 !important;
+    }
+  }
+
+  /* Mostrar placeholder cuando hay foco o etiqueta flotando */
+  &.mat-focused .mdc-text-field__input::placeholder,
+  &.mat-form-field-should-float .mdc-text-field__input::placeholder {
+    opacity: 0.45 !important;
+  }
+
   .mdc-floating-label, 
   .mdc-floating-label--float-above,
   .mat-mdc-form-field-label {
-    color: var(--sera-on-surface) !important;
-    opacity: 1 !important;
+    color: rgba(var(--sera-text-rgb), 0.7) !important;
   }
 
-  &.mat-form-field-should-float .mdc-floating-label {
-    color: var(--sera-on-surface) !important;
+  .mat-icon,
+  mat-icon {
+    color: var(--sera-text-color) !important;
+    opacity: 0.6;
+    transition: color 0.2s ease, opacity 0.2s ease;
+  }
+
+  /* Garantizar que el hueco (notch) nunca genere líneas verticales parásitas */
+  .mdc-notched-outline__leading {
+    border-right: none !important;
+  }
+  .mdc-notched-outline__notch {
+    border-left: none !important;
+    border-right: none !important;
+  }
+  .mdc-notched-outline__trailing {
+    border-left: none !important;
+  }
+
+  /* Estado Enfocado: solo cambia borde y labels, nunca el fondo */
+  &.mat-focused {
+    --mdc-outlined-text-field-focus-outline-color: var(--sera-primary-color) !important;
+
+    .mat-mdc-text-field-wrapper {
+      background-color: rgba(var(--sera-text-rgb), 0.03) !important;
+    }
+
+    .mdc-floating-label,
+    .mdc-floating-label--float-above,
+    .mat-mdc-floating-label {
+      color: var(--sera-primary-color) !important;
+    }
+
+    .mat-icon,
+    mat-icon {
+      color: var(--sera-primary-color) !important;
+      opacity: 1 !important;
+    }
   }
 }
 
-::ng-deep .mat-mdc-select-value {
-  color: var(--sera-on-surface) !important;
+/* Bloqueo global del focus-overlay fuera del contexto ng-deep */
+.mat-mdc-form-field-focus-overlay {
+  background: transparent !important;
+  opacity: 0 !important;
+  display: none !important;
 }
 
-::ng-deep .mat-mdc-form-field-focus-indicator {
+.mat-mdc-select-value {
+  color: var(--sera-text-color) !important;
+}
+
+.mat-mdc-form-field-focus-indicator {
   color: var(--sera-primary-color) !important;
+}
+
+/* ==========================================================================
+   MAT-SELECT Y MAT-OPTION (Sincronización con el tema activo)
+   ========================================================================== */
+mat-select,
+.mat-mdc-select {
+  --mat-select-arrow-color: rgba(var(--sera-text-rgb), 0.7);
+  --mat-select-focused-arrow-color: var(--sera-primary-color);
+  --mat-select-disabled-arrow-color: rgba(var(--sera-text-rgb), 0.3);
+  --mat-select-panel-background-color: var(--sera-card-bg, #222);
+
+  &.mat-mdc-select-focused {
+    .mat-mdc-select-arrow {
+      color: var(--sera-primary-color) !important;
+    }
+  }
+}
+
+.mat-mdc-select-panel {
+  background-color: var(--sera-card-bg, #222) !important;
+  border: 1px solid rgba(var(--sera-text-rgb), 0.15) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.mat-mdc-option {
+  color: var(--sera-text-color) !important;
+
+  .mdc-list-item__primary-text {
+    color: var(--sera-text-color) !important;
+  }
+
+  &:hover:not(.mdc-list-item--disabled) {
+    background-color: rgba(var(--sera-primary-rgb), 0.1) !important;
+  }
+
+  &.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+    background-color: rgba(var(--sera-primary-rgb), 0.15) !important;
+    
+    .mdc-list-item__primary-text {
+      color: var(--sera-primary-color) !important;
+      font-weight: 600 !important;
+    }
+
+    .mat-pseudo-checkbox,
+    .mat-mdc-option-pseudo-checkbox {
+      --mat-pseudo-checkbox-checked-color: var(--sera-primary-color) !important;
+      color: var(--sera-primary-color) !important;
+    }
+  }
+}
+
+/* Overrides para botones nativos (no migrados) Angular Material */
+.mat-mdc-outlined-button:not(:disabled) {
+  --mdc-outlined-button-outline-color: rgba(var(--sera-text-rgb), 0.18) !important;
+  --mdc-outlined-button-label-text-color: var(--sera-text-color) !important;
+  --mdc-outlined-button-icon-color: var(--sera-text-color) !important;
+  color: var(--sera-text-color) !important;
+  border-color: rgba(var(--sera-text-rgb), 0.18) !important;
+
+  &:hover {
+    --mdc-outlined-button-outline-color: var(--sera-primary-color) !important;
+    --mdc-outlined-button-label-text-color: var(--sera-primary-color) !important;
+    --mdc-outlined-button-icon-color: var(--sera-primary-color) !important;
+    background-color: rgba(var(--sera-primary-rgb), 0.08) !important;
+    border-color: var(--sera-primary-color) !important;
+    color: var(--sera-primary-color) !important;
+  }
+}
+
+.mat-mdc-button:not(.mat-primary):not(.mat-accent):not(.mat-warn):not(:disabled) {
+  color: var(--sera-text-color) !important;
+  --mdc-text-button-label-text-color: var(--sera-text-color) !important;
+
+  &:hover {
+    color: var(--sera-primary-color) !important;
+    --mdc-text-button-label-text-color: var(--sera-primary-color) !important;
+    background-color: rgba(var(--sera-primary-rgb), 0.08) !important;
+  }
+}
+
+.mat-mdc-flat-button.mat-primary:not(:disabled),
+.mat-mdc-raised-button.mat-primary:not(:disabled),
+.mat-mdc-unelevated-button.mat-primary:not(:disabled) {
+  background-color: var(--sera-primary-color) !important;
+  color: var(--sera-on-primary, #ffffff) !important;
+  --mdc-filled-button-container-color: var(--sera-primary-color) !important;
+  --mdc-filled-button-label-text-color: var(--sera-on-primary, #ffffff) !important;
+}
+
+.mat-mdc-button.mat-primary:not(:disabled),
+.mat-mdc-button.mat-accent:not(:disabled) {
+  color: var(--sera-primary-color) !important;
+  --mdc-text-button-label-text-color: var(--sera-primary-color) !important;
+}
+
+.mat-mdc-button.mat-warn:not(:disabled) {
+  color: #ef5350 !important;
+  --mdc-text-button-label-text-color: #ef5350 !important;
+}
+
+mat-dialog-actions,
+.mat-mdc-dialog-actions {
+  button[mat-dialog-close]:not(.mat-raised-button):not(.mat-flat-button):not(.mat-stroked-button) {
+    color: var(--sera-text-color) !important;
+    --mdc-text-button-label-text-color: var(--sera-text-color) !important;
+
+    &:hover {
+      color: var(--sera-primary-color) !important;
+      --mdc-text-button-label-text-color: var(--sera-primary-color) !important;
+      background-color: rgba(var(--sera-primary-rgb), 0.08) !important;
+    }
+  }
 }
 
 /* Global Disabled Button Overrides */
@@ -247,16 +518,228 @@ app-root {
   cursor: not-allowed !important;
 }
 
-/* Forzar color primary en componentes de selección */
-mat-checkbox, mat-slide-toggle {
+/* ==========================================================================
+   TABS GLOBALES (Sincronización con el tema activo)
+   ========================================================================== */
+mat-tab-group,
+.mat-mdc-tab-group,
+.mat-mdc-tab-header,
+.mat-mdc-tab,
+.mdc-tab {
+  --mdc-tab-indicator-active-indicator-color: var(--sera-primary-color) !important;
+  --mat-tab-header-active-label-text-color: var(--sera-primary-color) !important;
+  --mat-tab-header-active-ripple-color: var(--sera-primary-color) !important;
+  --mat-tab-header-active-focus-label-text-color: var(--sera-primary-color) !important;
+  --mat-tab-header-active-hover-label-text-color: var(--sera-primary-color) !important;
+  --mat-tab-header-active-focus-indicator-color: var(--sera-primary-color) !important;
+  --mat-tab-header-active-hover-indicator-color: var(--sera-primary-color) !important;
+  --mat-tab-header-inactive-label-text-color: rgba(var(--sera-text-rgb), 0.7) !important;
+  --mat-tab-header-inactive-hover-label-text-color: var(--sera-text-color) !important;
+  --mat-tab-header-inactive-focus-label-text-color: var(--sera-text-color) !important;
+
+  .mdc-tab-indicator--active .mdc-tab-indicator__content--underline,
+  .mat-mdc-tab-indicator .mdc-tab-indicator__content--underline {
+    border-color: var(--sera-primary-color) !important;
+  }
+
+  .mdc-tab--active .mdc-tab__text-label {
+    color: var(--sera-primary-color) !important;
+  }
+
+  .mdc-tab__text-label {
+    color: var(--sera-text-color);
+  }
+}
+
+/* ==========================================================================
+   CHECKBOXES GLOBALES (Sincronización con el tema activo)
+   ========================================================================== */
+mat-checkbox, 
+.mat-mdc-checkbox,
+.mat-mdc-checkbox.mat-primary,
+.mat-mdc-checkbox.mat-accent,
+.mat-mdc-checkbox.mat-mdc-checkbox-checked,
+.mdc-checkbox {
   --mdc-checkbox-selected-focus-icon-color: var(--sera-primary-color) !important;
   --mdc-checkbox-selected-hover-icon-color: var(--sera-primary-color) !important;
   --mdc-checkbox-selected-icon-color: var(--sera-primary-color) !important;
   --mdc-checkbox-selected-pressed-icon-color: var(--sera-primary-color) !important;
+  --mdc-checkbox-selected-checkmark-color: var(--sera-on-primary, #ffffff) !important;
+  --mdc-checkbox-selected-focus-state-layer-color: var(--sera-primary-color) !important;
+  --mdc-checkbox-selected-hover-state-layer-color: var(--sera-primary-color) !important;
+  --mdc-checkbox-selected-pressed-state-layer-color: var(--sera-primary-color) !important;
+
+  --mat-checkbox-selected-container-color: var(--sera-primary-color) !important;
+  --mat-checkbox-selected-hover-container-color: var(--sera-primary-color) !important;
+  --mat-checkbox-selected-focus-container-color: var(--sera-primary-color) !important;
+  --mat-checkbox-selected-pressed-container-color: var(--sera-primary-color) !important;
+  --mat-checkbox-selected-checkmark-color: var(--sera-on-primary, #ffffff) !important;
+
+  --mdc-checkbox-unselected-icon-color: rgba(var(--sera-text-rgb), 0.45) !important;
+  --mdc-checkbox-unselected-hover-icon-color: var(--sera-primary-color) !important;
+  --mdc-checkbox-unselected-focus-icon-color: var(--sera-primary-color) !important;
+  --mdc-checkbox-unselected-pressed-icon-color: var(--sera-primary-color) !important;
+
+  /* Selectores directos para asegurar cobertura total */
+  .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background,
+  .mdc-checkbox__native-control:enabled:indeterminate ~ .mdc-checkbox__background,
+  &.mat-mdc-checkbox-checked .mdc-checkbox__background,
+  .mdc-checkbox--selected .mdc-checkbox__background {
+    background-color: var(--sera-primary-color) !important;
+    border-color: var(--sera-primary-color) !important;
+  }
+
+  .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background .mdc-checkbox__checkmark,
+  &.mat-mdc-checkbox-checked .mdc-checkbox__checkmark,
+  .mdc-checkbox__checkmark {
+    color: var(--sera-on-primary, #ffffff) !important;
+  }
+
+  .mdc-checkbox__native-control:enabled:not(:checked):not(:indeterminate) ~ .mdc-checkbox__background {
+    border-color: rgba(var(--sera-text-rgb), 0.4) !important;
+  }
+
+  &:hover .mdc-checkbox__native-control:enabled:not(:checked):not(:indeterminate) ~ .mdc-checkbox__background {
+    border-color: var(--sera-primary-color) !important;
+  }
+}
+
+/* ==========================================================================
+   RADIO BUTTONS GLOBALES (Sincronización con el tema activo)
+   ========================================================================== */
+mat-radio-button,
+.mat-mdc-radio-button,
+.mat-mdc-radio-button.mat-primary,
+.mat-mdc-radio-button.mat-accent {
+  --mdc-radio-selected-focus-icon-color: var(--sera-primary-color) !important;
+  --mdc-radio-selected-hover-icon-color: var(--sera-primary-color) !important;
+  --mdc-radio-selected-icon-color: var(--sera-primary-color) !important;
+  --mdc-radio-selected-pressed-icon-color: var(--sera-primary-color) !important;
+  --mat-radio-checked-ripple-color: var(--sera-primary-color) !important;
+  --mat-radio-ripple-color: rgba(var(--sera-text-rgb), 0.1) !important;
+
+  .mdc-radio--selected .mdc-radio__outer-circle {
+    border-color: var(--sera-primary-color) !important;
+  }
+
+  .mdc-radio--selected .mdc-radio__inner-circle {
+    border-color: var(--sera-primary-color) !important;
+  }
+}
+
+mat-slide-toggle,
+.mat-mdc-slide-toggle,
+.mat-mdc-slide-toggle.mat-primary,
+.mat-mdc-slide-toggle.mat-accent,
+.mat-mdc-slide-toggle:hover,
+.mat-mdc-slide-toggle:focus-within,
+.mdc-switch,
+.mdc-switch:hover,
+.mdc-switch:focus {
+  /* Variables para estado Seleccionado (ON) */
+  --mdc-switch-selected-icon-color: #ffffff !important;
+  --mdc-switch-selected-track-color: rgba(var(--sera-primary-rgb), 0.45) !important;
+  --mdc-switch-selected-focus-track-color: rgba(var(--sera-primary-rgb), 0.55) !important;
+  --mdc-switch-selected-hover-track-color: rgba(var(--sera-primary-rgb), 0.55) !important;
+  --mdc-switch-selected-pressed-track-color: rgba(var(--sera-primary-rgb), 0.65) !important;
   
-  --mdc-switch-selected-icon-color: var(--sera-primary-color) !important;
-  --mdc-switch-selected-track-color: var(--sera-primary-color) !important;
-  --mdc-switch-selected-handle-color: #ffffff !important;
+  --mdc-switch-selected-handle-color: var(--sera-primary-color) !important;
+  --mdc-switch-selected-focus-handle-color: var(--sera-primary-color) !important;
+  --mdc-switch-selected-hover-handle-color: var(--sera-primary-color) !important;
+  --mdc-switch-selected-pressed-handle-color: var(--sera-primary-color) !important;
+  
+  --mdc-switch-selected-focus-state-layer-color: var(--sera-primary-color) !important;
+  --mdc-switch-selected-hover-state-layer-color: var(--sera-primary-color) !important;
+  --mdc-switch-selected-pressed-state-layer-color: var(--sera-primary-color) !important;
+
+  --mat-slide-toggle-selected-track-color: rgba(var(--sera-primary-rgb), 0.45) !important;
+  --mat-slide-toggle-selected-hover-track-color: rgba(var(--sera-primary-rgb), 0.55) !important;
+  --mat-slide-toggle-selected-handle-color: var(--sera-primary-color) !important;
+  --mat-slide-toggle-selected-hover-handle-color: var(--sera-primary-color) !important;
+  --mat-switch-selected-track-color: rgba(var(--sera-primary-rgb), 0.45) !important;
+  --mat-switch-selected-handle-color: var(--sera-primary-color) !important;
+
+  /* Variables para estado No Seleccionado (OFF) */
+  --mdc-switch-unselected-track-color: rgba(var(--sera-text-rgb), 0.2) !important;
+  --mdc-switch-unselected-focus-track-color: rgba(var(--sera-text-rgb), 0.28) !important;
+  --mdc-switch-unselected-hover-track-color: rgba(var(--sera-text-rgb), 0.28) !important;
+  --mdc-switch-unselected-pressed-track-color: rgba(var(--sera-text-rgb), 0.35) !important;
+
+  --mdc-switch-unselected-handle-color: rgba(var(--sera-text-rgb), 0.6) !important;
+  --mdc-switch-unselected-focus-handle-color: rgba(var(--sera-text-rgb), 0.7) !important;
+  --mdc-switch-unselected-hover-handle-color: rgba(var(--sera-text-rgb), 0.7) !important;
+  --mdc-switch-unselected-pressed-handle-color: rgba(var(--sera-text-rgb), 0.8) !important;
+
+  --mdc-switch-unselected-focus-state-layer-color: var(--sera-text-color) !important;
+  --mdc-switch-unselected-hover-state-layer-color: var(--sera-text-color) !important;
+  --mdc-switch-unselected-pressed-state-layer-color: var(--sera-text-color) !important;
+
+  --mat-slide-toggle-unselected-track-color: rgba(var(--sera-text-rgb), 0.2) !important;
+  --mat-slide-toggle-unselected-handle-color: rgba(var(--sera-text-rgb), 0.6) !important;
+
+  /* Elementos Directos - Switch Seleccionado (ON) */
+  .mdc-switch.mdc-switch--selected:enabled {
+    .mdc-switch__track,
+    .mdc-switch__track::before,
+    .mdc-switch__track::after,
+    &:hover .mdc-switch__track,
+    &:focus .mdc-switch__track {
+      background-color: rgba(var(--sera-primary-rgb), 0.5) !important;
+      border-color: transparent !important;
+    }
+
+    .mdc-switch__handle,
+    .mdc-switch__handle::before,
+    .mdc-switch__handle::after,
+    &:hover .mdc-switch__handle,
+    &:focus .mdc-switch__handle {
+      background-color: var(--sera-primary-color) !important;
+      border-radius: 50% !important;
+    }
+
+    .mdc-switch__icon,
+    .mdc-switch__icon svg,
+    .mdc-switch__icon svg path,
+    &:hover .mdc-switch__icon,
+    &:focus .mdc-switch__icon {
+      fill: #ffffff !important;
+      stroke: #ffffff !important;
+      color: #ffffff !important;
+    }
+  }
+
+  /* Elementos Directos - Switch No Seleccionado (OFF) */
+  .mdc-switch.mdc-switch--unselected:enabled {
+    .mdc-switch__track,
+    .mdc-switch__track::before,
+    .mdc-switch__track::after,
+    &:hover .mdc-switch__track,
+    &:focus .mdc-switch__track {
+      background-color: rgba(var(--sera-text-rgb), 0.15) !important;
+      border-color: rgba(var(--sera-text-rgb), 0.25) !important;
+    }
+
+    .mdc-switch__handle,
+    .mdc-switch__handle::before,
+    .mdc-switch__handle::after,
+    &:hover .mdc-switch__handle,
+    &:focus .mdc-switch__handle {
+      background-color: rgba(var(--sera-text-rgb), 0.65) !important;
+      border-radius: 50% !important;
+    }
+  }
+
+  /* Halo de efecto ripple transparente y sin fantasmas cuadrados */
+  .mdc-switch__ripple,
+  .mdc-switch__ripple::before,
+  .mdc-switch__ripple::after {
+    background-color: transparent !important;
+    border-radius: 50% !important;
+  }
+
+  .mdc-label {
+    color: var(--sera-text-color) !important;
+  }
 }
 
 /* Custom Scrollbar Dynamic */
@@ -297,4 +780,156 @@ mat-checkbox, mat-slide-toggle {
 .spotlight-backdrop {
   background: rgba(var(--sera-bg-rgb), 0.5) !important;
   backdrop-filter: none !important;
+}
+
+/* ==========================================================================
+   MENÚS DESPLEGABLES Y MENÚ CONTEXTUAL (MAT-MENU)
+   ========================================================================== */
+.mat-mdc-menu-panel {
+  background-color: var(--sera-card-bg, #140c1f) !important;
+  border: 1px solid rgba(var(--sera-text-rgb), 0.12) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 16px rgba(var(--sera-primary-rgb), 0.08) !important;
+  color: var(--sera-text-color) !important;
+
+  .mat-mdc-menu-item {
+    color: var(--sera-text-color) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    min-height: 40px !important;
+    padding: 0 14px !important;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    mat-icon {
+      color: var(--sera-primary-color) !important;
+      margin-right: 12px !important;
+      font-size: 18px !important;
+      width: 18px !important;
+      height: 18px !important;
+    }
+
+
+    &:hover:not([disabled]) {
+      background-color: rgba(var(--sera-primary-rgb), 0.12) !important;
+      color: var(--sera-text-color) !important;
+    }
+
+
+    &[disabled] {
+      opacity: 0.35 !important;
+      mat-icon {
+        color: inherit !important;
+      }
+    }
+  }
+
+  mat-divider,
+  .mat-divider {
+    border-top-color: rgba(var(--sera-text-rgb), 0.08) !important;
+    margin: 4px 0 !important;
+  }
+}
+
+/* Submenús rápidos y contextuales */
+.sera-submenu {
+  min-width: 190px !important;
+  border-radius: 12px !important;
+  background-color: var(--sera-card-bg, #140c1f) !important;
+  border: 1px solid rgba(var(--sera-text-rgb), 0.12) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Header estilizado y comportamiento del Menú Contextual de SERA */
+.sera-context-menu {
+  max-height: 460px !important;
+  overflow-y: auto !important;
+  border-radius: 12px !important;
+
+  /* Flecha indicadora de scroll adaptada dinámicamente al tema activo */
+  background:
+    linear-gradient(var(--sera-card-bg, #140c1f) 30%, rgba(0, 0, 0, 0)),
+    linear-gradient(rgba(0, 0, 0, 0), var(--sera-card-bg, #140c1f) 70%, var(--sera-card-bg, #140c1f)) 0 100%,
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23ffffff" opacity="0.65"><path d="M7 10l5 5 5-5z"/></svg>') center bottom 4px !important;
+  
+  background-repeat: no-repeat !important;
+  background-color: var(--sera-card-bg, #140c1f) !important;
+  background-size: 100% 32px, 100% 32px, 20px 20px !important;
+  background-attachment: local, local, scroll !important;
+
+  /* Ocultar barra de scroll manteniendo funcionalidad intacta */
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  .context-menu-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(var(--sera-primary-rgb), 0.18) 0%, rgba(var(--sera-text-rgb), 0.02) 100%), var(--sera-card-bg, #140c1f) !important;
+    border-bottom: 1px solid rgba(var(--sera-text-rgb), 0.12) !important;
+    cursor: default;
+    user-select: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+
+    &__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(var(--sera-primary-rgb), 0.2);
+      border: 1px solid rgba(var(--sera-primary-rgb), 0.35);
+      flex-shrink: 0;
+
+      mat-icon {
+        color: var(--sera-primary-color);
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    &__details {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex: 1;
+    }
+
+    &__col {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--sera-primary-color);
+      margin-bottom: 2px;
+      line-height: 1.2;
+    }
+
+    &__val {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--sera-text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+      line-height: 1.3;
+
+      &--empty {
+        font-style: italic;
+        opacity: 0.5;
+        font-weight: 400;
+      }
+    }
+  }
 }

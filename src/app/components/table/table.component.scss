@@ -36,6 +36,20 @@
 ::ng-deep .mat-mdc-cell {
   color: inherit;
   border-bottom: 1px solid rgba(var(--sera-text-rgb), 0.05) !important;
+
+  // Forzar herencia de color para que currentColor funcione en componentes anidados
+  .mat-mdc-checkbox,
+  .mat-mdc-icon-button,
+  .mat-icon {
+    color: inherit !important;
+    
+    --mdc-icon-button-icon-color: currentColor !important;
+  }
+
+  // Sobrescribir directamente el borde del checkbox MDC
+  .mdc-checkbox__background {
+    border-color: currentColor !important;
+  }
 }
 
 // Columna de Selección (Checkbox)
@@ -46,7 +60,7 @@
   padding: 0 !important;
   text-align: center !important;
 
-  .mat-mdc-checkbox {
+  ::ng-deep .mat-mdc-checkbox {
     display: flex;
     justify-content: center;
   }
@@ -263,4 +277,42 @@ tr.element-row:not(.expanded-row):hover {
     color: var(--sera-primary-color, #00bcd4);
     mat-icon { color: var(--sera-primary-color, #00bcd4); opacity: 1; }
   }
+}
+
+/* --- ESTILOS MENU CONTEXTUAL --- */
+::ng-deep .sera-context-menu {
+  max-height: 460px !important;
+  overflow-y: auto !important;
+  border-radius: 12px !important;
+
+  /* Flecha indicadora de scroll adaptada dinámicamente al tema activo */
+  background:
+    linear-gradient(var(--sera-card-bg, #140c1f) 30%, rgba(0, 0, 0, 0)),
+    linear-gradient(rgba(0, 0, 0, 0), var(--sera-card-bg, #140c1f) 70%, var(--sera-card-bg, #140c1f)) 0 100%,
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23ffffff" opacity="0.65"><path d="M7 10l5 5 5-5z"/></svg>') center bottom 4px;
+  
+  background-repeat: no-repeat;
+  background-color: var(--sera-card-bg, #140c1f);
+  background-size: 100% 32px, 100% 32px, 20px 20px;
+  background-attachment: local, local, scroll;
+
+  /* Ocultar barra de scroll manteniendo funcionalidad intacta */
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+body.theme-light .sera-context-menu {
+  background:
+    linear-gradient(var(--sera-card-bg, #ffffff) 30%, rgba(255, 255, 255, 0)),
+    linear-gradient(rgba(255, 255, 255, 0), var(--sera-card-bg, #ffffff) 70%, var(--sera-card-bg, #ffffff)) 0 100%,
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23000000" opacity="0.65"><path d="M7 10l5 5 5-5z"/></svg>') center bottom 4px;
+  background-repeat: no-repeat;
+  background-color: var(--sera-card-bg, #ffffff);
+  background-size: 100% 32px, 100% 32px, 20px 20px;
+  background-attachment: local, local, scroll;
 }

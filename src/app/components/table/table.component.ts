@@ -5,6 +5,11 @@ import {
   OnDestroy,
   OnInit,
   Output,
+  ViewChild,
+  ElementRef,
+  HostListener,
+  ChangeDetectorRef,
+  AfterViewInit,
 } from "@angular/core";
 import { MaterialModule } from "../../shared/material.module";
 import { SelectionModel } from "@angular/cdk/collections";
@@ -19,7 +24,7 @@ import { selectCampos, selectContenido } from "../../store/store.selectors";
 import { CommonModule } from "@angular/common";
 import { FormularioRegistroComponent } from "../formulario-registro/formulario-registro.component";
 import { DetalleRegistroComponent } from "../detalle-registro/detalle-registro";
-import { ChangeDetectorRef, ViewChild, AfterViewInit, HostListener } from "@angular/core";
+import { MatMenuTrigger } from "@angular/material/menu";
 import { TableConfigDialog } from "../table-config-dialog/table-config-dialog";
 import { TableConfig, TableRule, CalculatedField } from "../../interfaces/tablas.interfaces";
 import { invoke } from "@tauri-apps/api/core";
@@ -29,11 +34,12 @@ import { FilterSeraDialog, FilterRule } from "../filter-sera-dialog/filter-sera-
 import { SearchPaletteDialog } from "../search-palette-dialog/search-palette-dialog";
 import { FormulaEngine } from "../../utils/formula-engine";
 import { SeraPluginService } from "../../services/sera-plugin.service";
+import { FormatNamePipe } from "../../shared/pipes/format-name.pipe";
 
 @Component({
   selector: "app-table",
   standalone: true,
-  imports: [MaterialModule, CommonModule],
+  imports: [MaterialModule, CommonModule, FormatNamePipe],
   templateUrl: "./table.component.html",
   styleUrl: "./table.component.scss",
 })
@@ -69,6 +75,14 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
   allowAttachments: boolean = true;
 
   @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild('contextMenuTrigger', { read: MatMenuTrigger }) contextMenuTrigger!: MatMenuTrigger;
+  @ViewChild('contextMenuTrigger', { read: ElementRef }) contextMenuTriggerEl!: ElementRef;
+
+  // Context Menu State
+  contextMenuPosition = { x: 0, y: 0 };
+  isContextMenuVisible = true;
+  contextMenuTarget: { row: any; col: string; value: any; isPluginRendered: boolean; hasPlugin: boolean; isPluginBypassed: boolean } | null = null;
+  bypassedPluginCells: Set<string> = new Set(); // Guarda IDs de fila + columna para ignorar plugin temporalmente
 
   constructor(
     private store: Store,
@@ -692,7 +706,287 @@ export class TableComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   renderCell(column: string, value: any, row: any): string {
+    const cellId = `${row['id_' + this.tabla]}-${column}`;
+    if (this.bypassedPluginCells.has(cellId)) {
+      return String(value === undefined || value === null ? '' : value);
+    }
     const renderer = this.pluginService.cellRenderers.get(column.toLowerCase());
     return renderer ? renderer(value, row) : String(value === undefined || value === null ? '' : value);
   }
+
+
+
+  // --- CONTEXT MENU LOGIC ---
+  @HostListener('document:contextmenu', ['$event'])
+  onGlobalContextMenu(event: MouseEvent) {
+    // Si el evento fue re-despachado por nosotros mismos para reposicionar, dejarlo pasar
+    if ((event as any)._isSeraRetrigger) return;
+
+    if (!this.contextMenuTrigger?.menuOpen) return;
+
+    const target = event.target as HTMLElement;
+    if (target.closest('.mat-mdc-menu-panel')) return;
+
+    // Interceptar contextmenu cuando el menú está abierto para reposicionarlo al instante
+    event.preventDefault();
+    event.stopPropagation();
+
+    const backdrop = document.querySelector('.cdk-overlay-backdrop') as HTMLElement;
+    if (backdrop) backdrop.style.display = 'none';
+    const elementBelow = document.elementFromPoint(event.clientX, event.clientY);
+    if (backdrop) backdrop.style.display = '';
+
+    this.closeContextMenu();
+
+    if (elementBelow) {
+      setTimeout(() => {
+        const newEvent = new MouseEvent('contextmenu', {
+          bubbles: true,
+          cancelable: true,
+          clientX: event.clientX,
+          clientY: event.clientY,
+          button: 2
+        });
+        (newEvent as any)._isSeraRetrigger = true;
+        elementBelow.dispatchEvent(newEvent);
+      }, 20);
+    }
+  }
+
+  closeContextMenu() {
+    if (this.contextMenuTrigger?.menuOpen) {
+      this.contextMenuTrigger.closeMenu();
+    }
+    this.isContextMenuVisible = false;
+    this.cdr.detectChanges();
+  }
+
+  onContextMenu(event: MouseEvent, row: any, col: string) {
+    if (col === 'actions' || col === this.campoSeleccion || col === 'sera_adjuntos') return;
+
+    event.preventDefault();
+
+    const cellId = `${row['id_' + this.tabla]}-${col}`;
+    const hasPlugin = this.hasCellRenderer(col);
+    const isPluginBypassed = this.bypassedPluginCells.has(cellId);
+    const isPluginRendered = hasPlugin && !isPluginBypassed;
+
+    this.contextMenuTarget = {
+      row: row,
+      col: col,
+      value: row[col],
+      isPluginRendered: isPluginRendered,
+      hasPlugin: hasPlugin,
+      isPluginBypassed: isPluginBypassed
+    };
+
+    // 1. Destruir ancla vieja para purgar el caché de coordenadas de Angular CDK Overlay
+    this.isContextMenuVisible = false;
+    this.cdr.detectChanges();
+
+    // 2. Asignar nuevas coordenadas
+    this.contextMenuPosition.x = event.clientX;
+    this.contextMenuPosition.y = event.clientY;
+
+    // 3. Recrear ancla con las nuevas coordenadas
+    this.isContextMenuVisible = true;
+    this.cdr.detectChanges();
+
+    // 4. Abrir menú en el ancla recién recreada
+    setTimeout(() => {
+      if (this.contextMenuTrigger) {
+        this.contextMenuTrigger.openMenu();
+      }
+    }, 10);
+  }
+
+  async copyToClipboard(mode: 'cell' | 'row') {
+    if (!this.contextMenuTarget) return;
+    
+    let textToCopy = '';
+    if (mode === 'cell') {
+      textToCopy = String(this.contextMenuTarget.value);
+    } else {
+      textToCopy = JSON.stringify(this.contextMenuTarget.row, null, 2);
+    }
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      this.snackBar.open("Copiado al portapapeles", "OK", { duration: 2000 });
+    } catch (err) {
+      this.snackBar.open("Error al copiar", "OK", { duration: 2000 });
+    }
+  }
+
+  quickFilter(mode: 'include' | 'exclude') {
+    if (!this.contextMenuTarget) return;
+
+    const newFilter: FilterRule = {
+      field: this.contextMenuTarget.col,
+      operator: mode === 'include' ? 'equals' : 'not_equals',
+      value: this.contextMenuTarget.value
+    };
+
+    const camposFiltrados = this.allColumns.filter(c => 
+      c !== this.campoSeleccion && 
+      c !== 'actions' && 
+      !c.startsWith('sera_')
+    );
+
+    const dialogRef = this.dialog.open(FilterSeraDialog, {
+      width: '80%',
+      minWidth: '500px',
+      data: { 
+        campos: camposFiltrados,
+        currentFilters: [...this.activeFilters, newFilter]
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (!result) return;
+      if (result.action === 'apply') {
+        this.activeFilters = result.filters;
+        this.applyAdvancedFilters();
+        this.snackBar.open(`Aplicados ${this.activeFilters.length} filtro(s)`, 'OK', { duration: 3000 });
+      } else if (result.action === 'clear') {
+        this.activeFilters = [];
+        this.applyAdvancedFilters();
+        this.snackBar.open("Filtros eliminados", "OK", { duration: 3000 });
+      }
+      this.cdr.detectChanges(); 
+    });
+  }
+
+  async addQuickVisualRule(colorHex: string, textColor: string) {
+    if (!this.contextMenuTarget) return;
+
+    const newRule: TableRule = {
+      type: 'simple',
+      field: this.contextMenuTarget.col,
+      operator: 'equals',
+      value: String(this.contextMenuTarget.value),
+      backgroundColor: colorHex,
+      textColor: textColor,
+      applyTo: 'row'
+    };
+
+    try {
+      let configJsonStr: any = null;
+      try {
+        configJsonStr = await invoke('get_tabla_config', { nombreTabla: this.tabla });
+      } catch (e) {
+        console.warn("Tabla sin config previa, creando nueva.");
+      }
+      
+      let config: any = { rules: [], calculatedFields: [], linkedFields: [] };
+      if (configJsonStr) {
+        config = typeof configJsonStr === 'string' ? JSON.parse(configJsonStr) : configJsonStr;
+      }
+      
+      if (!config.rules) config.rules = [];
+      config.rules.push(newRule);
+
+      await invoke('update_tabla_config', { nombreTabla: this.tabla, configJson: JSON.stringify(config) });
+      
+      // Actualizar datos locales y forzar renderizado
+      this.tableRules = config.rules;
+      this.loadRulesAndCalculate();
+      this.snackBar.open("Regla visual rápida guardada", "OK", { duration: 3000 });
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.error(e);
+      this.snackBar.open("Error al guardar regla visual", "OK", { duration: 3000 });
+    }
+  }
+
+  bypassPluginRender() {
+    if (!this.contextMenuTarget) return;
+    const { row, col } = this.contextMenuTarget;
+    const cellId = `${row['id_' + this.tabla]}-${col}`;
+    this.bypassedPluginCells.add(cellId);
+  }
+
+  restorePluginRender() {
+    if (!this.contextMenuTarget) return;
+    const { row, col } = this.contextMenuTarget;
+    const cellId = `${row['id_' + this.tabla]}-${col}`;
+    this.bypassedPluginCells.delete(cellId);
+  }
+
+  quickExport(mode: 'row' | 'selected') {
+    if (!this.contextMenuTarget) return;
+    const dataToExport = mode === 'row' ? [this.contextMenuTarget.row] : this.selection.selected;
+    this.printPdf.emit(dataToExport);
+  }
+
+  async addQuickIconRule(iconName: string, iconColor: string) {
+    if (!this.contextMenuTarget) return;
+
+    const { col, value } = this.contextMenuTarget;
+
+    const newRule: TableRule = {
+      type: 'simple',
+      field: col,
+      operator: 'equals',
+      value: String(value),
+      backgroundColor: '',
+      textColor: iconColor,
+      icon: iconName,
+      applyTo: 'cell',
+    };
+
+    try {
+      let configJsonStr: any = null;
+      try {
+        configJsonStr = await invoke('get_tabla_config', { nombreTabla: this.tabla });
+      } catch (e) {
+        console.warn("Tabla sin config previa, creando nueva.");
+      }
+      
+      let config: any = { rules: [], calculatedFields: [], linkedFields: [] };
+      if (configJsonStr) {
+        config = typeof configJsonStr === 'string' ? JSON.parse(configJsonStr) : configJsonStr;
+      }
+      
+      if (!config.rules) config.rules = [];
+      config.rules.push(newRule);
+
+      await invoke('update_tabla_config', { nombreTabla: this.tabla, configJson: JSON.stringify(config) });
+      
+      this.tableRules = config.rules;
+      this.loadRulesAndCalculate();
+      this.snackBar.open("Regla de ícono guardada", "OK", { duration: 3000 });
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.error(e);
+      this.snackBar.open("Error al guardar regla de ícono", "OK", { duration: 3000 });
+    }
+  }
+
+  getCellIcon(row: any, col: string): { icon: string, color: string } | null {
+    if (!this.tableRules) return null;
+
+    for (const rule of this.tableRules) {
+      if (!rule.icon || rule.applyTo !== 'cell' || rule.field !== col) continue;
+
+      let conditionMet = false;
+      const cellValue = row[rule.field];
+
+      if (rule.type === 'simple') {
+        const val1 = String(cellValue).toLowerCase();
+        const val2 = rule.value.toLowerCase();
+        switch (rule.operator) {
+          case 'equals': conditionMet = val1 === val2; break;
+          case 'not_equals': conditionMet = val1 !== val2; break;
+          case 'contains': conditionMet = val1.includes(val2); break;
+        }
+      }
+
+      if (conditionMet) {
+        return { icon: rule.icon, color: rule.textColor };
+      }
+    }
+    return null;
+  }
 }
+

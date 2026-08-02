@@ -11,6 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { UiService } from '../../services/ui.service';
 import { ConfigData } from '../../interfaces/configData.interfaces';
 import { AppInfoService } from '../../services/app-info.service';
+import { SeraButtonComponent } from '../../shared/components/ui/sera-button/sera-button.component';
 
 interface GlobalStats {
   total_tablas: number;
@@ -25,7 +26,8 @@ interface GlobalStats {
     MatIconModule, 
     MatButtonModule, 
     MatCardModule, 
-    MatDividerModule
+    MatDividerModule,
+    SeraButtonComponent
   ],
   templateUrl: './home-dashboard.html',
   styleUrl: './home-dashboard.scss'

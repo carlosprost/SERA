@@ -45,6 +45,7 @@ import { ConnectRemoteDialogComponent } from "./components/connect-remote-dialog
 import { listen } from '@tauri-apps/api/event';
 import { SeraPluginService } from './services/sera-plugin.service';
 import { RibbonButtonConfig } from './interfaces/plugin.interfaces';
+import { FormatNamePipe } from './shared/pipes/format-name.pipe';
 
 
 /**
@@ -69,6 +70,7 @@ import { RibbonButtonConfig } from './interfaces/plugin.interfaces';
     HomeDashboardComponent,
     TableDashboardComponent,
     SearchResultsComponent,
+    FormatNamePipe,
   ],
   templateUrl: "./app.component.html",
   styleUrl: "./app.component.scss",
@@ -393,6 +395,7 @@ export class AppComponent implements AfterViewInit, OnInit {
 
     const dialogRef = this.dialog.open(ReciboComponent, {
       width: "650px",
+      maxHeight: "90vh",
       data: { 
         message: "Configurar Reporte",
         campos: camposDisponibles,
@@ -599,6 +602,35 @@ export class AppComponent implements AfterViewInit, OnInit {
     dialogRef.afterClosed().subscribe((result) => {
        // El resultado ahora lo informan los Effects
     });
+  }
+
+  /**
+   * Invoca al backend para cargar un archivo SQL de ejemplo en la base de datos.
+   * @param nombre Nombre del ejemplo a cargar (ej. 'inventario', 'personal').
+   */
+  async cargarEjemplo(nombre: string) {
+    try {
+      this.snackBar.open(`Cargando ejemplo "${nombre}"...`, "Ocultar", { duration: 2000 });
+      await invoke('cargar_ejemplo_sql_cmd', { nombre });
+      this.ngZone.run(() => {
+        this.store.dispatch(StoreActions.loadListadoTablas());
+        
+        // Abrir tabla(s) automáticamente
+        if (nombre === 'crm') {
+          this.addTab('ejemplo_clientes');
+          this.addTab('ejemplo_ventas');
+        } else {
+          this.addTab('ejemplo_' + nombre);
+        }
+
+        this.snackBar.open(`Ejemplo "${nombre}" cargado exitosamente.`, "Cerrar", { duration: 4000 });
+      });
+    } catch (err: any) {
+      this.ngZone.run(() => {
+        console.error(`Error al cargar el ejemplo ${nombre}:`, err);
+        this.snackBar.open(`Error: ${err}`, "Cerrar", { duration: 5000 });
+      });
+    }
   }
 
   // ─── EXPORTACIÓN E IMPORTACIÓN (.srx) ───────────────────────────────────────

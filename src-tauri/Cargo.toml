@@ -1,6 +1,6 @@
 [package]
 name = "sera"
-version = "4.2.0"
+version = "4.2.1"
 description = "Sistema de Expedientes de Registro Avanzado"
 authors = ["WolfTeI"]
 edition = "2021"

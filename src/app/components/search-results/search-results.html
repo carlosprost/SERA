@@ -13,7 +13,7 @@
     <mat-card *ngFor="let tableName of tableNames" class="table-result-card">
       <mat-card-header>
         <mat-icon mat-card-avatar>table_chart</mat-icon>
-        <mat-card-title>{{ tableName }}</mat-card-title>
+        <mat-card-title>{{ tableName.split('_').join(' ') | uppercase }}</mat-card-title>
         <mat-card-subtitle>{{ results[tableName].length }} coincidencias</mat-card-subtitle>
       </mat-card-header>
 

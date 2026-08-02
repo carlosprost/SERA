@@ -1,0 +1,33 @@
+<mat-form-field
+  appearance="outline"
+  class="sera-select-field"
+  [style.width]="width">
+
+  <mat-label>{{ label }}</mat-label>
+
+  <mat-select
+    [formControl]="internalControl"
+    [multiple]="multiple"
+    [placeholder]="placeholder"
+    [disabled]="isDisabled"
+    (closed)="onPanelClosed()">
+
+    @if (multiple) {
+      <mat-select-trigger>
+        {{ getSelectedMultipleLabels() }}
+      </mat-select-trigger>
+    }
+
+    @for (opt of options; track getOptionValue(opt)) {
+      <mat-option [value]="getOptionValue(opt)">
+        {{ getOptionLabel(opt) }}
+      </mat-option>
+    }
+
+  </mat-select>
+
+  @if (internalControl.hasError('required') && internalControl.touched) {
+    <mat-error>Este campo es requerido</mat-error>
+  }
+
+</mat-form-field>

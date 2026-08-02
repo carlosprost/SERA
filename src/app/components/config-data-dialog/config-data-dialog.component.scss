@@ -970,9 +970,9 @@
   gap: 8px;
   margin-bottom: 24px;
   padding: 6px;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--sera-text-rgb, 255, 255, 255), 0.04);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(var(--sera-text-rgb, 255, 255, 255), 0.08);
 
   .plugin-sub-btn {
     flex: 1;
@@ -981,28 +981,34 @@
     justify-content: center;
     gap: 8px;
     padding: 10px 20px;
-    border: none;
+    border: 1px solid transparent;
     background: transparent;
     color: var(--sera-text-color, #e2e8f0);
     border-radius: 8px;
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 500;
-    transition: all 0.25s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0.65;
 
     mat-icon { font-size: 18px; width: 18px; height: 18px; }
 
+    &:hover:not(.active) {
+      opacity: 0.9;
+      background: rgba(var(--sera-text-rgb, 255, 255, 255), 0.04);
+    }
+
     &.active {
-      background: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.15);
+      background: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.14);
       color: var(--sera-primary-color, #00bcd4);
       opacity: 1;
-      border: 1px solid rgba(var(--sera-primary-rgb, 0, 188, 212), 0.3);
+      border: 1px solid rgba(var(--sera-primary-rgb, 0, 188, 212), 0.35);
+      box-shadow: 0 0 14px rgba(var(--sera-primary-rgb, 0, 188, 212), 0.15);
     }
 
     .plugin-badge {
       background: var(--sera-primary-color, #00bcd4);
-      color: #000;
+      color: var(--sera-on-primary, #ffffff);
       border-radius: 10px;
       padding: 1px 7px;
       font-size: 0.72rem;
@@ -1025,6 +1031,7 @@
   justify-content: center;
   gap: 16px;
   padding: 60px 20px;
+  color: var(--sera-text-color, #e2e8f0);
   opacity: 0.7;
   font-size: 0.9rem;
 }
@@ -1037,7 +1044,8 @@
   gap: 12px;
   padding: 60px 20px;
   text-align: center;
-  opacity: 0.7;
+  color: var(--sera-text-color, #e2e8f0);
+  opacity: 0.75;
 
   mat-icon {
     font-size: 48px;
@@ -1046,8 +1054,8 @@
     opacity: 0.4;
   }
 
-  h4 { margin: 0; font-size: 1.1rem; }
-  p { margin: 0; font-size: 0.9rem; opacity: 0.75; }
+  h4 { margin: 0; font-size: 1.1rem; color: var(--sera-text-color, #e2e8f0); }
+  p { margin: 0; font-size: 0.9rem; color: var(--sera-text-color, #e2e8f0); opacity: 0.75; }
 }
 
 // --- TARJETAS DE PLUGINS INSTALADOS ---
@@ -1061,18 +1069,19 @@
     align-items: center;
     gap: 16px;
     padding: 16px 20px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: var(--sera-card-bg, rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(var(--sera-text-rgb, 255, 255, 255), 0.08);
     border-radius: 12px;
-    transition: all 0.25s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
-      border-color: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.25);
-      background: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.03);
+      border-color: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.35);
+      background: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.04);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
 
     &.plugin-card--active {
-      border-color: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.2);
+      border-color: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.25);
     }
 
     &__icon {
@@ -1081,7 +1090,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.1);
+      background: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.12);
       border-radius: 10px;
       flex-shrink: 0;
 
@@ -1100,6 +1109,7 @@
       .plugin-card__name {
         font-weight: 600;
         font-size: 0.95rem;
+        color: var(--sera-text-color, #e2e8f0);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1111,7 +1121,8 @@
         margin-top: 2px;
 
         .plugin-version {
-          background: rgba(255, 255, 255, 0.08);
+          background: rgba(var(--sera-text-rgb, 255, 255, 255), 0.08);
+          color: var(--sera-text-color, #e2e8f0);
           padding: 1px 8px;
           border-radius: 8px;
           font-size: 0.75rem;
@@ -1120,13 +1131,15 @@
 
         .plugin-autor {
           font-size: 0.8rem;
+          color: var(--sera-text-color, #e2e8f0);
           opacity: 0.6;
         }
       }
 
       .plugin-card__desc {
         font-size: 0.82rem;
-        opacity: 0.6;
+        color: var(--sera-text-color, #e2e8f0);
+        opacity: 0.65;
         margin-top: 4px;
         white-space: nowrap;
         overflow: hidden;
@@ -1155,17 +1168,23 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(var(--sera-text-rgb, 255, 255, 255), 0.04);
+    border: 1px solid rgba(var(--sera-text-rgb, 255, 255, 255), 0.12);
     border-radius: 10px;
     padding: 8px 14px;
-    transition: border-color 0.2s ease;
+    transition: all 0.2s ease;
 
     &:focus-within {
-      border-color: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.4);
+      border-color: var(--sera-primary-color, #00bcd4);
+      background: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.03);
+      box-shadow: 0 0 0 2px rgba(var(--sera-primary-rgb, 0, 188, 212), 0.15);
     }
 
-    mat-icon { opacity: 0.5; flex-shrink: 0; }
+    mat-icon {
+      color: var(--sera-text-color, #e2e8f0);
+      opacity: 0.55;
+      flex-shrink: 0;
+    }
 
     .marketplace-input {
       flex: 1;
@@ -1174,8 +1193,54 @@
       outline: none;
       color: var(--sera-text-color, #e2e8f0);
       font-size: 0.9rem;
+      font-family: inherit;
 
-      &::placeholder { opacity: 0.4; }
+      &::placeholder {
+        color: var(--sera-text-color, #e2e8f0);
+        opacity: 0.45;
+      }
+    }
+  }
+
+  .marketplace-refresh-btn {
+    border: 1px solid rgba(var(--sera-text-rgb, 255, 255, 255), 0.15) !important;
+    color: var(--sera-text-color, #e2e8f0) !important;
+    background: rgba(var(--sera-text-rgb, 255, 255, 255), 0.03) !important;
+    border-radius: 10px !important;
+    height: 40px !important;
+    padding: 0 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+    mat-icon {
+      color: var(--sera-text-color, #e2e8f0) !important;
+      opacity: 0.75;
+      font-size: 18px !important;
+      width: 18px !important;
+      height: 18px !important;
+      transition: transform 0.3s ease, color 0.2s ease;
+    }
+
+    &:hover:not([disabled]) {
+      border-color: var(--sera-primary-color, #00bcd4) !important;
+      color: var(--sera-primary-color, #00bcd4) !important;
+      background: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.1) !important;
+      box-shadow: 0 0 12px rgba(var(--sera-primary-rgb, 0, 188, 212), 0.2) !important;
+
+      mat-icon {
+        color: var(--sera-primary-color, #00bcd4) !important;
+        opacity: 1;
+        transform: rotate(90deg);
+      }
+    }
+
+    &[disabled] {
+      opacity: 0.4 !important;
+      cursor: not-allowed !important;
     }
   }
 }
@@ -1186,25 +1251,30 @@
   gap: 16px;
 
   .marketplace-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--sera-card-bg, rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(var(--sera-text-rgb, 255, 255, 255), 0.08);
     border-radius: 14px;
     padding: 18px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    transition: all 0.25s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
-      border-color: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.3);
+      border-color: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.4);
       background: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.04);
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     }
 
     &--installed {
-      border-color: rgba(76, 175, 80, 0.25);
-      background: rgba(76, 175, 80, 0.03);
+      border-color: rgba(var(--sera-text-rgb, 255, 255, 255), 0.08);
+      background: var(--sera-card-bg, rgba(255, 255, 255, 0.02));
+
+      &:hover {
+        border-color: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.4);
+        background: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.04);
+      }
     }
 
     &__head {
@@ -1239,19 +1309,22 @@
     &__name {
       font-weight: 700;
       font-size: 0.95rem;
+      color: var(--sera-text-color, #e2e8f0);
     }
 
     &__meta {
       display: flex;
       gap: 8px;
       font-size: 0.78rem;
-      opacity: 0.55;
+      color: var(--sera-text-color, #e2e8f0);
+      opacity: 0.6;
       margin-top: 2px;
     }
 
     &__desc {
       font-size: 0.84rem;
-      opacity: 0.6;
+      color: var(--sera-text-color, #e2e8f0);
+      opacity: 0.65;
       line-height: 1.5;
       flex: 1;
     }
@@ -1266,7 +1339,7 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        color: #4caf50;
+        color: #22c55e;
         font-size: 0.85rem;
         font-weight: 600;
 
@@ -1274,6 +1347,7 @@
           font-size: 18px;
           width: 18px;
           height: 18px;
+          color: #22c55e;
         }
       }
     }
@@ -1324,8 +1398,8 @@
   &[disabled] {
     opacity: 0.6;
     color: var(--sera-text-color, #94a3b8) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    background: rgba(255, 255, 255, 0.02) !important;
+    border-color: rgba(var(--sera-text-rgb, 255, 255, 255), 0.1) !important;
+    background: rgba(var(--sera-text-rgb, 255, 255, 255), 0.02) !important;
   }
 }
 
@@ -1333,8 +1407,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(var(--sera-text-rgb, 255, 255, 255), 0.02);
+  border: 1px solid rgba(var(--sera-text-rgb, 255, 255, 255), 0.06);
   border-radius: 6px;
   padding: 2px 10px 2px 4px;
   height: 32px;
@@ -1342,8 +1416,8 @@
   transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.2);
+    background: rgba(var(--sera-text-rgb, 255, 255, 255), 0.04);
+    border-color: rgba(var(--sera-primary-rgb, 0, 188, 212), 0.25);
   }
 
   mat-checkbox {

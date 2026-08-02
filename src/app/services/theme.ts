@@ -76,6 +76,31 @@ export class ThemeService {
     this.customColors.set(colors);
   }
 
+  public getPrimaryColor(): string {
+    const current = this.currentTheme();
+    if (current === 'theme-custom') {
+      return this.customColors().primary || '#ff4081';
+    }
+    const found = this.themes.find(t => t.id === current);
+    if (found) return found.primary;
+    if (typeof window !== 'undefined') {
+      const comp = getComputedStyle(document.body).getPropertyValue('--sera-primary-color').trim();
+      if (comp) return comp;
+    }
+    return '#00bcd4';
+  }
+
+  public getTextColor(): string {
+    const current = this.currentTheme();
+    if (current === 'theme-custom') {
+      return this.customColors().text || '#f3e8ff';
+    }
+    if (current === 'theme-light') {
+      return '#1e293b';
+    }
+    return '#f1f5f9';
+  }
+
   public hexToRgb(hex: string): string {
     const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
     const fullHex = hex.replace(shorthandRegex, (_, r, g, b) => r + r + g + g + b + b);
@@ -106,6 +131,7 @@ export class ThemeService {
     
     root.style.setProperty('--sera-primary-color', colors.primary);
     root.style.setProperty('--sera-primary-rgb', rgbPrimary);
+    root.style.setProperty('--sera-primary-color-rgb', rgbPrimary);
     
     root.style.setProperty('--sera-bg-color', colors.bg);
     root.style.setProperty('--sera-bg-rgb', rgbBg);
@@ -115,17 +141,20 @@ export class ThemeService {
     
     root.style.setProperty('--sera-text-color', colors.text);
     root.style.setProperty('--sera-text-rgb', rgbText);
+    root.style.setProperty('--sera-text-color-rgb', rgbText);
   }
 
   private clearCustomThemeVariables() {
     const root = document.documentElement;
     root.style.removeProperty('--sera-primary-color');
     root.style.removeProperty('--sera-primary-rgb');
+    root.style.removeProperty('--sera-primary-color-rgb');
     root.style.removeProperty('--sera-bg-color');
     root.style.removeProperty('--sera-bg-rgb');
     root.style.removeProperty('--sera-card-bg');
     root.style.removeProperty('--sera-surface-color');
     root.style.removeProperty('--sera-text-color');
     root.style.removeProperty('--sera-text-rgb');
+    root.style.removeProperty('--sera-text-color-rgb');
   }
 }

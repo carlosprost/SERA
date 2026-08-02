@@ -12,6 +12,13 @@ use serde_json::Value;
 /// Estado compartido: ruta al archivo SQLite.
 pub struct DbPath(pub PathBuf);
 
+// ─── EJEMPLOS Y ONBOARDING ────────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn cargar_ejemplo_sql_cmd(db_path: State<DbPath>, nombre: String) -> Result<String, String> {
+    crate::ejemplos::cargar_ejemplo_sql(&db_path.0, &nombre).map(|_| "exito".to_string())
+}
+
 // ─── CONFIGURACIÓN ────────────────────────────────────────────────────────────
 
 #[tauri::command]

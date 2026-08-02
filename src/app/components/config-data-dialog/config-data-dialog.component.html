@@ -246,7 +246,7 @@
               <h4>Animaciones de Interfaz</h4>
               <p>Activa micro-animaciones fluidas en botones, buscadores y transiciones de tablas.</p>
             </div>
-            <mat-slide-toggle [checked]="animationsEnabled" (change)="toggleAnimations()"></mat-slide-toggle>
+            <mat-slide-toggle [checked]="animationsEnabled" (change)="toggleAnimations()" color="primary"></mat-slide-toggle>
           </div>
         </div>
       </div>
@@ -530,7 +530,7 @@
                   class="marketplace-input"
                 />
               </div>
-              <button mat-stroked-button (click)="cargarMarketplace()" [disabled]="cargandoMarketplace()">
+              <button mat-stroked-button class="marketplace-refresh-btn" (click)="cargarMarketplace()" [disabled]="cargandoMarketplace()">
                 <mat-icon>refresh</mat-icon>
                 Actualizar
               </button>

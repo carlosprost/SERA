@@ -9,9 +9,7 @@
           
           <div class="rule-header">
             <strong>Filtro #{{ i + 1 }}</strong>
-            <button mat-icon-button color="warn" type="button" (click)="removeRule(i)" matTooltip="Eliminar regla">
-              <mat-icon>delete</mat-icon>
-            </button>
+            <sera-button variant="icon" icon="delete" class="btn-warn" type="button" (click)="removeRule(i)" matTooltip="Eliminar regla" />
           </div>
 
           <div class="rule-body">
@@ -52,21 +50,12 @@
       <p class="mat-body-2 text-center text-muted" style="margin: 16px 0;">No hay ningún filtro activo.</p>
     }
 
-    <button mat-stroked-button color="primary" type="button" (click)="addRule()" class="add-rule-btn">
-      <mat-icon>add</mat-icon> Agregar nuevo filtro
-    </button>
+    <sera-button variant="outlined" label="Agregar nuevo filtro" icon="add" type="button" (click)="addRule()" class="add-rule-btn" />
   </form>
 </div>
 <div mat-dialog-actions align="end">
-  <button mat-button color="warn" (click)="clearFilters()">Limpiar Todo</button>
+  <sera-button variant="text" label="Limpiar Todo" class="btn-warn" (click)="clearFilters()" />
   <span style="flex: 1 1 auto;"></span>
-  <button mat-button (click)="dialogClose()">Cancelar</button>
-  <button
-    mat-raised-button
-    color="primary"
-    (click)="onSubmit()"
-    [disabled]="filterForm.invalid"
-  >
-    Aplicar Filtros
-  </button>
+  <sera-button variant="text" label="Cancelar" (click)="dialogClose()" />
+  <sera-button variant="flat" label="Aplicar Filtros" (click)="onSubmit()" />
 </div>

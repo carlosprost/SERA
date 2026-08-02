@@ -1,7 +1,7 @@
 @if (!generando()) {
   <h2 mat-dialog-title>Configuración de Reporte Personalizado</h2>
   <mat-dialog-content class="report-dialog-content"> 
-      <mat-tab-group color="accent" animationDuration="200ms">
+      <mat-tab-group color="primary" animationDuration="200ms">
           
           <!-- PESTAÑA: TEXTOS DEL REPORTE -->
           <mat-tab label="Contenido de Texto">
@@ -16,7 +16,7 @@
   
                       <mat-form-field appearance="outline">
                           <mat-label>Texto de Apertura (Antes de la tabla)</mat-label>
-                          <textarea matInput formControlName="descripcion" rows="3" placeholder="Introducción o contexto..."></textarea>
+                          <textarea matInput formControlName="descripcion" rows="2" placeholder="Introducción o contexto..."></textarea>
                       </mat-form-field>
                   </div>
   
@@ -24,7 +24,7 @@
                   <div class="form-section">
                       <mat-form-field appearance="outline">
                           <mat-label>Texto de Cierre (Después de la tabla)</mat-label>
-                          <textarea matInput formControlName="descripcion_post" rows="3" placeholder="Conclusiones o notas finales..."></textarea>
+                          <textarea matInput formControlName="descripcion_post" rows="2" placeholder="Conclusiones o notas finales..."></textarea>
                       </mat-form-field>
                   </div>
   
@@ -76,7 +76,7 @@
       </mat-tab-group>
   </mat-dialog-content>
   <mat-dialog-actions align="end">
-    <button mat-button mat-dialog-close color="warn">Cancelar</button>
+    <button mat-button mat-dialog-close>Cancelar</button>
     <button mat-raised-button color="primary" (click)="save()">
       Generar Reporte
     </button>

@@ -19,7 +19,7 @@ import * as pdfjsLib from 'pdfjs-dist';
     <div class="detalle-container">
       <div class="header">
         <div class="title-group">
-          <mat-icon color="accent">description</mat-icon>
+          <mat-icon color="primary">description</mat-icon>
           <h2>Detalle del Registro</h2>
         </div>
         <button mat-icon-button (click)="close()">
@@ -109,7 +109,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 
       <div class="footer">
         <button mat-button (click)="close()">Cerrar</button>
-        <button mat-flat-button color="accent" (click)="editar()">
+        <button mat-flat-button color="primary" (click)="editar()">
           <mat-icon>edit</mat-icon>
           Actualizar Registro
         </button>
@@ -223,8 +223,8 @@ import * as pdfjsLib from 'pdfjs-dist';
       }
 
       .linked-detail-card {
-        background: rgba(var(--sera-primary-color-rgb, 33, 150, 243), 0.02);
-        border: 1px solid rgba(var(--sera-primary-color-rgb), 0.1);
+        background: rgba(var(--sera-primary-rgb, 33, 150, 243), 0.02);
+        border: 1px solid rgba(var(--sera-primary-rgb, 33, 150, 243), 0.1);
         border-radius: 12px;
         padding: 16px 20px;
         display: flex;

@@ -22,6 +22,6 @@
   }
 </mat-dialog-content>
 <mat-dialog-actions align="end" style="gap: 8px; padding: 12px 24px 20px 24px;">
-  <button mat-button (click)="dialogClose()">Cancelar</button>
-  <button mat-flat-button color="warn" (click)="onSubmit()">Eliminar</button>
+  <sera-button variant="text" label="Cancelar" (click)="dialogClose()" />
+  <sera-button variant="flat" label="Eliminar" icon="delete" class="btn-warn" (click)="onSubmit()" />
 </mat-dialog-actions>

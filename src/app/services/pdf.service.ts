@@ -35,7 +35,7 @@ export class PdfService {
       firma_texto?: string
     },
     contenido: any[]
-  ): Promise<void> {
+  ): Promise<boolean> {
     let tempContainer = contenedor;
     let appended = false;
     if (!tempContainer) {
@@ -47,10 +47,11 @@ export class PdfService {
       appended = true;
     }
     this.construirContenidoHtml(tempContainer, config, contenido);
-    await this.exportarComoPDF(tempContainer, config.titulo);
+    const success = await this.exportarComoPDF(tempContainer, config.titulo);
     if (appended && tempContainer) {
       document.body.removeChild(tempContainer);
     }
+    return success;
   }
 
   /**
@@ -261,7 +262,7 @@ export class PdfService {
    * Captura el contenedor HTML como canvas y lo exporta como PDF A4.
    * Utiliza las APIs nativas de Tauri v2 para el guardado.
    */
-  private async exportarComoPDF(contenedor: HTMLDivElement, titulo: string): Promise<void> {
+  private async exportarComoPDF(contenedor: HTMLDivElement, titulo: string): Promise<boolean> {
     try {
       const canvas = await html2canvas(contenedor, { scale: 2 });
       const imgWidth = 210;   // Ancho A4 en mm
@@ -300,11 +301,14 @@ export class PdfService {
       if (rutaSeleccionada) {
         await writeFile(rutaSeleccionada, pdfUint8Array);
         console.log(`[SERA] Reporte guardado exitosamente en: ${rutaSeleccionada}`);
+        return true;
       } else {
         console.log('[SERA] El usuario canceló la operación de guardado.');
+        return false;
       }
     } catch (error: any) {
       console.error('[SERA] Error al generar o guardar el PDF:', error.message);
+      throw error;
     }
   }
 }

@@ -4,9 +4,11 @@
   <div class="api-manager__server-card">
     <div class="api-manager__server-header">
       <div class="api-manager__server-title-group">
-        <mat-icon class="api-manager__server-icon" [class.api-manager__server-icon--active]="apiEnabled()">
-          settings_input_antenna
-        </mat-icon>
+        <div class="api-manager__server-icon-badge" [class.api-manager__server-icon-badge--active]="apiEnabled()">
+          <mat-icon class="api-manager__server-icon" [class.api-manager__server-icon--active]="apiEnabled()">
+            settings_input_antenna
+          </mat-icon>
+        </div>
         <div>
           <h2 class="api-manager__server-title">Servidor de Red Local (LAN)</h2>
           <p class="api-manager__server-subtitle">

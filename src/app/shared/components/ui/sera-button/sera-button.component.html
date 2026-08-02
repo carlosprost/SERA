@@ -1,0 +1,22 @@
+@if (variant !== 'icon') {
+  <button
+    [matButton]="buttonVariant"
+    [type]="type"
+    [disabled]="disabled"
+    [style.width]="width"
+    [class.sera-btn--sm]="size === 'sm'"
+    [class.sera-btn--lg]="size === 'lg'">
+    @if (icon && iconPosition === 'left') { <mat-icon>{{ icon }}</mat-icon> }
+    @if (label) { <span class="sera-btn__label">{{ label }}</span> }
+    @if (icon && iconPosition === 'right') { <mat-icon>{{ icon }}</mat-icon> }
+  </button>
+}
+
+@if (variant === 'icon') {
+  <button
+    matIconButton
+    [type]="type"
+    [disabled]="disabled">
+    <mat-icon>{{ icon }}</mat-icon>
+  </button>
+}

@@ -5,8 +5,8 @@ Este archivo sirve como memoria persistente y contexto de inducción inmediata p
 ---
 
 ## 📌 1. Estado del Arte y Versión Actual
-*   **Versión del Core:** `4.2.0`
-*   **Codename:** `Poseidón · Phoenix-420`
+*   **Versión del Core:** `4.2.1`
+*   **Codename:** `Poseidón · Phoenix-421`
 *   **Rama Activa:** `main`
 *   **Despliegue de Docs:** La carpeta `gh-pages` está sincronizada al 100% y forzada mediante `git subtree` en la rama remota `gh-pages` (`origin/gh-pages`).
 

@@ -61,10 +61,12 @@
                 <button mat-menu-item [matMenuTriggerFor]="tablaSubMenu">
                   @if (tabla.nombre_tabla.toLowerCase().startsWith('remoto_')) {
                     <mat-icon style="color: #61c3db;">cloud</mat-icon>
+                  } @else if (tabla.nombre_tabla.toLowerCase().startsWith('ejemplo_')) {
+                    <mat-icon style="color: #ff9800;">auto_awesome</mat-icon>
                   } @else {
                     <mat-icon>table_chart</mat-icon>
                   }
-                  <span>{{ tabla.nombre_tabla.split('_').join(' ') | titlecase }}</span>
+                  <span>{{ tabla.nombre_tabla | formatName | titlecase }}</span>
                 </button>
                 <mat-menu #tablaSubMenu="matMenu">
                   <button mat-menu-item (click)="addTab(tabla.nombre_tabla)">
@@ -98,6 +100,29 @@
               <button mat-menu-item (click)="importarExcel()">
                 <mat-icon style="color: #4caf50;">table_view</mat-icon>
                 <span>Desde Excel o CSV</span>
+              </button>
+            </mat-menu>
+
+            <button class="ribbon-btn" [matMenuTriggerFor]="ejemplosMenu" matTooltip="Cargar tablas de ejemplo con datos">
+              <mat-icon style="color: #ff9800;">auto_awesome</mat-icon>
+              <span>Ejemplos</span>
+            </button>
+            <mat-menu #ejemplosMenu="matMenu">
+              <button mat-menu-item (click)="cargarEjemplo('inventario')">
+                <mat-icon color="primary">inventory</mat-icon>
+                <span>Inventario de Equipos</span>
+              </button>
+              <button mat-menu-item (click)="cargarEjemplo('personal')">
+                <mat-icon color="accent">people</mat-icon>
+                <span>Gestión de Personal</span>
+              </button>
+              <button mat-menu-item (click)="cargarEjemplo('proyectos')">
+                <mat-icon style="color: #4caf50;">assignment</mat-icon>
+                <span>Seguimiento de Proyectos</span>
+              </button>
+              <button mat-menu-item (click)="cargarEjemplo('crm')">
+                <mat-icon style="color: #9c27b0;">contact_phone</mat-icon>
+                <span>CRM Vinculado (Clientes / Ventas)</span>
               </button>
             </mat-menu>
 
@@ -139,7 +164,7 @@
                   @if (col !== activeTable.campoSeleccion && col !== 'actions') {
                     <button mat-menu-item (click)="activeTable.toggleColumnVisibility(col); $event.stopPropagation()">
                       <mat-icon [color]="activeTable.hiddenColumns.has(col) ? '' : 'primary'">{{ activeTable.hiddenColumns.has(col) ? 'check_box_outline_blank' : 'check_box' }}</mat-icon>
-                      {{ col.split('_').join(' ') | titlecase }}
+                      {{ col | formatName | titlecase }}
                     </button>
                   }
                 }
@@ -288,7 +313,7 @@
                   <mat-icon style="font-size: 16px; width: 16px; height: 16px; margin-right: 8px;">search</mat-icon>
                   <span class="tab-title">RES: {{ searchTabsData[tab].term | uppercase }}</span>
                 } @else {
-                  <span class="tab-title">{{ tab.split("_").join(" ") | uppercase }}</span>
+                  <span class="tab-title">{{ tab | formatName | uppercase }}</span>
                 }
                 <button
                   mat-icon-button

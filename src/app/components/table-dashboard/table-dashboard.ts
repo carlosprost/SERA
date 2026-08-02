@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges, signal } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +10,8 @@ import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 import { Store } from '@ngrx/store';
 import { selectCampos, selectContenido } from '../../store/store.selectors';
 import { combineLatest, filter, take, map } from 'rxjs';
+import { FormatNamePipe } from '../../shared/pipes/format-name.pipe';
+import { ThemeService } from '../../services/theme';
 
 @Component({
   selector: 'app-table-dashboard',
@@ -21,7 +23,8 @@ import { combineLatest, filter, take, map } from 'rxjs';
     MatCardModule,
     MatSelectModule,
     MatFormFieldModule,
-    BaseChartDirective
+    BaseChartDirective,
+    FormatNamePipe
   ],
   templateUrl: './table-dashboard.html',
   styleUrl: './table-dashboard.scss'
@@ -42,14 +45,54 @@ export class TableDashboardComponent implements OnChanges {
   selectedMetricField: string = '';
   selectedOperation: 'sum' | 'avg' = 'sum';
 
-  constructor(private store: Store) {}
+  constructor(
+    private store: Store,
+    public themeService: ThemeService
+  ) {
+    // Reaccionar automáticamente cada vez que el usuario cambia de tema o personaliza colores
+    effect(() => {
+      this.themeService.currentTheme();
+      this.themeService.customColors();
+      if (this.showCharts() && this.cachedData.length > 0) {
+        this.updateAnalysis();
+      }
+    });
+  }
+
+  // Métodos de obtención dinámica del tema activo
+  private getThemePrimaryColor(): string {
+    return this.themeService.getPrimaryColor();
+  }
+
+  private getThemePalette(): string[] {
+    const primary = this.getThemePrimaryColor();
+    return [
+      primary,
+      '#ff9800',
+      '#4caf50',
+      '#00bcd4',
+      '#ab47bc',
+      '#26a69a',
+      '#ffca28',
+      '#ef5350',
+      '#5c6bc0',
+      '#8d6e63'
+    ];
+  }
 
   // Configuración de Gráfico de Torta
   public pieChartOptions: ChartConfiguration['options'] = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: true, position: 'right' },
+      legend: { 
+        display: true, 
+        position: 'right',
+        labels: {
+          color: 'rgba(255, 255, 255, 0.85)',
+          font: { family: "'Segoe UI', Roboto, sans-serif", size: 11 }
+        }
+      },
     }
   };
   public pieChartData: ChartData<'pie', number[], string | string[]> = {
@@ -62,14 +105,31 @@ export class TableDashboardComponent implements OnChanges {
   public barChartOptions: ChartConfiguration['options'] = {
     responsive: true,
     maintainAspectRatio: false,
-    scales: { x: {}, y: { min: 0 } },
+    scales: { 
+      x: { 
+        ticks: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 11 } },
+        grid: { color: 'rgba(255, 255, 255, 0.06)' }
+      }, 
+      y: { 
+        min: 0,
+        ticks: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 11 } },
+        grid: { color: 'rgba(255, 255, 255, 0.06)' }
+      } 
+    },
     plugins: {
-      legend: { display: true, position: 'top' }
+      legend: { 
+        display: true, 
+        position: 'top',
+        labels: {
+          color: 'rgba(255, 255, 255, 0.85)',
+          font: { family: "'Segoe UI', Roboto, sans-serif", size: 12, weight: 600 }
+        }
+      }
     }
   };
   public barChartData: ChartData<'bar'> = {
     labels: [],
-    datasets: [{ data: [], label: 'Registros', backgroundColor: '#2196f3' }]
+    datasets: [{ data: [], label: 'Registros' }]
   };
   public barChartType: ChartType = 'bar';
 
@@ -149,6 +209,9 @@ export class TableDashboardComponent implements OnChanges {
   updateAnalysis() {
     if (!this.cachedData.length) return;
 
+    const primaryColor = this.getThemePrimaryColor();
+    const themePalette = this.getThemePalette();
+
     if (this.analysisMode === 'frequency') {
       if (!this.selectedField) return;
 
@@ -165,10 +228,9 @@ export class TableDashboardComponent implements OnChanges {
         labels: sortedKeys,
         datasets: [{
           data: chartValues,
-          backgroundColor: [
-            '#2196f3', '#4caf50', '#ff9800', '#f44336', '#9c27b0', 
-            '#00bcd4', '#ffeb3b', '#795548', '#607d8b', '#e91e63'
-          ]
+          backgroundColor: themePalette,
+          borderWidth: 2,
+          borderColor: 'rgba(0, 0, 0, 0.25)'
         }]
       };
 
@@ -176,8 +238,11 @@ export class TableDashboardComponent implements OnChanges {
         labels: sortedKeys,
         datasets: [{
           data: chartValues,
-          label: `Cantidad de Expedientes por ${this.selectedField}`,
-          backgroundColor: '#2196f3'
+          label: `Cantidad de Registros por ${this.selectedField}`,
+          backgroundColor: primaryColor,
+          borderColor: primaryColor,
+          borderRadius: 6,
+          hoverBackgroundColor: primaryColor
         }]
       };
     } 
@@ -212,10 +277,9 @@ export class TableDashboardComponent implements OnChanges {
         labels: sortedKeys,
         datasets: [{
           data: chartValues,
-          backgroundColor: [
-            '#2196f3', '#4caf50', '#ff9800', '#f44336', '#9c27b0', 
-            '#00bcd4', '#ffeb3b', '#795548', '#607d8b', '#e91e63'
-          ]
+          backgroundColor: themePalette,
+          borderWidth: 2,
+          borderColor: 'rgba(0, 0, 0, 0.25)'
         }]
       };
 
@@ -224,7 +288,10 @@ export class TableDashboardComponent implements OnChanges {
         datasets: [{
           data: chartValues,
           label: `${opLabel} de ${this.selectedMetricField} por ${this.selectedCategoryField}`,
-          backgroundColor: '#00bcd4'
+          backgroundColor: primaryColor,
+          borderColor: primaryColor,
+          borderRadius: 6,
+          hoverBackgroundColor: primaryColor
         }]
       };
     }

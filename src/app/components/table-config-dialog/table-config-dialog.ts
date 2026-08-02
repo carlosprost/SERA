@@ -7,11 +7,12 @@ import { TableRule } from '../../interfaces/tablas.interfaces';
 import { invoke } from '@tauri-apps/api/core';
 import { MatDialog } from '@angular/material/dialog';
 import { RecetarioComponent } from '../recetario/recetario';
+import { FormatNamePipe } from '../../shared/pipes/format-name.pipe';
 
 @Component({
   selector: 'app-table-config-dialog',
   standalone: true,
-  imports: [MaterialModule, ReactiveFormsModule, CommonModule],
+  imports: [MaterialModule, ReactiveFormsModule, CommonModule, FormatNamePipe],
   templateUrl: './table-config-dialog.html',
   styleUrl: './table-config-dialog.scss'
 })
@@ -105,14 +106,36 @@ export class TableConfigDialog implements OnInit {
   }
 
   createLinkedFieldGroup(lf?: any): FormGroup {
+    let displayVal: string[] = [];
+    if (Array.isArray(lf?.displayFields) && lf.displayFields.length > 0) {
+      displayVal = lf.displayFields;
+    } else if (Array.isArray(lf?.displayField)) {
+      displayVal = lf.displayField;
+    } else if (typeof lf?.displayField === 'string' && lf.displayField.trim() !== '') {
+      displayVal = lf.displayField.includes(' - ')
+        ? lf.displayField.split(' - ').map((s: string) => s.trim()).filter(Boolean)
+        : (lf.displayField.includes(',')
+            ? lf.displayField.split(',').map((s: string) => s.trim()).filter(Boolean)
+            : [lf.displayField.trim()]);
+    }
+
     const group = this.fb.group({
       localField: [lf?.localField || '', Validators.required],
       remoteTable: [lf?.remoteTable || '', Validators.required],
       remoteField: [lf?.remoteField || '', Validators.required],
-      displayField: [lf?.displayField || '', Validators.required]
+      displayField: [displayVal, (control: any) => {
+        const v = control.value;
+        return (!v || (Array.isArray(v) && v.length === 0)) ? { required: true } : null;
+      }]
     });
 
-    // Cargar campos remotos si ya tiene tabla
+    group.get('remoteTable')?.valueChanges.subscribe(tbl => {
+      if (tbl) {
+        this.onRemoteTableChange(tbl);
+      }
+    });
+
+    // Cargar campos remotos si ya tiene tabla inicial
     if (lf?.remoteTable) {
       this.onRemoteTableChange(lf.remoteTable);
     }
@@ -120,28 +143,103 @@ export class TableConfigDialog implements OnInit {
     return group;
   }
 
+  /**
+   * Obtiene el array de campos seleccionados para mostrar en el vínculo.
+   */
+  getDisplayFieldsArray(lf: any): string[] {
+    const val = lf?.get ? lf.get('displayField')?.value : lf?.value?.displayField;
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string' && val.trim() !== '') {
+      return val.includes(' - ')
+        ? val.split(' - ').map(s => s.trim()).filter(Boolean)
+        : (val.includes(',') ? val.split(',').map(s => s.trim()).filter(Boolean) : [val.trim()]);
+    }
+    return [];
+  }
+
+  /**
+   * Agrega un campo a la lista de visualización en el orden en que se selecciona.
+   */
+  addDisplayField(lf: any, fieldName: string) {
+    if (!fieldName) return;
+    const current = this.getDisplayFieldsArray(lf);
+    if (!current.includes(fieldName)) {
+      const updated = [...current, fieldName];
+      lf.get('displayField')?.setValue(updated);
+      this.cdr.detectChanges();
+    }
+  }
+
+  /**
+   * Mueve un campo a la izquierda (-1) o a la derecha (+1) para cambiar el orden de aparición.
+   */
+  moveDisplayField(lf: any, index: number, delta: number) {
+    const current = [...this.getDisplayFieldsArray(lf)];
+    const target = index + delta;
+    if (target < 0 || target >= current.length) return;
+    const temp = current[index];
+    current[index] = current[target];
+    current[target] = temp;
+    lf.get('displayField')?.setValue(current);
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Elimina un campo de la lista de visualización.
+   */
+  removeDisplayField(lf: any, index: number) {
+    const current = [...this.getDisplayFieldsArray(lf)];
+    current.splice(index, 1);
+    lf.get('displayField')?.setValue(current);
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Genera el texto de vista previa en tiempo real del vínculo.
+   */
+  getPreviewDisplay(lf: any): string {
+    const fields = this.getDisplayFieldsArray(lf);
+    if (fields.length === 0) return '(Ningún campo seleccionado)';
+    return fields.map(f => `[${f.toUpperCase()}]`).join(' - ');
+  }
+
+  /**
+   * Retorna los campos de la tabla remota que aún no fueron agregados a la lista de visualización.
+   */
+  getAvailableFieldsToAdd(lf: any): string[] {
+    const all = this.getCamposFor(lf);
+    const selected = this.getDisplayFieldsArray(lf);
+    return all.filter(f => !selected.includes(f));
+  }
+
   addLinkedField() {
     this.linkedFields.push(this.createLinkedFieldGroup());
+    this.cdr.detectChanges();
   }
 
   removeLinkedField(index: number) {
     this.linkedFields.removeAt(index);
+    this.cdr.detectChanges();
   }
 
   addCalculatedField() {
     this.calculatedFields.push(this.createCalculatedFieldGroup());
+    this.cdr.detectChanges();
   }
 
   removeCalculatedField(index: number) {
     this.calculatedFields.removeAt(index);
+    this.cdr.detectChanges();
   }
 
   addRule() {
     this.rules.push(this.createRuleGroup());
+    this.cdr.detectChanges();
   }
 
   removeRule(index: number) {
     this.rules.removeAt(index);
+    this.cdr.detectChanges();
   }
 
   toggleRecipes() {
@@ -170,7 +268,7 @@ export class TableConfigDialog implements OnInit {
         this.cdr.detectChanges();
       }
     } catch (e) {
-      console.error("Error loading table config", e);
+      console.error("Error al cargar la configuración de la tabla:", e);
     }
     
     if (this.rules.length === 0) {
@@ -221,10 +319,25 @@ export class TableConfigDialog implements OnInit {
   async onSubmit() {
     if (this.configForm.invalid) return;
     
+    const rawLinkedFields = this.configForm.value.linkedFields || [];
+    const normalizedLinkedFields = rawLinkedFields.map((lf: any) => {
+      const displayFieldsArr: string[] = Array.isArray(lf.displayField)
+        ? lf.displayField
+        : (typeof lf.displayField === 'string' && lf.displayField.trim() !== '' ? [lf.displayField.trim()] : []);
+
+      return {
+        localField: lf.localField,
+        remoteTable: lf.remoteTable,
+        remoteField: lf.remoteField,
+        displayField: displayFieldsArr.join(' - '),
+        displayFields: displayFieldsArr
+      };
+    });
+
     const config = { 
       rules: this.configForm.value.rules,
       calculatedFields: this.configForm.value.calculatedFields,
-      linkedFields: this.configForm.value.linkedFields
+      linkedFields: normalizedLinkedFields
     };
     const configJson = JSON.stringify(config);
     
@@ -245,17 +358,58 @@ export class TableConfigDialog implements OnInit {
     }
   }
 
+  /**
+   * Carga los campos de la tabla remota seleccionada invocando Tauri con { tabla: nombreTabla }.
+   */
   async onRemoteTableChange(nombreTabla: string) {
-    if (!nombreTabla || this.camposRemotos[nombreTabla]) return;
-    
+    if (!nombreTabla) return;
+    if (this.camposRemotos[nombreTabla] && this.camposRemotos[nombreTabla].length > 0) {
+      this.cdr.detectChanges();
+      return;
+    }
     try {
-      const camposRes: any[] = await invoke('get_campos', { nombreTabla });
-      this.camposRemotos[nombreTabla] = camposRes.map(c => c.Field);
+      const camposRes: any[] = await invoke('get_campos', { tabla: nombreTabla });
+      const listaCampos: string[] = (camposRes || [])
+        .map((c: any) => c.Field ?? c.column_name ?? c.name ?? (typeof c === 'string' ? c : ''))
+        .filter((c: string) => Boolean(c) && !c.toLowerCase().startsWith('sera_'));
+
+      this.camposRemotos = {
+        ...this.camposRemotos,
+        [nombreTabla]: listaCampos,
+        [nombreTabla.toLowerCase()]: listaCampos,
+        [nombreTabla.toUpperCase()]: listaCampos
+      };
       this.cdr.detectChanges();
     } catch (e) {
-      console.error("Error al cargar campos de tabla remota", e);
+      console.error('Error al cargar campos de tabla remota', e);
+      this.camposRemotos[nombreTabla] = [];
     }
   }
+
+  /**
+   * Retorna los campos remotos cargados para el FormGroup de vínculos indicado de forma pura.
+   * Se usa en el template para los selects de remoteField y displayField.
+   */
+  getCamposFor(lf: any): string[] {
+    const remoteTable = lf?.get ? lf.get('remoteTable')?.value : lf?.value?.remoteTable;
+    if (!remoteTable) return [];
+    return this.camposRemotos[remoteTable]
+      || this.camposRemotos[remoteTable.toLowerCase()]
+      || this.camposRemotos[remoteTable.toUpperCase()]
+      || [];
+  }
+
+  /**
+   * Lista de tablas disponibles formateadas para SeraSelectComponent.
+   * Usa FormatName (reemplaza guiones bajos) + uppercase para la etiqueta.
+   */
+  get tablasFormateadas(): { value: string; label: string }[] {
+    return this.tablasDisponibles.map(t => ({
+      value: t.nombre_tabla,
+      label: t.nombre_tabla.replace(/_/g, ' ').toUpperCase()
+    }));
+  }
+
 
   verRecetario() {
     this.dialog.open(RecetarioComponent, {

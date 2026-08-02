@@ -63,9 +63,7 @@
             </div>
 
             <!-- Botón Eliminar -->
-            <button mat-icon-button color="warn" type="button" (click)="removeField(i)" [disabled]="fields.length === 1" matTooltip="Eliminar columna">
-              <mat-icon>delete</mat-icon>
-            </button>
+            <sera-button variant="icon" icon="delete" class="btn-warn" type="button" (click)="removeField(i)" [disabled]="fields.length === 1" matTooltip="Eliminar columna" />
           </div>
 
           <!-- CONFIGURACIÓN DE VÍNCULO (Se muestra solo si el tipo es LINK) -->
@@ -101,20 +99,16 @@
     </div>
 
     <div class="add-btn-container">
-      <button mat-stroked-button color="primary" type="button" (click)="agregarCampo()">
-        <mat-icon>add</mat-icon> Agregar columna
-      </button>
+      <sera-button variant="outlined" label="Agregar columna" icon="add" type="button" (click)="agregarCampo()" />
     </div>
   </form>
 </div>
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="dialogClose()">Cancelar</button>
-  <button
-    mat-raised-button
-    color="primary"
+  <sera-button variant="text" label="Cancelar" (click)="dialogClose()" />
+  <sera-button
+    variant="flat"
+    [label]="data.isEdit ? 'Actualizar tabla' : 'Crear nueva tabla'"
+    icon="check"
     (click)="onSubmit()"
-    [disabled]="newTableForm.invalid"
-  >
-    {{ data.isEdit ? 'Actualizar tabla' : 'Crear nueva tabla' }}
-  </button>
+    [disabled]="newTableForm.invalid" />
 </div>

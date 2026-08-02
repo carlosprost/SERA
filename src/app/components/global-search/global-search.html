@@ -15,11 +15,11 @@
 
   <div class="results-area" *ngIf="tableNames.length > 0">
     <div *ngFor="let tableName of tableNames" class="table-group">
-      <div class="table-header">
+      <h3 mat-subheader class="table-group-header">
         <mat-icon>table_chart</mat-icon>
-        <span>{{ tableName }}</span>
+        <span>{{ tableName.split('_').join(' ') | uppercase }}</span>
         <span class="count-badge">{{ results()[tableName].length }}</span>
-      </div>
+      </h3>
       
       <mat-nav-list>
         <mat-list-item *ngFor="let row of results()[tableName].slice(0, 3)" (click)="selectResult(tableName, row)">

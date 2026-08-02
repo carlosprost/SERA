@@ -1,19 +1,14 @@
 <div class="config-dialog">
   <div class="dialog-header">
-    <h2 mat-dialog-title>Configuración de Tabla: {{ tabla | uppercase }}</h2>
+    <h2 mat-dialog-title>Configuración de Tabla: {{ tabla | formatName | uppercase }}</h2>
     <div class="header-actions">
-      <button mat-flat-button (click)="verRecetario()" color="primary" type="button" class="btn-recetario">
-        <mat-icon>science</mat-icon>
-        Ver Recetario
-      </button>
-      <button mat-icon-button (click)="dialogClose()" type="button" class="btn-close-dialog" title="Cerrar ventana">
-        <mat-icon>close</mat-icon>
-      </button>
+      <sera-button variant="flat" label="Ver Recetario" icon="science" (click)="verRecetario()" type="button" class="btn-recetario" />
+      <sera-button variant="icon" icon="close" (click)="dialogClose()" type="button" class="btn-close-dialog" title="Cerrar ventana" />
     </div>
   </div>
 
   <form [formGroup]="configForm" (ngSubmit)="onSubmit()">
-    <mat-tab-group animationDuration="200ms" color="accent">
+    <mat-tab-group animationDuration="200ms" color="primary">
       
       <!-- PESTAÑA 1: REGLAS VISUALES -->
       <mat-tab label="Reglas de Color">
@@ -34,9 +29,7 @@
                             <mat-button-toggle value="formula">Fórmula</mat-button-toggle>
                           </mat-button-toggle-group>
                         </div>
-                        <button mat-icon-button color="warn" (click)="removeRule(i)" type="button">
-                          <mat-icon>delete</mat-icon>
-                        </button>
+                        <sera-button variant="icon" icon="delete" class="btn-warn" (click)="removeRule(i)" type="button" />
                       </div>
 
                       <div class="rule-body" [class.column-layout]="rule.get('type')?.value === 'formula'">
@@ -156,9 +149,7 @@
                 </div>
 
                 <div class="add-button-container">
-                  <button mat-stroked-button color="accent" type="button" (click)="addRule()" class="add-rule-btn">
-                    <mat-icon>add</mat-icon> Agregar Nueva Regla
-                  </button>
+                  <sera-button variant="outlined" label="Agregar Nueva Regla de Formato" icon="add" type="button" (click)="addRule()" class="add-rule-btn" />
                 </div>
               </div>
             </div>
@@ -196,9 +187,7 @@
                     <div [formGroupName]="i" class="rule-row mat-elevation-z2">
                       <div class="rule-header">
                         <span class="rule-badge">Campo Virtual #{{ i + 1 }}</span>
-                        <button mat-icon-button color="warn" (click)="removeCalculatedField(i)" type="button">
-                          <mat-icon>delete</mat-icon>
-                        </button>
+                        <sera-button variant="icon" icon="delete" class="btn-warn" (click)="removeCalculatedField(i)" type="button" />
                       </div>
 
                       <div class="rule-body column-layout">
@@ -232,9 +221,7 @@
                 </div>
 
                 <div class="add-button-container">
-                  <button mat-stroked-button color="accent" type="button" (click)="addCalculatedField()" class="add-rule-btn">
-                    <mat-icon>auto_awesome</mat-icon> Nueva Transformación Vitual
-                  </button>
+                  <sera-button variant="outlined" label="Nueva Transformación Virtual" icon="auto_awesome" type="button" (click)="addCalculatedField()" class="add-rule-btn" />
                 </div>
               </div>
             </div>
@@ -265,53 +252,109 @@
           
           <div class="rules-scroll-viewport no-split">
             <div formArrayName="linkedFields" class="rules-container">
-              @for (lf of linkedFields.controls; track lf; let i = $index) {
+              @for (lf of linkedFields.controls; track $index; let i = $index) {
                 <div [formGroupName]="i" class="rule-row mat-elevation-z2 relationship-row">
                   <div class="rule-header">
                     <span class="rule-badge link-badge"><mat-icon class="mini-icon">link</mat-icon> Vínculo #{{ i + 1 }}</span>
-                    <button mat-icon-button color="warn" (click)="removeLinkedField(i)" type="button">
-                      <mat-icon>delete</mat-icon>
-                    </button>
+                    <sera-button variant="icon" icon="delete" class="btn-warn" (click)="removeLinkedField(i)" type="button" />
                   </div>
 
-                  <div class="rule-body horizontal-layout">
-                    <mat-form-field appearance="outline" class="flex-1">
-                      <mat-label>Campo Local</mat-label>
-                      <mat-select formControlName="localField">
-                        @for (campo of campos; track campo) {
-                          <mat-option [value]="campo">{{ campo }}</mat-option>
-                        }
-                      </mat-select>
-                    </mat-form-field>
+                  <div class="rule-body column-layout-gap">
+                    <!-- Fila 1: Selectores de campos y tabla -->
+                    <div class="horizontal-layout">
+                      <!-- Campo Local: opciones primitivas -->
+                      <sera-select
+                        class="flex-1"
+                        label="Campo Local"
+                        formControlName="localField"
+                        [options]="campos">
+                      </sera-select>
 
-                    <mat-icon class="link-arrow">arrow_forward</mat-icon>
+                      <mat-icon class="link-arrow">arrow_forward</mat-icon>
 
-                    <mat-form-field appearance="outline" class="flex-1">
-                      <mat-label>Tabla Remota</mat-label>
-                      <mat-select formControlName="remoteTable" (selectionChange)="onRemoteTableChange($event.value)">
-                        @for (t of tablasDisponibles; track t.nombre_tabla) {
-                          <mat-option [value]="t.nombre_tabla">{{ t.nombre_tabla | uppercase }}</mat-option>
-                        }
-                      </mat-select>
-                    </mat-form-field>
+                      <!-- Tabla Remota: opciones objeto -->
+                      <sera-select
+                        class="flex-1"
+                        label="Tabla Remota"
+                        formControlName="remoteTable"
+                        [options]="tablasFormateadas"
+                        optionValue="value"
+                        optionLabel="label"
+                        (change)="onRemoteTableChange($event)">
+                      </sera-select>
 
-                    <mat-form-field appearance="outline" class="flex-1">
-                      <mat-label>Campo Valor (ID)</mat-label>
-                      <mat-select formControlName="remoteField">
-                        @for (cf of camposRemotos[lf.get('remoteTable')?.value] || []; track cf) {
-                          <mat-option [value]="cf">{{ cf }}</mat-option>
-                        }
-                      </mat-select>
-                    </mat-form-field>
+                      <!-- Campo Valor (ID / Clave) -->
+                      <sera-select
+                        class="flex-1"
+                        label="Campo Clave (ID)"
+                        formControlName="remoteField"
+                        [options]="getCamposFor(lf)">
+                      </sera-select>
 
-                    <mat-form-field appearance="outline" class="flex-1">
-                      <mat-label>Mostrar Campo</mat-label>
-                      <mat-select formControlName="displayField">
-                        @for (cf of camposRemotos[lf.get('remoteTable')?.value] || []; track cf) {
-                          <mat-option [value]="cf">{{ cf }}</mat-option>
+                      <!-- Selector para agregar campos a mostrar en orden -->
+                      <sera-select
+                        class="flex-1"
+                        label="➕ Agregar Campo a Mostrar"
+                        [options]="getAvailableFieldsToAdd(lf)"
+                        (change)="addDisplayField(lf, $event)">
+                      </sera-select>
+                    </div>
+
+                    <!-- Fila 2: Chips ordenables con botones < > y vista previa -->
+                    <div class="display-fields-order-bar">
+                      <div class="order-header-info">
+                        <mat-icon class="mini-icon">sort</mat-icon>
+                        <span class="order-title">Campos a mostrar (en orden de aparición):</span>
+                      </div>
+
+                      <div class="chips-container">
+                        @for (col of getDisplayFieldsArray(lf); track col; let chipIdx = $index) {
+                          <div class="field-order-chip">
+                            <span class="chip-number">{{ chipIdx + 1 }}°</span>
+                            <span class="chip-name">{{ col }}</span>
+                            <div class="chip-actions">
+                              <button
+                                type="button"
+                                class="chip-btn"
+                                [disabled]="chipIdx === 0"
+                                (click)="moveDisplayField(lf, chipIdx, -1)"
+                                title="Mover a la izquierda (aparecerá antes)">
+                                <mat-icon>chevron_left</mat-icon>
+                              </button>
+                              <button
+                                type="button"
+                                class="chip-btn"
+                                [disabled]="chipIdx === getDisplayFieldsArray(lf).length - 1"
+                                (click)="moveDisplayField(lf, chipIdx, 1)"
+                                title="Mover a la derecha (aparecerá después)">
+                                <mat-icon>chevron_right</mat-icon>
+                              </button>
+                              <button
+                                type="button"
+                                class="chip-btn chip-btn-remove"
+                                (click)="removeDisplayField(lf, chipIdx)"
+                                title="Quitar campo">
+                                <mat-icon>close</mat-icon>
+                              </button>
+                            </div>
+                          </div>
                         }
-                      </mat-select>
-                    </mat-form-field>
+
+                        @if (getDisplayFieldsArray(lf).length === 0) {
+                          <span class="no-fields-hint">
+                            <mat-icon class="mini-icon">info</mat-icon>
+                            Elegí los campos en el selector "➕ Agregar Campo a Mostrar" para definir el orden.
+                          </span>
+                        }
+                      </div>
+
+                      @if (getDisplayFieldsArray(lf).length > 0) {
+                        <div class="order-preview">
+                          <span class="preview-tag">Vista previa en formulario:</span>
+                          <code class="preview-code">{{ getPreviewDisplay(lf) }}</code>
+                        </div>
+                      }
+                    </div>
                   </div>
                 </div>
               }
@@ -325,9 +368,7 @@
             </div>
 
             <div class="add-button-container">
-              <button mat-stroked-button color="accent" type="button" (click)="addLinkedField()" class="add-rule-btn">
-                <mat-icon>link</mat-icon> Crear Nuevo Vínculo Relacional
-              </button>
+              <sera-button variant="outlined" label="Crear Nuevo Vínculo Relacional" icon="link" type="button" (click)="addLinkedField()" class="add-rule-btn" />
             </div>
           </div>
         </div>
@@ -335,10 +376,8 @@
     </mat-tab-group>
 
     <div mat-dialog-actions align="end" class="dialog-footer">
-      <button mat-button (click)="dialogClose()" type="button">Cancelar</button>
-      <button mat-flat-button color="accent" type="submit" [disabled]="configForm.invalid">
-        <mat-icon>save</mat-icon> Guardar Cambios
-      </button>
+      <sera-button variant="text" label="Cancelar" (click)="dialogClose()" type="button" />
+      <sera-button variant="flat" label="Guardar Cambios" icon="save" type="submit" [disabled]="configForm.invalid" />
     </div>
   </form>
 </div>

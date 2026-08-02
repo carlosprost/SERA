@@ -42,11 +42,19 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
+// Design System SERA — Componentes UI reutilizables
+import { SeraSelectComponent } from './components/ui/sera-select/sera-select.component';
+import { SeraInputComponent } from './components/ui/sera-input/sera-input.component';
+import { SeraButtonComponent } from './components/ui/sera-button/sera-button.component';
 
 @NgModule({
   declarations: [],
   imports: [
-    CommonModule
+    CommonModule,
+    // Standalone components del Design System SERA
+    SeraSelectComponent,
+    SeraInputComponent,
+    SeraButtonComponent
   ],
   exports: [
     MatAutocompleteModule,
@@ -84,7 +92,11 @@ import { MatTableModule } from '@angular/material/table';
     DragDropModule,
     MatPaginatorModule,
     MatSortModule,
-    MatTableModule
+    MatTableModule,
+    // Design System SERA
+    SeraSelectComponent,
+    SeraInputComponent,
+    SeraButtonComponent
   ]
 })
 export class MaterialModule { }

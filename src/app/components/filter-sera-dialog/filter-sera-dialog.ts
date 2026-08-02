@@ -1,6 +1,7 @@
 import { Component, Inject } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MaterialModule } from '../../shared/material.module';
 import { CommonModule } from '@angular/common';
 
@@ -34,6 +35,7 @@ export class FilterSeraDialog {
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<FilterSeraDialog>,
+    private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     // Filtrar los campos que no deben mostrarse
@@ -56,9 +58,9 @@ export class FilterSeraDialog {
 
   createRuleGroup(rule?: FilterRule): FormGroup {
     return this.fb.group({
-      field: [rule?.field || '', Validators.required],
-      operator: [rule?.operator || 'contains', Validators.required],
-      value: [rule?.value || ''] // Opcional, dependiendo del operador
+      field: [rule?.field || ''],
+      operator: [rule?.operator || 'contains'],
+      value: [rule?.value || '']
     });
   }
 
@@ -76,8 +78,22 @@ export class FilterSeraDialog {
   }
 
   onSubmit() {
-    if (this.filterForm.invalid) return;
-    const rulesToApply = this.filterForm.value.rules.filter((r: any) => r.field && r.operator);
+    const currentRules = this.filterForm.value.rules || [];
+
+    if (currentRules.length === 0) {
+      this.dialogRef.close({ action: 'apply', filters: [] });
+      return;
+    }
+
+    const hasIncompleteRule = currentRules.some((r: any) => !r.field || !r.field.trim?.() && !r.field);
+    if (hasIncompleteRule) {
+      this.snackBar.open('Fallo al aplicar el filtro: falta seleccionar el campo requerido (Columna a filtrar).', 'Cerrar', {
+        duration: 3500
+      });
+      return;
+    }
+
+    const rulesToApply = currentRules.filter((r: any) => r.field && r.operator);
     this.dialogRef.close({ action: 'apply', filters: rulesToApply });
   }
 

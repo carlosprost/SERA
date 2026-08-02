@@ -112,7 +112,7 @@ export class FormularioRegistroComponent implements OnInit {
           // El backend devuelve el array directamente, no dentro de .data
           this.optionsMap[link.localField.toLowerCase()] = res.map((row: any) => ({
             value: row[link.remoteField],
-            label: row[link.displayField]
+            label: this.buildDisplayLabel(row, link)
           }));
         } catch (e) {
           console.error(`Error al cargar opciones para vínculo ${link.localField}:`, e);
@@ -124,12 +124,31 @@ export class FormularioRegistroComponent implements OnInit {
     }
   }
 
+  buildDisplayLabel(row: any, link: any): string {
+    if (link.displayFields && Array.isArray(link.displayFields) && link.displayFields.length > 0) {
+      const parts = link.displayFields
+        .map((f: string) => row[f])
+        .filter((v: any) => v !== undefined && v !== null && String(v).trim() !== '');
+      if (parts.length > 0) return parts.join(' - ');
+    }
+    if (link.displayField) {
+      if (typeof link.displayField === 'string' && link.displayField.includes(' - ') && !row[link.displayField]) {
+        const parts = link.displayField.split(' - ')
+          .map((f: string) => row[f.trim()])
+          .filter((v: any) => v !== undefined && v !== null && String(v).trim() !== '');
+        if (parts.length > 0) return parts.join(' - ');
+      }
+      return row[link.displayField] ?? String(row[link.remoteField] ?? '');
+    }
+    return String(row[link.remoteField] ?? '');
+  }
+
   async recargarOpciones(link: any) {
     try {
       const res: any[] = await invoke('get_contenido', { tabla: link.remoteTable });
       this.optionsMap[link.localField.toLowerCase()] = res.map((row: any) => ({
         value: row[link.remoteField],
-        label: row[link.displayField]
+        label: this.buildDisplayLabel(row, link)
       }));
       this.cdr.detectChanges();
     } catch (e) {

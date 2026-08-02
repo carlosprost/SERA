@@ -1,0 +1,276 @@
+/**
+ * SeraButtonComponent — Estilos del Design System SERA.
+ *
+ * PRINCIPIO: Cada variante define sus tokens M3 y MDC y aplica
+ * los estilos correspondientes directamente al botón interno.
+ */
+
+:host {
+  display: inline-flex;
+  align-items: center;
+
+  button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px !important;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+
+    mat-icon {
+      transition: color 0.2s ease;
+    }
+  }
+
+  // Tamaños
+  .sera-btn--sm {
+    font-size: 12px !important;
+    padding: 0 12px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+
+    ::ng-deep mat-icon {
+      font-size: 16px !important;
+      width: 16px !important;
+      height: 16px !important;
+    }
+  }
+
+  .sera-btn--lg {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    padding: 0 24px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    border-radius: 12px !important;
+
+    ::ng-deep mat-icon {
+      font-size: 20px !important;
+      width: 20px !important;
+      height: 20px !important;
+    }
+  }
+
+  // Espaciado ícono + label
+  .sera-btn__label {
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+
+  // Disabled
+  button:disabled,
+  button[disabled] {
+    opacity: 0.45 !important;
+    cursor: not-allowed !important;
+    filter: grayscale(0.5) !important;
+  }
+}
+
+// ── Variante: FILLED (primario) ─────────────────────────────────────────────
+:host([variant="flat"]),
+:host-context(sera-button[variant="flat"]) {
+  --mat-button-filled-container-color: var(--sera-primary-color);
+  --mat-button-filled-label-text-color: var(--sera-on-primary, #fff);
+  --mat-button-filled-state-layer-color: var(--sera-on-primary, #fff);
+  --mat-button-filled-ripple-color: rgba(255, 255, 255, 0.12);
+  --mat-sys-primary: var(--sera-primary-color);
+  --mat-sys-on-primary: var(--sera-on-primary, #fff);
+  --mdc-filled-button-container-color: var(--sera-primary-color);
+  --mdc-filled-button-label-text-color: var(--sera-on-primary, #fff);
+  --mdc-filled-button-icon-color: var(--sera-on-primary, #fff);
+
+  button:not([disabled]) {
+    background-color: var(--sera-primary-color) !important;
+    color: var(--sera-on-primary, #fff) !important;
+
+    mat-icon,
+    .sera-btn__label {
+      color: var(--sera-on-primary, #fff) !important;
+    }
+
+    &:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 12px rgba(var(--sera-primary-rgb), 0.35);
+    }
+  }
+
+  button[disabled] {
+    background-color: rgba(var(--sera-text-rgb), 0.12) !important;
+    color: rgba(var(--sera-text-rgb), 0.38) !important;
+
+    mat-icon,
+    .sera-btn__label {
+      color: rgba(var(--sera-text-rgb), 0.38) !important;
+    }
+  }
+}
+
+// ── Variante: OUTLINED ──────────────────────────────────────────────────────
+:host([variant="outlined"]),
+:host-context(sera-button[variant="outlined"]) {
+  --mat-button-outlined-label-text-color: var(--sera-text-color);
+  --mat-button-outlined-outline-color: rgba(var(--sera-text-rgb), 0.25);
+  --mat-button-outlined-state-layer-color: var(--sera-primary-color);
+  --mdc-outlined-button-label-text-color: var(--sera-text-color);
+  --mdc-outlined-button-outline-color: rgba(var(--sera-text-rgb), 0.25);
+  --mdc-outlined-button-icon-color: var(--sera-text-color);
+
+  button:not([disabled]) {
+    background-color: transparent !important;
+    color: var(--sera-text-color) !important;
+    border-color: rgba(var(--sera-text-rgb), 0.25) !important;
+
+    mat-icon,
+    .sera-btn__label {
+      color: var(--sera-text-color) !important;
+    }
+
+    &:hover {
+      background-color: rgba(var(--sera-primary-rgb), 0.08) !important;
+      border-color: var(--sera-primary-color) !important;
+      color: var(--sera-primary-color) !important;
+
+      mat-icon,
+      .sera-btn__label {
+        color: var(--sera-primary-color) !important;
+      }
+    }
+  }
+}
+
+// ── Variante: TEXT ──────────────────────────────────────────────────────────
+:host([variant="text"]),
+:host-context(sera-button[variant="text"]) {
+  --mat-button-text-label-text-color: var(--sera-text-color);
+  --mat-button-text-state-layer-color: var(--sera-primary-color);
+  --mdc-text-button-label-text-color: var(--sera-text-color);
+  --mdc-text-button-icon-color: var(--sera-text-color);
+
+  button:not([disabled]) {
+    background-color: transparent !important;
+    color: var(--sera-text-color) !important;
+
+    mat-icon,
+    .sera-btn__label {
+      color: var(--sera-text-color) !important;
+    }
+
+    &:hover {
+      background-color: rgba(var(--sera-primary-rgb), 0.08) !important;
+      color: var(--sera-primary-color) !important;
+
+      mat-icon,
+      .sera-btn__label {
+        color: var(--sera-primary-color) !important;
+      }
+    }
+  }
+}
+
+// ── Variante: ELEVATED ──────────────────────────────────────────────────────
+:host([variant="elevated"]),
+:host-context(sera-button[variant="elevated"]) {
+  --mat-button-protected-container-color: var(--sera-card-bg, #1e1e1e);
+  --mat-button-protected-label-text-color: var(--sera-primary-color);
+  --mdc-elevated-button-container-color: var(--sera-card-bg, #1e1e1e);
+  --mdc-elevated-button-label-text-color: var(--sera-primary-color);
+
+  button:not([disabled]) {
+    background-color: var(--sera-card-bg, #1e1e1e) !important;
+    color: var(--sera-primary-color) !important;
+
+    mat-icon,
+    .sera-btn__label {
+      color: var(--sera-primary-color) !important;
+    }
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+// ── Variante: TONAL ─────────────────────────────────────────────────────────
+:host([variant="tonal"]),
+:host-context(sera-button[variant="tonal"]) {
+  --mat-button-tonal-container-color: rgba(var(--sera-primary-rgb), 0.15);
+  --mat-button-tonal-label-text-color: var(--sera-primary-color);
+  --mdc-filled-button-container-color: rgba(var(--sera-primary-rgb), 0.15);
+  --mdc-filled-button-label-text-color: var(--sera-primary-color);
+
+  button:not([disabled]) {
+    background-color: rgba(var(--sera-primary-rgb), 0.15) !important;
+    color: var(--sera-primary-color) !important;
+
+    mat-icon,
+    .sera-btn__label {
+      color: var(--sera-primary-color) !important;
+    }
+
+    &:hover {
+      background-color: rgba(var(--sera-primary-rgb), 0.25) !important;
+    }
+  }
+}
+
+// ── Variante: ICON ──────────────────────────────────────────────────────────
+:host([variant="icon"]),
+:host-context(sera-button[variant="icon"]) {
+  --mat-icon-button-icon-color: var(--sera-text-color);
+  --mat-icon-button-state-layer-color: var(--sera-text-color);
+  --mdc-icon-button-icon-color: var(--sera-text-color);
+
+  button:not([disabled]) {
+    color: var(--sera-text-color) !important;
+
+    mat-icon {
+      color: var(--sera-text-color) !important;
+    }
+
+    &:hover {
+      background-color: rgba(var(--sera-primary-rgb), 0.08) !important;
+      color: var(--sera-primary-color) !important;
+
+      mat-icon {
+        color: var(--sera-primary-color) !important;
+      }
+    }
+  }
+}
+
+// ── Modificador: WARN (peligro / advertencia) ───────────────────────────────
+:host.btn-warn {
+  --mat-button-filled-container-color: #ef5350 !important;
+  --mat-button-filled-label-text-color: #ffffff !important;
+  --mat-icon-button-icon-color: #ef5350 !important;
+
+  button:not([disabled]) {
+    background-color: #ef5350 !important;
+    color: #ffffff !important;
+
+    mat-icon,
+    .sera-btn__label {
+      color: #ffffff !important;
+    }
+
+    &:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 12px rgba(239, 83, 80, 0.35);
+    }
+  }
+
+  &[variant="outlined"] button:not([disabled]),
+  &[variant="text"] button:not([disabled]),
+  &[variant="icon"] button:not([disabled]) {
+    background-color: transparent !important;
+    color: #ef5350 !important;
+    border-color: #ef5350 !important;
+
+    mat-icon,
+    .sera-btn__label {
+      color: #ef5350 !important;
+    }
+
+    &:hover {
+      background-color: rgba(239, 83, 80, 0.1) !important;
+    }
+  }
+}

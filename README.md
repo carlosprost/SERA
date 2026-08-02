@@ -1,7 +1,7 @@
 # SERA — Sistema de Expedientes de Registro Avanzado
 
-> **v4.2.0 "Poseidón"** · Desarrollado por [WolfTeI](https://wolftei.com.ar/)
-> *Edición del Ciclo Phoenix-420 (Mayo 2026)*
+> **v4.2.1 "Poseidón"** · Desarrollado por [WolfTeI](https://wolftei.com.ar/)
+> *Edición del Ciclo Phoenix-421 (2026)*
 
 Aplicación de escritorio nativa de alto rendimiento para la gestión de registros digitales. Con la versión 4.0 SERA se consolida como una **herramienta universal y genérica** adaptable a cualquier industria: desde PyMEs y estudios profesionales hasta organismos institucionales. Incluye **Motor Relacional Completo**, **Búsqueda Global Spotlight**, **Sistema de Membrete y Reportes PDF Profesionales**, **Auditoría ISO 27001** y **Temas Visuales Personalizados**.
 

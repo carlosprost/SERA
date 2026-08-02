@@ -1,0 +1,106 @@
+// ==========================================================================
+// _sera-ui-tokens.scss
+// Tokens y mixins centralizados del Design System de SERA.
+// Importar en cada componente UI con: @use '../sera-ui-tokens' as t;
+// ==========================================================================
+
+// ── Geometría ──────────────────────────────────────────────────────────────
+$field-border-radius: 8px;
+$btn-border-radius: 8px;
+
+// ── Transiciones ───────────────────────────────────────────────────────────
+$transition-fast: 0.15s ease;
+$transition-std: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+// ── Mixin: Reset MDC & M3 para mat-form-field ──────────────────────────────
+// Elimina el overlay de foco (el fondo de color primario al enfocar),
+// bloquea el state-layer, y sincroniza todos los tokens MDC y Material 3
+// con las variables del tema activo de SERA. Usar dentro de :host {} con ::ng-deep.
+@mixin field-mdc-reset {
+  // Overlay de foco — causa el fondo celeste/primario al hacer click
+  ::ng-deep .mat-mdc-form-field-focus-overlay {
+    display: none !important;
+    opacity: 0 !important;
+    background: transparent !important;
+  }
+
+  // Pseudo-elementos de state-layer del wrapper
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    &::before,
+    &::after {
+      background-color: transparent !important;
+      opacity: 0 !important;
+      display: none !important;
+    }
+
+    // Fondo neutro en todos los estados
+    background-color: rgba(var(--sera-text-rgb), 0.04) !important;
+    &.mdc-text-field--focused,
+    &:hover,
+    &:focus-within {
+      background-color: rgba(var(--sera-text-rgb), 0.04) !important;
+    }
+  }
+
+  // Tokens MDC y Material 3 sincronizados con el tema activo
+  ::ng-deep .mat-mdc-form-field {
+    // Tokens M3 (Angular Material 18+)
+    --mat-sys-primary: var(--sera-primary-color) !important;
+    --mat-form-field-outlined-outline-color: rgba(var(--sera-text-rgb), 0.18) !important;
+    --mat-form-field-outlined-hover-outline-color: rgba(var(--sera-primary-rgb), 0.5) !important;
+    --mat-form-field-outlined-focus-outline-color: var(--sera-primary-color) !important;
+    --mat-form-field-outlined-label-text-color: rgba(var(--sera-text-rgb), 0.7) !important;
+    --mat-form-field-outlined-hover-label-text-color: var(--sera-text-color) !important;
+    --mat-form-field-outlined-focus-label-text-color: var(--sera-primary-color) !important;
+    --mat-form-field-outlined-input-text-color: var(--sera-text-color) !important;
+    --mat-form-field-outlined-input-text-placeholder-color: rgba(var(--sera-text-rgb), 0.45) !important;
+    --mat-form-field-outlined-caret-color: var(--sera-primary-color) !important;
+    --mat-form-field-focus-select-arrow-color: var(--sera-primary-color) !important;
+    --mat-form-field-focus-indicator-color: var(--sera-primary-color) !important;
+    --mat-form-field-state-layer-color: transparent !important;
+    --mat-form-field-hover-state-layer-opacity: 0 !important;
+    --mat-form-field-focus-state-layer-opacity: 0 !important;
+
+    // Tokens MDC heredados
+    --mdc-outlined-text-field-outline-color: rgba(var(--sera-text-rgb), 0.18) !important;
+    --mdc-outlined-text-field-hover-outline-color: rgba(var(--sera-primary-rgb), 0.5) !important;
+    --mdc-outlined-text-field-focus-outline-color: var(--sera-primary-color) !important;
+    --mdc-outlined-text-field-label-text-color: rgba(var(--sera-text-rgb), 0.7) !important;
+    --mdc-outlined-text-field-hover-label-text-color: var(--sera-text-color) !important;
+    --mdc-outlined-text-field-focus-label-text-color: var(--sera-primary-color) !important;
+    --mdc-outlined-text-field-input-text-color: var(--sera-text-color) !important;
+    --mdc-outlined-text-field-caret-color: var(--sera-primary-color) !important;
+  }
+
+  // Eliminar líneas verticales parásitas en el notch outline
+  ::ng-deep .mdc-notched-outline__leading  { border-right: none !important; }
+  ::ng-deep .mdc-notched-outline__notch    { border-left: none !important; border-right: none !important; }
+  ::ng-deep .mdc-notched-outline__trailing { border-left: none !important; }
+
+  // Color del texto seleccionado y flecha del select
+  ::ng-deep .mat-mdc-select-value  { color: var(--sera-text-color) !important; }
+  ::ng-deep .mat-mdc-select-arrow  { color: rgba(var(--sera-text-rgb), 0.7) !important; }
+
+  // Estado focused explícito: asegura que el borde, label y cursor usen siempre el color primario del tema
+  ::ng-deep .mat-mdc-form-field.mat-focused {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--sera-primary-color) !important;
+    }
+
+    .mdc-floating-label,
+    .mdc-floating-label--float-above,
+    .mat-mdc-floating-label {
+      color: var(--sera-primary-color) !important;
+    }
+
+    .mat-mdc-select-arrow {
+      color: var(--sera-primary-color) !important;
+    }
+
+    input, textarea {
+      caret-color: var(--sera-primary-color) !important;
+    }
+  }
+}

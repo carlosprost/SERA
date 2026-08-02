@@ -1,3 +1,12 @@
+// Aplica el reset MDC de SERA para sincronizar mat-form-field con el tema activo
+@use '../../shared/components/ui/sera-ui-tokens' as t;
+
+// El mixin field-mdc-reset usa ::ng-deep — debe llamarse en el host del componente
+// para que aplique a todos los mat-form-field nativos del template.
+:host {
+  @include t.field-mdc-reset;
+}
+
 .formStyle {
   display: block;
   width: 100%;

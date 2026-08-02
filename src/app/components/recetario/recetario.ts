@@ -118,8 +118,8 @@ import { MatDialogRef } from '@angular/material/dialog';
       margin-top: 5px;
     }
     .ejemplo-final {
-      background: rgba(var(--sera-primary-color-rgb), 0.1);
-      border: 1px solid rgba(var(--sera-primary-color-rgb), 0.3);
+      background: rgba(var(--sera-primary-rgb, 33, 150, 243), 0.1);
+      border: 1px solid rgba(var(--sera-primary-rgb, 33, 150, 243), 0.3);
       padding: 15px;
       border-radius: 8px;
       margin-top: 25px;

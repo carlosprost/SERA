@@ -1,0 +1,48 @@
+@use '../sera-ui-tokens' as t;
+
+/**
+ * Estilos del SeraSelectComponent.
+ * Toda la lógica visual está definida aquí UNA SOLA VEZ.
+ * Los consumidores solo ajustan [width] vía @Input().
+ */
+:host {
+  display: inline-block;
+
+  // ── Aplicar el reset MDC scoped a este componente ──────────────────────
+  @include t.field-mdc-reset;
+
+  // ── Garantizar que el mat-form-field ocupe el ancho del host ──────────
+  .sera-select-field {
+    width: 100%;
+  }
+
+  // ── Panel de opciones (dropdown) ──────────────────────────────────────
+  ::ng-deep .mat-mdc-select-panel {
+    background-color: var(--sera-card-bg, #1e1e2e) !important;
+    border: 1px solid rgba(var(--sera-text-rgb), 0.12) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  // ── Opciones del panel ─────────────────────────────────────────────────
+  ::ng-deep .mat-mdc-option {
+    color: var(--sera-text-color) !important;
+
+    .mdc-list-item__primary-text {
+      color: var(--sera-text-color) !important;
+    }
+
+    &:hover:not(.mdc-list-item--disabled) {
+      background-color: rgba(var(--sera-primary-rgb), 0.1) !important;
+    }
+
+    &.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+      background-color: rgba(var(--sera-primary-rgb), 0.15) !important;
+
+      .mdc-list-item__primary-text {
+        color: var(--sera-primary-color) !important;
+        font-weight: 600 !important;
+      }
+    }
+  }
+}
