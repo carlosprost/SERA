@@ -397,7 +397,7 @@ export class ConfigDataDialogComponent {
       const catalogo: any[] = Array.isArray(data) ? data : data.plugins || [];
 
       const conUpdate: string[] = [];
-      let huboSincronizacionSilenciosa = false;
+      const autoActualizados: string[] = [];
 
       for (const plugin of instalados) {
         const mp = catalogo.find(m => m.id === plugin.id);
@@ -407,10 +407,10 @@ export class ConfigDataDialogComponent {
         if (!hayUpdate) continue;
 
         if (plugin.auto_update ?? true) {
-          // Auto-actualización transparente en segundo plano (sin spam de snackbars)
+          // Auto-actualización transparente en segundo plano
           try {
-            await this.instalarDesdeMarketplace(mp, true, true); // modo silencioso = true
-            huboSincronizacionSilenciosa = true;
+            await this.instalarDesdeMarketplace(mp, true, true); // modo silencioso = true (evita popup individual)
+            autoActualizados.push(`${plugin.nombre} (v${mp.version})`);
           } catch (e) {
             console.error(`[SERA Auto-Update] Error al auto-actualizar ${plugin.nombre}:`, e);
           }
@@ -421,7 +421,13 @@ export class ConfigDataDialogComponent {
 
       this.pluginsConUpdate.set(conUpdate);
 
-      if (huboSincronizacionSilenciosa) {
+      // Solo mostramos notificación si efectivamente se detectó e instaló una versión superior
+      if (autoActualizados.length > 0) {
+        this.snackBar.open(
+          `🔄 ${autoActualizados.length === 1 ? `Se actualizó automáticamente ${autoActualizados[0]}` : `${autoActualizados.length} plugins actualizados automáticamente: ${autoActualizados.join(', ')}`}`,
+          'OK',
+          { duration: 4500, panelClass: ['snackbar-exito'] }
+        );
         await this.cargarPluginsInstalados(true);
       }
     } catch (err) {
