@@ -163,8 +163,6 @@
     }
   });
 
-  // Notificación de carga
-  api.env.showNotification('🧩 Validador de CUIT/CUIL 🇦🇷 cargado correctamente', 'info');
   console.log('[Validador CUIT] Plugin inicializado correctamente ✅');
 
 })();

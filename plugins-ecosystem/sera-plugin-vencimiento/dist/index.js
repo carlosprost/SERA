@@ -442,8 +442,6 @@
     }
   });
 
-  // Notificación de carga exitosa en la UI del Core
-  api.env.showNotification('🧩 Plugin "Control de Vencimientos" cargado correctamente', 'info');
   console.log('[Control Vencimientos] Plugin inicializado correctamente ✅');
 
 })();
