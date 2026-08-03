@@ -525,6 +525,11 @@ SI(IGUAL([tipo]; "urgente"); "⚠️ URGENTE"; [tipo])</code></pre>
         </div>
 
         <div class="docs-img-box">
+          <img src="assets/v4.2.2/Filtros.png" alt="Panel de filtros dinámicos y ordenamiento en SERA" class="lightbox-trigger" loading="lazy" />
+          <div class="docs-img-caption">Filtros avanzados: segmentación por múltiples condiciones y ordenamiento multicriterio.</div>
+        </div>
+
+        <div class="docs-img-box">
           <img src="assets/v4.2.2/BusquedaGlobal-resultado.png" alt="Resultados del Buscador Global Spotlight" class="lightbox-trigger" loading="lazy" />
           <div class="docs-img-caption">Spotlight en acción: búsqueda instantánea indexada a través de todas las tablas.</div>
         </div>
@@ -664,19 +669,23 @@ SI(IGUAL([tipo]; "urgente"); "⚠️ URGENTE"; [tipo])</code></pre>
 
         <h2>Proceso de importación</h2>
         <ol class="docs-list ordered">
-          <li>Abrí la tabla destino y hacé clic en <strong>Importar Excel/CSV</strong> en la barra de herramientas.</li>
-          <li>Seleccioná el archivo desde el explorador nativo de Windows.</li>
-          <li>SERA lee las primeras filas y muestra una <strong>vista previa</strong> con las columnas detectadas.</li>
-          <li>En el mapeador, asignás cada columna del archivo al campo correspondiente en SERA.</li>
-          <li>Confirmás la importación. SERA procesa los registros en lotes para no bloquear la UI.</li>
+          <li>Hacé clic en <strong>Importar Excel / CSV</strong> desde el menú principal o la barra de herramientas.</li>
+          <li>Seleccioná tu archivo (<code>.xlsx</code>, <code>.xls</code> o <code>.csv</code>) desde el explorador nativo de Windows.</li>
+          <li>SERA analiza el archivo y abre el asistente de configuración con la <strong>vista previa de columnas y registros</strong>.</li>
+          <li>Podés importar hacia una <strong>tabla existente</strong> o crear una <strong>tabla nueva automáticamente</strong> con los nombres y tipos sugeridos.</li>
+          <li>Confirmá con <strong>Importar Registros</strong> para procesar los datos de forma atómica en SQLite.</li>
         </ol>
 
-        <h2>Validación de datos</h2>
+        <div class="docs-img-box">
+          <img src="assets/v4.2.2/ImportaExcelOCSV.png" alt="Asistente de configuración y mapeo para importación de Excel o CSV en SERA" class="lightbox-trigger" loading="lazy" />
+          <div class="docs-img-caption">Asistente inteligente de importación: selección de destino, detección de columnas y vista previa inmediata.</div>
+        </div>
+
+        <h2>Validación y Normalización Automática</h2>
         <ul class="docs-list">
-          <li>Los campos de tipo <strong>Fecha</strong> se validan y normalizan al formato interno.</li>
-          <li>Los campos de tipo <strong>Número</strong> rechazan strings no numéricos y registran un warning.</li>
-          <li>Los campos de tipo <strong>Lista</strong> solo aceptan valores que existan en las opciones definidas.</li>
-          <li>Los campos <strong>Relacionales</strong> no pueden importarse (requieren resolución de IDs internos).</li>
+          <li><strong>Fechas:</strong> Se normalizan automáticamente al formato ISO estándar <code>YYYY-MM-DD</code> preservando la consistencia temporal.</li>
+          <li><strong>Números y Monedas:</strong> Se limpian símbolos y separadores de miles para almacenar valores numéricos limpios.</li>
+          <li><strong>Rendimiento:</strong> La inserción por lotes (batching transaccional) permite procesar miles de registros en pocos segundos sin congelar la interfaz.</li>
         </ul>
 
         <div class="docs-callout tip">
@@ -685,8 +694,8 @@ SI(IGUAL([tipo]; "urgente"); "⚠️ URGENTE"; [tipo])</code></pre>
         </div>
 
         <div class="docs-img-box">
-          <img src="assets/v4.2.2/Filtros.png" alt="Filtros y ordenamiento de registros importados en SERA" class="lightbox-trigger" loading="lazy" />
-          <div class="docs-img-caption">Filtros y ordenamiento dinámico sobre los datos cargados o importados.</div>
+          <img src="assets/v4.2.2/ImportaExcelOCSV-tablaResultado.png" alt="Tabla de datos importada exitosamente en la grilla principal de SERA" class="lightbox-trigger" loading="lazy" />
+          <div class="docs-img-caption">Resultado final: los datos importados quedan integrados y listos para filtrar, vincular y generar reportes.</div>
         </div>
       </section>
 
