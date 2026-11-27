@@ -131,7 +131,7 @@ export class AppComponent implements AfterViewInit, OnInit {
     this.tablas = this.store.select(selectTablas);
 
     // Suscripciones a eventos de UI globales
-    this.uiService.openNewTable$.subscribe(() => this.openFormNewTable());
+    this.uiService.openNewTable$.subscribe(() => this.openDialogNuevaTabla());
     this.uiService.openImportExcel$.subscribe(() => this.importarExcel());
     this.uiService.openAttachments$.subscribe(() => this.openAttachmentsFolder());
   }
@@ -357,6 +357,7 @@ export class AppComponent implements AfterViewInit, OnInit {
    * Si la tabla ya está abierta, simplemente la selecciona.
    */
   addTab(tabName: string) {
+    if (!tabName) return;
     const index = this.tabs.findIndex(t => t.toLowerCase() === tabName.toLowerCase());
     if (index === -1) {
       this.tabs = [...this.tabs, tabName];
@@ -427,14 +428,21 @@ export class AppComponent implements AfterViewInit, OnInit {
   /** Abre el dialog para crear una nueva tabla. */
   openDialogNuevaTabla() {
     const dialogRef = this.dialog.open(FormNewTableComponent, {
-      width: "800px",
-      maxWidth: "90vw",
+      width: "840px",
+      maxWidth: "95vw",
       maxHeight: "90vh",
       data: { message: "Crear nueva Tabla" },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      // El resultado ahora lo informan los Effects para mayor precisión
+      if (result?.reload && result?.tableName) {
+        this.store.dispatch(StoreActions.loadListadoTablas());
+        // Abrir automáticamente la pestaña de la tabla creada para una UX óptima
+        setTimeout(() => {
+          this.addTab(result.tableName);
+          this.cdr.detectChanges();
+        }, 150);
+      }
     });
   }
 
@@ -694,18 +702,9 @@ export class AppComponent implements AfterViewInit, OnInit {
     });
   }
 
-  /** Abre el diálogo para crear una nueva tabla. */
+  /** Abre el diálogo para crear una nueva tabla (delega en openDialogNuevaTabla para consistencia total). */
   openFormNewTable() {
-    const dialogRef = this.dialog.open(FormNewTableComponent, {
-      width: "400px",
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.addTab(result.nombre_tabla);
-        this.store.dispatch(StoreActions.loadListadoTablas());
-      }
-    });
+    this.openDialogNuevaTabla();
   }
 
   /** Abre el diálogo para conectar una tabla remota de la red local (LAN) */
@@ -856,30 +855,30 @@ export class AppComponent implements AfterViewInit, OnInit {
       
       // 3. Parsear con XLSX con soporte explícito para fechas
       const workbook = XLSX.read(fileData, { type: 'array', cellDates: true });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      
-      // Convertir a JSON
-      let jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+      const sheetNames = workbook.SheetNames;
+      if (!sheetNames || sheetNames.length === 0) {
+        this.snackBar.open("El archivo no contiene hojas de cálculo válidas", "Cerrar", { duration: 3000 });
+        return;
+      }
 
-      // Formatear objetos Date a strings YYYY-MM-DD (Evitando offset de Timezone)
-      jsonData = jsonData.map(row => {
-        const newRow: any = {};
-        for (const key in row) {
-          if (row[key] instanceof Date) {
-            const d = row[key] as Date;
+      const sheetsData: { [sheetName: string]: any[][] } = {};
+      sheetNames.forEach(sheetName => {
+        const ws = workbook.Sheets[sheetName];
+        if (!ws) return;
+        const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' }) as any[][];
+        // Formatear objetos Date a strings YYYY-MM-DD (Evitando offset de Timezone)
+        sheetsData[sheetName] = raw.map(row => (row || []).map(cell => {
+          if (cell instanceof Date) {
+            const d = cell as Date;
             const pad = (n: number) => n.toString().padStart(2, '0');
-            // Almacenamos SIEMPRE en formato YYYY-MM-DD (ISO) para que SQLite ordene bien.
-            // La UI se encargará de mostrarlo como DD/MM/YYYY
-            newRow[key] = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-          } else {
-            newRow[key] = row[key];
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
           }
-        }
-        return newRow;
+          return cell !== undefined && cell !== null ? cell : '';
+        }));
       });
 
-      if (!jsonData || jsonData.length === 0) {
+      const firstSheet = sheetNames[0];
+      if (!sheetsData[firstSheet] || sheetsData[firstSheet].length === 0) {
         this.snackBar.open("El archivo está vacío o no tiene un formato válido", "Cerrar", { duration: 3000 });
         return;
       }
@@ -889,10 +888,12 @@ export class AppComponent implements AfterViewInit, OnInit {
       const activeTableName = this.activeTable ? this.activeTable.tabla : null;
 
       const dialogRef = this.dialog.open(DialogImportExcel, {
-        width: '800px',
-        maxWidth: '90vw',
+        width: '980px',
+        maxWidth: '95vw',
+        maxHeight: '92vh',
         data: {
-          json: jsonData,
+          sheetsData: sheetsData,
+          sheetNames: sheetNames,
           fileName: fileName,
           activeTable: activeTableName
         }

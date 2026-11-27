@@ -94,8 +94,10 @@ export class FormNewTableComponent {
 
   createFieldGroup(fieldData?: any, linkData?: any): FormGroup {
     const type = linkData ? 'LINK' : (fieldData?.Type || "VARCHAR(255)");
+    // En creación nueva sugerimos 'descripcion' como primer campo para no bloquear el formulario de entrada
+    const defaultName = fieldData?.Field || (this.data?.isEdit ? "" : (this.fields?.length === 0 ? "descripcion" : ""));
     const group = this.fb.group({
-      name: [fieldData?.Field || "", Validators.required],
+      name: [defaultName, Validators.required],
       type: [type, Validators.required],
       notNull: [fieldData?.Null === 'NO'],
       defaultValue: [fieldData?.Default || ""],
@@ -173,7 +175,7 @@ export class FormNewTableComponent {
   }
 
   dialogClose() {
-    this.dialogRef.close();
+    this.dialogRef?.close();
   }
 
   onSubmit() {
@@ -248,6 +250,6 @@ export class FormNewTableComponent {
       this.store.dispatch(StoreActions.loadNewTable({ tabla: nuevaTabla }));
     }
     
-    this.dialogRef.close({ reload: true });
+    this.dialogRef.close({ reload: true, tableName: nombreTabla });
   }
 }

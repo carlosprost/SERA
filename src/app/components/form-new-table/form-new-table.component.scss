@@ -2,7 +2,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  padding: 24px; /* Más aire en los bordes */
+  padding: 8px 4px 16px 4px;
   box-sizing: border-box;
 
   .formulario {
@@ -15,7 +15,8 @@
       display: flex;
       gap: 24px;
       align-items: flex-start;
-      margin-bottom: 8px;
+      margin-top: 10px; /* Margen superior para que el label flotante respire perfectamente */
+      margin-bottom: 12px;
 
       .flex-grow {
         flex: 1;
@@ -41,12 +42,12 @@
     }
 
     mat-divider {
-      margin: 8px 0;
+      margin: 12px 0 16px 0;
       opacity: 0.5;
     }
 
     .fields-header {
-      margin-bottom: 8px;
+      margin-bottom: 12px;
       h3 {
         margin: 0;
         font-weight: 600;
@@ -73,7 +74,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 20px; /* Filas más altas y cómodas */
+  padding: 16px 20px; /* Filas cómodas y bien proporcionadas */
   background: rgba(var(--sera-text-rgb), 0.02);
   border: 1px solid rgba(var(--sera-text-rgb), 0.08);
   border-radius: 12px;
@@ -90,6 +91,7 @@
   align-items: center;
   gap: 16px;
   width: 100%;
+  flex-wrap: wrap; /* Evita que los inputs se compriman en anchos menores */
 }
 
 .link-config-container {
@@ -133,6 +135,7 @@
 
 .flex-field {
   flex: 1;
+  min-width: 170px;
 }
 
 .field-options {
@@ -154,7 +157,8 @@
 }
 
 .add-btn-container {
-  margin-top: 12px;
+  margin-top: 16px;
+  margin-bottom: 8px;
   display: flex;
   justify-content: flex-start;
 }

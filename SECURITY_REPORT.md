@@ -1,6 +1,6 @@
-# SECURITY_REPORT.md — SERA v4.2.2 "Poseidón"
+# SECURITY_REPORT.md — SERA v4.3.0 "Poseidón"
 **WolfTeI | Sistema de Expedientes de Registro Avanzado**
-*Última actualización: 2026-08-02 — Release v4.2.2 (Phoenix-422)*
+*Última actualización: 2026-11-26 — Release v4.3.0 (Phoenix-430)*
 
 ---
 
@@ -12,6 +12,7 @@
 - **Asynchronous PDF Engine (v4.0.0):** Generador de reportes en PDF con membrete configurable (logo + firma tipo sello). Construye el DOM en un contenedor efímero en memoria y desinfecta todos los campos mediante `textContent` nativo para prevenir XSS/HTMLi.
 - **Logo Membrete System (v4.0.0):** Subsistema de copia y recuperación de logotipos de empresa. Copia el archivo al directorio de datos de la aplicación (`app_data_dir/membrete/`) y lo sirve como Data URL base64 al frontend, sin exponer rutas absolutas del sistema.
 - **Audit Log System (v4.0.0):** Motor de auditoría ISO 27001 que registra eventos críticos (escrituras, optimizaciones, purgas) en tabla SQLite dedicada (`_sera_audit_log`). Los eventos incluyen timestamp, tipo de acción y descripción, nunca datos PII ni credenciales.
+- **Smart Excel/CSV Import Engine (v4.3.0 - Estilo QGIS):** Motor de importación avanzado con selección visual de fila de cabeceras, previsualización en tiempo real y auto-detección tipada (`TEXT`, `INTEGER`, `REAL`, `DATE`). Sanitiza identificadores de columnas contra inyecciones SQL y normaliza fechas en formato ISO (`YYYY-MM-DD`). Inserciones atómicas protegidas mediante `importar_bulk` con Prepared Statements en SQLite.
 - **Relational Portability Packager (v3.3.0):** Compilador recursivo de dependencias relacionales que empaqueta una tabla y todas sus tablas vinculadas con sus respectivos adjuntos físicos en un único archivo `.srx` AES-256-GCM.
 
 | Dependencia | Versión | Rol de Seguridad / Aporte a la Confidencialidad |
@@ -109,21 +110,28 @@ Para garantizar que el marketplace y las extensiones locales activas no comprome
 4. **Hot Reload e Inyección Síncrona Controlada (Mitigación de Fugas y Código Huérfano):**
    - La inyección de bundles de JavaScript se realiza de forma síncrona mediante inline scripts (`script.textContent`), asegurando que las llamadas de inicialización de la API pública `SeraAPI` se realicen dentro del hilo síncrono controlado del servicio. Esto permite al sandbox asociar unívocamente el ID del plugin cargándose a sus `cellRenderers` e interceptores `onBeforeInsert`. Al desactivar o actualizar un plugin, `SeraPluginService` purga de forma quirúrgica todos sus recursos y callbacks inyectados en caliente, impidiendo que lógica obsoleta o interceptores duplicados queden huérfanos en memoria (OWASP A04: Insecure Design).
 
+### D. Sanitización y Tipado en Importación Masiva (Excel/CSV v4.3.0)
+Para impedir que archivos externos manipulen la estructura de la base de datos o ejecuten inyecciones SQL:
+1. **Sanitización Estricta de Identificadores:** Los nombres de columna propuestos o extraídos de las celdas se normalizan convirtiéndolos a minúsculas, reemplazando caracteres no permitidos por guiones bajos y asegurando que cumplan la expresión regular `^[a-z0-9_]+$`.
+2. **Tipado Fuerte Seguro:** Los tipos de datos se acotan estrictamente a los 4 tipos permitidos por el motor de SERA (`TEXT`, `INTEGER`, `REAL`, `DATE`), rechazando definiciones de tipos no soportadas.
+3. **Prepared Statements en Bulk Insert:** El frontend envía únicamente la matriz de datos sanitizada y el comando Rust ejecuta la transacción atómica con parámetros preparados (`bind`), neutralizando inyecciones por contenido de celda (OWASP A03).
+4. **Protección de Memoria y UI:** La previsualización procesa únicamente un subconjunto acotado de registros (máximo 50) y trunca cadenas excesivamente largas, previniendo DoS por agotamiento de memoria o congelamiento del hilo principal del navegador.
+
 ---
 
-## 4. Matriz de Prevención de Vulnerabilidades (OWASP v4.1.0)
+## 4. Matriz de Prevención de Vulnerabilidades (OWASP v4.3.0)
 
-| OWASP ID | Vulnerabilidad | Mecanismo Implementado en v4.1.0 / Ecosistema de Plugins |
+| OWASP ID | Vulnerabilidad | Mecanismo Implementado en v4.3.0 |
 |---|---|---|
-| **A03** | Inyección | Prepared Statements en Rust (incluyendo `set_plugin_auto_update`), escape de strings mediante `textContent` en reportes PDF, sandbox léxico en motor de fórmulas, whitelist de extensiones en copia de logos y sanitización de comillas para triggers DOM en plugins (`redactor`). |
+| **A03** | Inyección | Prepared Statements en Rust (incluyendo `set_plugin_auto_update` e `importar_bulk`), sanitización de identificadores de columna en importador Excel/CSV (v4.3.0), escape de strings mediante `textContent` en reportes PDF, sandbox léxico en motor de fórmulas, whitelist de extensiones en copia de logos y sanitización de comillas para triggers DOM en plugins (`redactor`). |
 | **A01** | Control de Acceso / PII | Enmascaramiento dinámico e interactivo de datos sensibles en pantalla mediante el plugin `redactor` para DNI, Teléfonos y Correos. |
-| **A04** | Diseño Inseguro | Separación estricta de responsabilidades (SoC), logs de auditoría ISO 27001, control granular de adjuntos y cleanups automáticos de cascada. |
-| **A05** | Mala Configuración | Perfil de operador simplificado sin campos obsoletos expuestos; dispatch NgRx corregido para garantizar persistencia real de configuración. |
+| **A04** | Diseño Inseguro | Separación estricta de responsabilidades (SoC), logs de auditoría ISO 27001, control granular de adjuntos, auto-apertura segura de pestañas recién creadas y cleanups automáticos de cascada. |
+| **A05** | Mala Configuración | Perfil de operador simplificado sin campos obsoletos expuestos; fallback defensivo en diálogos para prevenir fallos por objetos nulos en inputs de creación de tablas. |
 | **A07** | Fallos de Identificación | Derivación de llaves AES-256-GCM mediante SHA-256 para paquetes encriptados `.srx`. |
 | **A08** | Fallos de Integridad | Inserción con mitigación de duplicados (`INSERT OR IGNORE`), auto-detección flexible de paquetes relacionales/legacy, UUIDs para adjuntos físicos, interceptación de integridad en base de datos (`onBeforeInsert`) en plugins de CBU y Patentes, y verificación semántica de versiones en Auto Update de plugins para mitigar *downgrade attacks*. |
 | **ISO 27001** | Trazabilidad | Audit Log System: registro persistente en SQLite de eventos críticos sin almacenamiento de PII. |
-| **ISO 27002** | Privacidad de Datos | Procesamiento 100% offline y generación en memoria de códigos de barra (`barcode`) y combinación de correspondencia (`documento`) para evitar fugas de red. |
+| **ISO 27002** | Privacidad de Datos | Procesamiento 100% offline y generación en memoria de códigos de barra (`barcode`), combinación de correspondencia (`documento`) e importación de planillas para evitar fugas de red hacia servicios de conversión en la nube. |
 
 ---
 
-*Este reporte certifica que SERA v4.2.2 "Poseidón" eleva los controles de seguridad a nivel de producto comercial universal, incorporando auditoría ISO 27001, gestión segura de activos de marca (logos), robustecimiento del ciclo de vida de la configuración del operador, un blindaje estricto en la inyección de plugins dinámicos del marketplace, y un sistema seguro de actualización automática y manual de plugins basado en control semántico de versiones y consultas de SQLite preparadas.*
+*Este reporte certifica que SERA v4.3.0 "Poseidón" eleva los controles de seguridad a nivel de producto comercial universal, incorporando auditoría ISO 27001, gestión segura de activos de marca (logos), robustecimiento del ciclo de vida de la configuración del operador, un blindaje estricto en la inyección de plugins dinámicos del marketplace, importador Excel/CSV inteligente estilo QGIS con tipado y sanitización estricta, y un sistema seguro de actualización automática y manual de plugins basado en control semántico de versiones y consultas de SQLite preparadas.*

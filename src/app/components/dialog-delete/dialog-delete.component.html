@@ -1,9 +1,9 @@
 <h2 mat-dialog-title style="font-weight: 600; color: #ff5252; display: flex; align-items: center; gap: 8px;">
   <mat-icon color="warn">warning</mat-icon>
-  {{data.title}}
+  {{ data?.title || 'Confirmar eliminación' }}
 </h2>
 <mat-dialog-content style="min-width: 320px; font-size: 14px; line-height: 1.5; color: #e0e0e0;">
-  <p>{{data.message}}</p>
+  <p>{{ data?.message }}</p>
 
   @if (linkedTables && linkedTables.length > 0) {
     <div style="margin-top: 16px; padding: 12px; border-radius: 8px; background: rgba(244, 67, 54, 0.08); border: 1px solid rgba(244, 67, 54, 0.25);">

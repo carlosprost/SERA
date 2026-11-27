@@ -1,27 +1,87 @@
 <h2 mat-dialog-title class="dialog-header">
-  <mat-icon>upload_file</mat-icon> Importar desde Excel/CSV
+  <mat-icon color="primary">table_view</mat-icon>
+  <div class="header-texts">
+    <span class="dialog-title">Importar desde Excel / CSV</span>
+    <span class="file-badge" [matTooltip]="data.fileName">{{ data.fileName }}</span>
+  </div>
 </h2>
 
 <mat-dialog-content class="dialog-content">
-  <p class="subtitle">Se han detectado <strong>{{ data.json.length }}</strong> registros en <strong>{{ data.fileName }}</strong>.</p>
 
-  <div class="preview-section">
-    <h3>Previsualización de datos:</h3>
-    <div class="table-preview-container">
-      <table class="preview-table">
+  <!-- 1. CONFIGURACIÓN DEL ARCHIVO (HOJA Y CABECERA) -->
+  <div class="file-config-bar">
+    @if (sheetNames.length > 1) {
+      <mat-form-field appearance="outline" class="config-field sheet-select">
+        <mat-label>Hoja de Cálculo</mat-label>
+        <mat-select [(ngModel)]="selectedSheet" (selectionChange)="onSheetChange()">
+          @for (s of sheetNames; track s) {
+            <mat-option [value]="s">{{ s }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline" class="config-field header-select flex-grow">
+      <mat-label>Fila de Encabezados</mat-label>
+      <mat-select [(ngModel)]="selectedHeaderRow" (selectionChange)="onHeaderRowChange()">
+        @for (opt of headerOptions; track opt.rowNumber) {
+          <mat-option [value]="opt.rowNumber">
+            <span class="opt-label">{{ opt.label }}</span>
+            <span class="opt-preview"> — {{ opt.preview }}</span>
+          </mat-option>
+        }
+      </mat-select>
+      <mat-hint>Elegí la fila del archivo que contiene los nombres reales de las columnas (o hacé clic en la vista previa abajo).</mat-hint>
+    </mat-form-field>
+  </div>
+
+  <!-- 2. MAPEO Y SELECCIÓN DE CAMPOS (ESTILO QGIS) -->
+  <div class="mapping-section">
+    <div class="mapping-header">
+      <div class="mapping-title">
+        <mat-icon>checklist</mat-icon>
+        <h3>Campos a Importar</h3>
+        <span class="counter-badge">{{ camposSeleccionados.length }} de {{ campos.length }} seleccionados</span>
+      </div>
+      <div class="mapping-actions">
+        <sera-button variant="outlined" size="sm" label="Seleccionar todos" icon="select_all" (click)="toggleTodos(true)" />
+        <sera-button variant="outlined" size="sm" label="Deseleccionar todos" icon="deselect" (click)="toggleTodos(false)" />
+      </div>
+    </div>
+
+    <div class="fields-mapping-container">
+      <table class="fields-mapping-table">
         <thead>
           <tr>
-            @for (h of headers; track h) {
-              <th>{{ h }}</th>
-            }
+            <th class="col-check">Importar</th>
+            <th class="col-orig">Columna en Archivo</th>
+            <th class="col-clean">Nombre en Base de Datos</th>
+            <th class="col-type">Tipo de Dato</th>
           </tr>
         </thead>
         <tbody>
-          @for (row of previewRows; track row) {
-            <tr>
-              @for (h of headers; track h) {
-                <td>{{ row[h] }}</td>
-              }
+          @for (campo of campos; track campo.index) {
+            <tr [class.row-disabled]="!campo.selected">
+              <td class="cell-check">
+                <mat-checkbox [(ngModel)]="campo.selected" (change)="onCampoChange()" color="primary"></mat-checkbox>
+              </td>
+              <td class="cell-original">
+                <span class="original-badge" [matTooltip]="campo.originalName">{{ campo.originalName }}</span>
+              </td>
+              <td class="cell-clean">
+                <mat-form-field appearance="outline" class="table-input-field" subscriptSizing="dynamic">
+                  <input matInput [(ngModel)]="campo.cleanName" (input)="onCampoChange()" [disabled]="!campo.selected" placeholder="nombre_campo">
+                </mat-form-field>
+              </td>
+              <td class="cell-type">
+                <mat-form-field appearance="outline" class="table-select-field" subscriptSizing="dynamic">
+                  <mat-select [(ngModel)]="campo.type" (selectionChange)="onCampoChange()" [disabled]="!campo.selected">
+                    @for (t of tiposDisponibles; track t.value) {
+                      <mat-option [value]="t.value">{{ t.viewValue }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </td>
             </tr>
           }
         </tbody>
@@ -29,38 +89,101 @@
     </div>
   </div>
 
-  <div class="mode-selection">
-    <h3>Destino de la importación:</h3>
+  <!-- 3. PREVISUALIZACIÓN DE DATOS -->
+  <div class="preview-section">
+    <div class="preview-header">
+      <div class="preview-title">
+        <mat-icon>visibility</mat-icon>
+        <h3>Previsualización de Datos</h3>
+        <span class="records-badge">{{ dataRows.length }} registros detectados</span>
+      </div>
+      <div class="preview-hint">
+        <mat-icon class="hint-icon">touch_app</mat-icon>
+        <span>¿Ves tus encabezados en una fila abajo? Hacé clic en su botón <strong>"Usar Fila X"</strong> para asignarla al instante.</span>
+      </div>
+    </div>
+
+    <div class="table-preview-container">
+      @if (camposSeleccionados.length === 0) {
+        <div class="empty-preview">
+          <mat-icon>warning_amber</mat-icon>
+          <span>Seleccioná al menos una columna arriba para ver los datos.</span>
+        </div>
+      } @else {
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th class="col-action-header" title="Número de fila original en el archivo Excel">Fila</th>
+              @for (c of camposSeleccionados; track c.cleanName) {
+                <th>
+                  <div class="th-content">
+                    <span class="col-title">{{ c.cleanName }}</span>
+                    <span class="type-pill">{{ c.type }}</span>
+                  </div>
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of previewRows; track $index) {
+              <tr class="preview-data-row">
+                <td class="cell-row-action">
+                  <button 
+                    type="button" 
+                    class="btn-pick-header" 
+                    (click)="seleccionarFilaComoEncabezado(row._originalRowNumber)"
+                    [matTooltip]="'Hacer clic para usar la Fila ' + row._originalRowNumber + ' como nombres de columnas'">
+                    <mat-icon>title</mat-icon>
+                    <span>Usar Fila {{ row._originalRowNumber }}</span>
+                  </button>
+                </td>
+                @for (c of camposSeleccionados; track c.cleanName) {
+                  <td>{{ row[c.cleanName] }}</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+
+  <!-- 4. DESTINO DE LA IMPORTACIÓN -->
+  <div class="destination-section">
+    <h3>Destino de la Importación</h3>
     <mat-radio-group [(ngModel)]="mode" class="radio-group">
       <mat-radio-button value="new">Crear como Tabla Nueva</mat-radio-button>
       <mat-radio-button value="existing" [disabled]="!data.activeTable">
         Añadir a Tabla Abierta ({{ data.activeTable || 'Ninguna' }})
       </mat-radio-button>
     </mat-radio-group>
-  </div>
 
-  @if (mode === 'new') {
-    <div class="options-section">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Nombre de la nueva tabla</mat-label>
-        <input matInput [(ngModel)]="tableName" placeholder="Ej: Registro_Inventario" pattern="^[a-zA-Z0-9_]*$">
-        <mat-hint>Solo letras, números y guiones bajos.</mat-hint>
-      </mat-form-field>
-    </div>
-  }
-  
-  @if (mode === 'existing') {
-    <div class="info-alert">
-      <mat-icon>info</mat-icon>
-      <span>Los datos se añadirán al final de la tabla actual. Asegúrate de que las columnas coincidan exactamente con las del archivo.</span>
-    </div>
-  }
+    @if (mode === 'new') {
+      <div class="options-section">
+        <mat-form-field appearance="outline" class="table-name-input">
+          <mat-label>Nombre de la nueva tabla</mat-label>
+          <input matInput [(ngModel)]="tableName" placeholder="Ej: tentativa_de_cambio_de_grupos" pattern="^[a-zA-Z0-9_]*$">
+          <mat-hint>Solo letras, números y guiones bajos (sin espacios).</mat-hint>
+        </mat-form-field>
+      </div>
+    }
+
+    @if (mode === 'existing') {
+      <div class="info-alert">
+        <mat-icon>info</mat-icon>
+        <span>Los datos se añadirán al final de la tabla <strong>"{{ data.activeTable }}"</strong>. Verificá que los nombres de columnas coincidan.</span>
+      </div>
+    }
+  </div>
 
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close>Cancelar</button>
-  <button mat-raised-button color="primary" (click)="onConfirm()" [disabled]="mode === 'new' && !tableName">
-    <mat-icon>check_circle</mat-icon> Iniciar Importación
-  </button>
+  <sera-button variant="text" label="Cancelar" mat-dialog-close [disabled]="cargando" />
+  <sera-button
+    variant="flat"
+    [label]="cargando ? 'Importando...' : ('Importar ' + dataRows.length + ' registros')"
+    icon="cloud_upload"
+    (click)="onConfirm()"
+    [disabled]="cargando || camposSeleccionados.length === 0 || (mode === 'new' && !tableName.trim())" />
 </mat-dialog-actions>

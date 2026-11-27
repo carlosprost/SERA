@@ -211,14 +211,48 @@ app-root {
   .mat-mdc-dialog-container, .mat-mdc-dialog-surface {
     background-color: var(--sera-bg-color) !important;
     color: var(--sera-text-color) !important;
+    border-radius: 16px !important;
+    overflow: hidden;
   }
 
   .mat-mdc-dialog-title {
     color: var(--sera-primary-color) !important;
+    padding: 24px 28px 14px 28px !important;
+    margin: 0 !important;
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    mat-icon {
+      color: var(--sera-primary-color);
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
   }
 
   .mat-mdc-dialog-content {
     color: var(--sera-text-color) !important;
+    padding: 16px 28px 20px 28px !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+    overflow-x: hidden;
+
+    /* Margen de seguridad superior para que el label flotante de mat-form-field no se corte */
+    & > *:first-child {
+      margin-top: 6px;
+    }
+  }
+
+  .mat-mdc-dialog-actions {
+    padding: 16px 28px 24px 28px !important;
+    margin: 0 !important;
+    gap: 12px;
+    border-top: 1px solid rgba(var(--sera-text-rgb), 0.06);
+    background: rgba(var(--sera-text-rgb), 0.015);
   }
 }
 
@@ -759,6 +793,10 @@ mat-slide-toggle,
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--sera-text-rgb), 0.3);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent !important;
 }
 
 /* Paleta de Comandos (Ctrl+F), Búsqueda Global (Ctrl+Shift+F) y Ajustes Premium */
